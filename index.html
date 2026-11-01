@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN" class="dark" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="智码 CodeQuest — 游戏化编程闯关学习平台，浏览器内真实编译运行，系统掌握 Go / Rust / C++" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <title>智码 CodeQuest · 编程闯关</title>
+    <script>
+      // 首屏防闪烁：在样式应用前同步主题（localStorage 优先，其次跟随系统）
+      (function () {
+        try {
+          var t = localStorage.getItem('zhiqu-theme');
+          if (t !== 'light' && t !== 'dark') {
+            t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          }
+          document.documentElement.dataset.theme = t;
+          document.documentElement.style.colorScheme = t;
+        } catch (e) {
+          /* ignore */
+        }
+      })();
+    </script>
+    <style>
+      html { background: #070b14; }
+      html[data-theme='light'] { background: #f3f5fb; }
+      body { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
