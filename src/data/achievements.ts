@@ -1,4 +1,7 @@
 import type { AchievementDef } from '@/types';
+import { totalTerms } from '@/data/terms';
+
+const TOTAL_TERMS = totalTerms();
 
 /** 成就定义（check 均为纯函数，配合 store 计数评估） */
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -80,7 +83,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'term-explorer', name: '百科漫游者', desc: '浏览 60 个术语词条', icon: '📚', rarity: 'rare',
     check: (c) => c.viewedTermsCount >= 60, progress: (c) => [Math.min(c.viewedTermsCount, 60), 60] },
   { id: 'term-completionist', name: '行走的百科全书', desc: '浏览全部术语词条', icon: '🗃️', rarity: 'legendary',
-    check: (c) => c.viewedTermsCount >= 175, progress: (c) => [Math.min(c.viewedTermsCount, 175), 175] },
+    check: (c) => c.viewedTermsCount >= TOTAL_TERMS, progress: (c) => [Math.min(c.viewedTermsCount, TOTAL_TERMS), TOTAL_TERMS] },
   { id: 'quiz-10', name: '小试词锋', desc: '术语测验累计答对 10 题', icon: '🎓', rarity: 'common',
     check: (c) => c.quizCorrect >= 10, progress: (c) => [Math.min(c.quizCorrect, 10), 10] },
   { id: 'quiz-100', name: '词汇大师', desc: '术语测验累计答对 100 题', icon: '🏅', rarity: 'epic',

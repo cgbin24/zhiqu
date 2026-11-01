@@ -5,6 +5,7 @@ import { ChevronLeft, Search } from 'lucide-react';
 import { TERM_CATEGORY_MAP, getTerm, searchTerms, termsOfCategory } from '@/data/terms';
 import type { TermCatId } from '@/data/terms';
 import { Markdown } from '@/components/Markdown';
+import { LifecycleFlow } from '@/components/LifecycleFlow';
 import { useProgress } from '@/store/progress';
 
 export function TermCategoryPage() {
@@ -75,8 +76,13 @@ export function TermCategoryPage() {
         />
       </div>
 
+      {/* 全链路领域：专属流程视图 */}
+      {def.id === 'lifecycle' && (
+        <LifecycleFlow />
+      )}
+
       {/* 分组列表 */}
-      {groups.map(([sub, terms]) => (
+      {def.id !== 'lifecycle' && groups.map(([sub, terms]) => (
         <section key={sub}>
           <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-300">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: def.color }} />

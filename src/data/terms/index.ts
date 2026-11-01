@@ -1,3 +1,4 @@
+import { LC_LIFECYCLE } from './lifecycle';
 import { FE_FRONTEND } from './frontend';
 import { NET_NETWORK } from './network';
 import { BE_BACKEND } from './backend';
@@ -9,6 +10,7 @@ import type { Term, TermCatId } from './types';
 
 /** 全部术语（按领域聚合） */
 export const TERMS: Term[] = [
+  ...LC_LIFECYCLE,
   ...FE_FRONTEND,
   ...NET_NETWORK,
   ...BE_BACKEND,

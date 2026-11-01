@@ -22,7 +22,7 @@ export function TermsHome() {
           </span>
           <div>
             <h1 className="text-xl font-black text-slate-100">术语百科</h1>
-            <p className="text-sm text-slate-400">七大领域 {total} 个核心术语 —— 概念、关系、代码示例与面试要点</p>
+            <p className="text-sm text-slate-400">八大领域 {total} 个核心术语 —— 从全链路流程到技术细节：概念、关系、代码示例与面试要点</p>
           </div>
           <div className="ml-auto text-right">
             <div className="text-2xl font-black text-quest-400">{viewedCount}<span className="text-sm text-slate-500">/{total}</span></div>

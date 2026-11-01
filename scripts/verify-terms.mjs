@@ -5,6 +5,7 @@
  *  - relations 指向存在的术语 id，且不自指
  *  - cat 与所在文件一致
  */
+import { LC_LIFECYCLE } from '../src/data/terms/lifecycle.ts';
 import { FE_FRONTEND } from '../src/data/terms/frontend.ts';
 import { NET_NETWORK } from '../src/data/terms/network.ts';
 import { BE_BACKEND } from '../src/data/terms/backend.ts';
@@ -14,6 +15,7 @@ import { AGENT_AGENT } from '../src/data/terms/agent.ts';
 import { AI_AI } from '../src/data/terms/ai.ts';
 
 const FILE_CAT = {
+  lifecycle: LC_LIFECYCLE,
   frontend: FE_FRONTEND,
   network: NET_NETWORK,
   backend: BE_BACKEND,
