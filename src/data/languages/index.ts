@@ -1,5 +1,5 @@
 import { MODULES } from '@/data/modules';
-import type { LanguageId, Level, ModuleId, TestCase } from '@/types';
+import type { CourseId, Level, ModuleId, TestCase } from '@/types';
 import { GO_BASIC } from './go/basic';
 import { GO_PARADIGM } from './go/paradigm';
 import { GO_ADVANCED } from './go/advanced';
@@ -18,29 +18,38 @@ import { CPP_ADVANCED } from './cpp/advanced';
 import { CPP_TIPS } from './cpp/tips';
 import { CPP_BEST } from './cpp/best';
 import { CPP_INTEGRATION } from './cpp/integration';
+import { ALGO_BASIC } from '../algo/basic';
+import { ALGO_PARADIGM } from '../algo/paradigm';
+import { ALGO_ADVANCED } from '../algo/advanced';
+import { ALGO_TIPS } from '../algo/tips';
+import { ALGO_BEST } from '../algo/best';
+import { ALGO_INTEGRATION } from '../algo/integration';
 
 /** 章节文件注册表：新增语言/章节在这里追加一行即可 */
 const CHAPTER_FILES: Level[][] = [
   GO_BASIC, GO_PARADIGM, GO_ADVANCED, GO_TIPS, GO_BEST, GO_INTEGRATION,
   RUST_BASIC, RUST_PARADIGM, RUST_ADVANCED, RUST_TIPS, RUST_BEST, RUST_INTEGRATION,
   CPP_BASIC, CPP_PARADIGM, CPP_ADVANCED, CPP_TIPS, CPP_BEST, CPP_INTEGRATION,
+  ALGO_BASIC, ALGO_PARADIGM, ALGO_ADVANCED, ALGO_TIPS, ALGO_BEST, ALGO_INTEGRATION,
 ];
 
-/** 全部关卡（扁平，含语言内全局顺序） */
+/** 全部关卡（扁平，含课程内全局顺序） */
 export const LEVELS: Level[] = CHAPTER_FILES.flat();
 
 const BY_ID = new Map<string, Level>(LEVELS.map((l) => [l.id, l]));
 
-/** 语言内顺序：同语言按模块顺序 + 章节内顺序 */
-const LANG_ORDER: Record<LanguageId, Level[]> = {
+/** 课程内顺序：同一课程按模块顺序 + 章节内顺序 */
+const COURSE_ORDER: Record<CourseId, Level[]> = {
   go: [],
   rust: [],
   cpp: [],
+  javascript: [],
+  algo: [],
 };
-for (const lang of ['go', 'rust', 'cpp'] as LanguageId[]) {
+for (const course of ['go', 'rust', 'cpp', 'javascript', 'algo'] as CourseId[]) {
   for (const m of MODULES) {
     for (const l of LEVELS) {
-      if (l.lang === lang && l.module === m.id) LANG_ORDER[lang].push(l);
+      if (l.lang === course && l.module === m.id) COURSE_ORDER[course].push(l);
     }
   }
 }
@@ -49,29 +58,32 @@ export function getLevel(id: string | undefined): Level | undefined {
   return id ? BY_ID.get(id) : undefined;
 }
 
-export function levelsOfLang(lang: LanguageId): Level[] {
-  return LANG_ORDER[lang];
+export function levelsOfCourse(course: CourseId): Level[] {
+  return COURSE_ORDER[course];
 }
 
-export function levelsOfChapter(lang: LanguageId, module: ModuleId): Level[] {
-  return LEVELS.filter((l) => l.lang === lang && l.module === module);
+/** 兼容旧调用名 */
+export const levelsOfLang = levelsOfCourse;
+
+export function levelsOfChapter(course: CourseId, module: ModuleId): Level[] {
+  return LEVELS.filter((l) => l.lang === course && l.module === module);
 }
 
 export function totalLevels(): number {
   return LEVELS.length;
 }
 
-/** 关卡是否解锁：语言内前一关已通关（第一章首关永远解锁） */
+/** 关卡是否解锁：课程内前一关已通关（首关永远解锁） */
 export function isLevelUnlocked(level: Level, completedIds: Set<string>): boolean {
-  const list = LANG_ORDER[level.lang];
+  const list = COURSE_ORDER[level.lang];
   const idx = list.findIndex((l) => l.id === level.id);
   if (idx <= 0) return true;
   return completedIds.has(list[idx - 1].id);
 }
 
-/** 下一关（语言内顺序） */
+/** 下一关（课程内顺序） */
 export function nextLevel(level: Level): Level | undefined {
-  const list = LANG_ORDER[level.lang];
+  const list = COURSE_ORDER[level.lang];
   const idx = list.findIndex((l) => l.id === level.id);
   return idx >= 0 && idx + 1 < list.length ? list[idx + 1] : undefined;
 }

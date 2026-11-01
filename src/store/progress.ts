@@ -97,6 +97,7 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
   const stats = Object.entries(s.levelStats);
   const completedCount = stats.length;
   const langCompleted = { go: 0, rust: 0, cpp: 0 } as Record<LanguageId, number>;
+  let algoCompleted = 0;
   const moduleCompleted = Object.fromEntries(MODULES.map((m) => [m.id, 0])) as Record<ModuleId, number>;
   let threeStarCount = 0;
 
@@ -105,7 +106,11 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
     if (st.stars === 3) threeStarCount++;
     const level = ALL_LEVEL_MAP[id];
     if (!level) continue;
-    langCompleted[level.lang]++;
+    if (level.lang === 'algo') {
+      algoCompleted++;
+    } else if (level.lang === 'go' || level.lang === 'rust' || level.lang === 'cpp') {
+      langCompleted[level.lang]++;
+    }
     moduleCompleted[level.module]++;
   }
 
@@ -125,10 +130,13 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
   const langsTouched = (Object.keys(langCompleted) as LanguageId[]).filter(
     (k) => langCompleted[k] > 0,
   ).length;
+  // 算法课也算一种"多面手"经历
+  const courseTouched = langsTouched + (algoCompleted > 0 ? 1 : 0);
 
   return {
     completedCount,
     langCompleted,
+    algoCompleted,
     moduleCompleted,
     chapterCleared,
     perfectChapters,
@@ -138,7 +146,7 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
     totalSubmissions: s.counters.totalSubmissions,
     totalRuns: s.counters.totalRuns,
     firstTryWins: s.counters.firstTryWins,
-    langsTouched,
+    langsTouched: courseTouched,
     dailyDone: s.counters.dailyDone,
     playgroundUsed: s.counters.playgroundRuns > 0,
     comebackAfterFail: s.counters.failedThenPassed,

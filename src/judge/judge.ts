@@ -1,6 +1,8 @@
 import type { ExecRequest, ExecResult, JudgeCaseResult, JudgeResult, LanguageId, TestCase, Verdict } from '@/types';
+import { LANG_MAP } from '@/data/languages/registry';
 import { godboltProvider } from './godbolt';
 import { wandboxProvider } from './wandbox';
+import { localJsProvider } from './local-js';
 
 /* ---------------- 节流队列：公共 API 礼貌限速 ---------------- */
 
@@ -23,6 +25,10 @@ function schedule<T>(fn: () => Promise<T>): Promise<T> {
 /* ---------------- Provider 链：godbolt -> wandbox ---------------- */
 
 async function executeWithFallback(req: ExecRequest): Promise<ExecResult> {
+  // JS 走浏览器本地执行：零延迟、无配额
+  if (LANG_MAP[req.lang]?.executor.provider === 'local') {
+    return localJsProvider.execute(req);
+  }
   try {
     return await schedule(() => godboltProvider.execute(req));
   } catch (err) {

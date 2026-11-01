@@ -4,11 +4,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
 import { MODULES } from '@/data/modules';
-import { LANGUAGES } from '@/data/languages/registry';
+import { COURSES, getCourse } from '@/data/languages/registry';
 import { isLevelUnlocked, levelsOfChapter, testCaseSummary } from '@/data/languages';
 import { DIFFICULTY_COLOR } from '@/game/xp';
 import { useProgress } from '@/store/progress';
-import type { LanguageId, Level } from '@/types';
+import type { CourseId, Level } from '@/types';
 
 export function LearnPath() {
   const { lang = 'go' } = useParams<{ lang: string }>();
@@ -19,45 +19,39 @@ export function LearnPath() {
     () => new Set(Object.keys(levelStats).filter((k) => levelStats[k].stars > 0)),
     [levelStats],
   );
-  const langDef = LANGUAGES.find((l) => l.id === lang) ?? LANGUAGES[0];
+  const course = getCourse(lang) ?? COURSES[0];
 
   return (
     <div>
-      {/* 语言切换 */}
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {LANGUAGES.map((l) => {
-          const lv = levelsOfChapter(l.id, 'basic').concat(
-            levelsOfChapter(l.id, 'paradigm'),
-            levelsOfChapter(l.id, 'advanced'),
-            levelsOfChapter(l.id, 'tips'),
-            levelsOfChapter(l.id, 'best'),
-            levelsOfChapter(l.id, 'integration'),
-          );
+      {/* 课程切换 */}
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {COURSES.map((c) => {
+          const lv = MODULES.flatMap((m) => levelsOfChapter(c.id, m.id));
           const done = lv.filter((x) => completedIds.has(x.id)).length;
-          const active = l.id === langDef.id;
+          const active = c.id === course.id;
           return (
             <Link
-              key={l.id}
-              to={`/learn/${l.id}`}
-              className={`group relative overflow-hidden rounded-2xl border p-4 transition-all ${
+              key={c.id}
+              to={`/learn/${c.id}`}
+              className={`group relative overflow-hidden rounded-2xl border p-3.5 transition-all ${
                 active ? 'border-transparent ring-2 shadow-lg' : 'border-night-700 hover:border-night-600'
               }`}
-              style={active ? ({ '--tw-ring-color': l.color } as CSSProperties) : undefined}
+              style={active ? ({ '--tw-ring-color': c.color } as CSSProperties) : undefined}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br opacity-10 ${l.gradient}`} />
-              <div className="relative flex items-center justify-between">
-                <div>
-                  <div className="text-lg font-black" style={{ color: l.color }}>{l.name}</div>
-                  <div className="text-xs text-slate-400">{l.tagline}</div>
+              <div className={`absolute inset-0 bg-gradient-to-br opacity-10 ${c.gradient}`} />
+              <div className="relative flex items-center gap-2.5">
+                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${c.gradient} text-lg`}>{c.icon}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-base font-black" style={{ color: c.color }}>{c.name}</div>
+                  <div className="truncate text-[10px] text-slate-400">{c.tagline}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-black text-slate-200">{done}<span className="text-sm text-slate-500">/{lv.length}</span></div>
-                  <div className="text-[10px] text-slate-500">关卡</div>
+                  <div className="text-xl font-black text-slate-200">{done}<span className="text-xs text-slate-500">/{lv.length}</span></div>
                 </div>
               </div>
-              <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-night-800">
+              <div className="relative mt-2.5 h-1.5 overflow-hidden rounded-full bg-night-800">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r ${l.gradient} transition-all`}
+                  className={`h-full rounded-full bg-gradient-to-r ${c.gradient} transition-all`}
                   style={{ width: `${lv.length ? (done / lv.length) * 100 : 0}%` }}
                 />
               </div>
@@ -69,7 +63,7 @@ export function LearnPath() {
       {/* 六大模块章节 */}
       <div className="space-y-5">
         {MODULES.map((mod) => {
-          const lv = levelsOfChapter(langDef.id as LanguageId, mod.id);
+          const lv = levelsOfChapter(course.id as CourseId, mod.id);
           const done = lv.filter((x) => completedIds.has(x.id)).length;
           const stars = lv.reduce((acc, x) => acc + (levelStats[x.id]?.stars ?? 0), 0);
           const maxStars = lv.length * 3;
@@ -96,8 +90,8 @@ export function LearnPath() {
                     key={level.id}
                     level={level}
                     index={i}
-                    langColor={langDef.color}
-                    locked={!isLevelUnlocked(level, completedIds) && !(/* daily bypass */ false)}
+                    langColor={course.color}
+                    locked={!isLevelUnlocked(level, completedIds)}
                     stars={levelStats[level.id]?.stars ?? 0}
                     completed={completedIds.has(level.id)}
                     onClick={() => navigate(`/level/${level.id}`)}

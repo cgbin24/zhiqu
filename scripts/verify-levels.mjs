@@ -31,6 +31,14 @@ import { CPP_TIPS } from '../src/data/languages/cpp/tips.ts';
 import { CPP_BEST } from '../src/data/languages/cpp/best.ts';
 import { CPP_INTEGRATION } from '../src/data/languages/cpp/integration.ts';
 
+import { ALGO_BASIC } from '../src/data/algo/basic.ts';
+import { ALGO_PARADIGM } from '../src/data/algo/paradigm.ts';
+import { ALGO_ADVANCED } from '../src/data/algo/advanced.ts';
+import { ALGO_TIPS } from '../src/data/algo/tips.ts';
+import { ALGO_BEST } from '../src/data/algo/best.ts';
+import { ALGO_INTEGRATION } from '../src/data/algo/integration.ts';
+import { executeJsLocally } from '../src/judge/local-js.ts';
+
 const LANG_EXEC = {
   go: { id: 'gl1260', args: '', file: 'main.go' },
   rust: { id: 'r1990', args: '', file: 'main.rs' },
@@ -44,7 +52,12 @@ const CHAPTERS = [
   ['rust', 'tips', RUST_TIPS], ['rust', 'best', RUST_BEST], ['rust', 'integration', RUST_INTEGRATION],
   ['cpp', 'basic', CPP_BASIC], ['cpp', 'paradigm', CPP_PARADIGM], ['cpp', 'advanced', CPP_ADVANCED],
   ['cpp', 'tips', CPP_TIPS], ['cpp', 'best', CPP_BEST], ['cpp', 'integration', CPP_INTEGRATION],
+  ['algo', 'basic', ALGO_BASIC], ['algo', 'paradigm', ALGO_PARADIGM], ['algo', 'advanced', ALGO_ADVANCED],
+  ['algo', 'tips', ALGO_TIPS], ['algo', 'best', ALGO_BEST], ['algo', 'integration', ALGO_INTEGRATION],
 ];
+
+/** 算法关的作答语言集（JS 本地验证，其余云端） */
+const ALGO_LANGS = ['javascript', 'go', 'rust', 'cpp'];
 
 /* ---------- CLI ---------- */
 const argv = process.argv.slice(2);
@@ -111,6 +124,12 @@ async function exec(lang, source, stdin) {
   }
 }
 
+/** 本地立即执行（JS），失败返回 null 交给调用方走云端 */
+function execJs(source, stdin) {
+  const r = executeJsLocally(source, stdin);
+  return { executed: r.exitCode === null || r.exitCode === 0, compileError: r.stderr, stdout: r.stdout, exitCode: r.exitCode };
+}
+
 /* ---------- 主流程 ---------- */
 const allLevels = CHAPTERS.flatMap(([lang, mod, levels]) =>
   (levels ?? []).map((l) => ({ lang, mod, level: l })),
@@ -128,50 +147,100 @@ console.log(`共 ${allLevels.length} 关，本次验证 ${targets.length} 关${f
 const failures = [];
 let passedLevels = 0;
 
+// 本地验证器：返回 null 表示该测试不适用本地路径
+function verifyCaseLocal(level, t) {
+  if (level.lang !== 'algo') return null;
+  const js = level.algo?.solutions?.javascript;
+  if (!js) return { executed: false, compileError: '缺少 javascript 参考答案' };
+  return execJs(js, t.stdin);
+}
+
 for (const { lang, mod, level } of targets) {
   const label = `${lang}/${mod}/${level.id}`;
-  process.stdout.write(`${label} `.padEnd(38));
+  process.stdout.write(`${label} `.padEnd(40));
 
-  const cfg = LANG_EXEC[lang];
   let ok = true;
   const details = [];
 
-  for (let i = 0; i < level.tests.length; i++) {
-    const t = level.tests[i];
-    const res = await exec(lang, level.solution, t.stdin);
-    if (!res.executed) {
-      ok = false;
-      details.push(`  ✗ [${t.name}] 编译/执行失败: ${(res.compileError || '').split('\n').slice(0, 6).join('\n  ')}`);
-      break;
+  // 算法关：逐语言验证
+  if (level.lang === 'algo') {
+    for (const l of ALGO_LANGS) {
+      const src = level.algo?.solutions?.[l];
+      if (!src) {
+        ok = false;
+        details.push(`  ✗ 缺少 ${l} 参考答案`);
+        continue;
+      }
+      for (const t of level.tests) {
+        let res;
+        if (l === 'javascript') {
+          res = execJs(src, t.stdin);
+        } else {
+          res = await exec(l, src, t.stdin);
+        }
+        if (!res.executed) {
+          ok = false;
+          details.push(`  ✗ [${l}] [${t.name}] 编译/执行失败: ${(res.compileError || '').split('\n').slice(0, 5).join('\n  ')}`);
+          break;
+        }
+        if (normalizeOutput(res.stdout) !== normalizeOutput(t.expected)) {
+          ok = false;
+          details.push(
+            `  ✗ [${l}] [${t.name}] 输出不匹配\n` +
+            `    期望: ${JSON.stringify(t.expected)}\n` +
+            `    实际: ${JSON.stringify(res.stdout)}`,
+          );
+        }
+      }
     }
-    if (normalizeOutput(res.stdout) !== normalizeOutput(t.expected)) {
-      ok = false;
-      details.push(
-        `  ✗ [${t.name}] 输出不匹配\n` +
-        `    期望: ${JSON.stringify(t.expected)}\n` +
-        `    实际: ${JSON.stringify(res.stdout)}`,
-      );
+  } else {
+    for (let i = 0; i < level.tests.length; i++) {
+      const t = level.tests[i];
+      const localRes = verifyCaseLocal(level, t);
+      const res = localRes ?? (await exec(lang, level.solution ?? '', t.stdin));
+      if (!res.executed) {
+        ok = false;
+        details.push(`  ✗ [${t.name}] 编译/执行失败: ${(res.compileError || '').split('\n').slice(0, 6).join('\n  ')}`);
+        break;
+      }
+      if (normalizeOutput(res.stdout) !== normalizeOutput(t.expected)) {
+        ok = false;
+        details.push(
+          `  ✗ [${t.name}] 输出不匹配\n` +
+          `    期望: ${JSON.stringify(t.expected)}\n` +
+          `    实际: ${JSON.stringify(res.stdout)}`,
+        );
+      }
     }
   }
 
   if (ok) {
     passedLevels++;
-    console.log(`✓ ${level.tests.length} 用例`);
+    const langTag = level.lang === 'algo' ? `全 ${ALGO_LANGS.length} 语言` : `${level.tests.length} 用例`;
+    console.log(`✓ ${langTag}`);
   } else {
     failures.push(label);
     console.log('✗');
     for (const d of details) console.log(d);
   }
 
-  // starter 防误过：起始代码不该全过（抽第一个可见用例）
+  // starter 防误过：起始代码不该全过（抽第一个可见用例；算法关用 JS 本地验证）
   if (full && ok) {
     const vis = level.tests.find((t) => !t.hidden);
-    if (vis && level.starter) {
-      const res = await exec(lang, level.starter, vis.stdin);
-      const starterPassed = res.executed && normalizeOutput(res.stdout) === normalizeOutput(vis.expected);
-      if (starterPassed) {
-        failures.push(`${label} (starter 误过)`);
-        console.log(`  ⚠ starter 在用例「${vis.name}」就通过了 —— 起始代码过于完整，缺少 TODO 空洞`);
+    if (vis) {
+      const starterSrc = level.lang === 'algo' ? level.algo?.starters?.javascript : level.starter;
+      if (starterSrc) {
+        let res;
+        if (level.lang === 'algo' || level.lang === 'javascript') {
+          res = execJs(starterSrc, vis.stdin);
+        } else {
+          res = await exec(level.lang, starterSrc, vis.stdin);
+        }
+        const starterPassed = res.executed && normalizeOutput(res.stdout) === normalizeOutput(vis.expected);
+        if (starterPassed) {
+          failures.push(`${label} (starter 误过)`);
+          console.log(`  ⚠ starter 在用例「${vis.name}」就通过了 —— 起始代码过于完整，缺少 TODO 空洞`);
+        }
       }
     }
   }

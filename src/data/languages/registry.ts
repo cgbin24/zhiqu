@@ -1,10 +1,10 @@
-import type { LanguageDef, LanguageId } from '@/types';
+import type { CourseId, ExecutorConfig, LanguageDef, LanguageId } from '@/types';
 
 /**
  * 语言注册表 —— 可扩展架构的核心：
  * 新增语言 = 增加一个 LanguageDef + 对应章节内容文件，其余零改动。
  *
- * 执行引擎：Godbolt 为主（编译器版本最新），Wandbox 为备。
+ * 执行引擎：Godbolt 为主（编译器版本最新），Wandbox 为备；JS 为浏览器本地执行（零延迟）。
  */
 export const LANGUAGES: LanguageDef[] = [
   {
@@ -56,6 +56,23 @@ int main() {
 }
 `,
   },
+  {
+    id: 'javascript',
+    name: 'JavaScript',
+    tagline: '浏览器原生语言，本地瞬时执行',
+    color: '#eab308',
+    gradient: 'from-yellow-400 to-amber-500',
+    monaco: 'javascript',
+    fileName: 'main.js',
+    executor: { provider: 'local' },
+    learnable: false,
+    template: `// JavaScript 在浏览器内直接执行，无需等待云端
+// stdin 已按行注入：readline() 读一行，readInts() 读一行整数数组
+const n = Number(readline());
+console.log("Hello, JS Quest! n =", n);
+console.log("平方：", n * n);
+`,
+  },
 ];
 
 export const LANG_MAP: Record<LanguageId, LanguageDef> = Object.fromEntries(
@@ -64,4 +81,62 @@ export const LANG_MAP: Record<LanguageId, LanguageDef> = Object.fromEntries(
 
 export function getLang(id: string | undefined): LanguageDef | undefined {
   return LANGUAGES.find((l) => l.id === id);
+}
+
+/* ---------- 课程轨道（语言课 + 算法课） ---------- */
+
+/** 课程轨道的统一展示定义 */
+export interface CourseDef {
+  id: CourseId;
+  name: string;
+  tagline: string;
+  icon: string;
+  color: string;
+  gradient: string;
+  /** 关卡作答使用的执行语言集合 */
+  execLangs: LanguageId[];
+}
+
+/** 算法课：语言无关，作答语言可切换（JS 本地执行，其余云端） */
+export const ALGO_TRACK: CourseDef = {
+  id: 'algo',
+  name: '算法',
+  tagline: '从入门到实战，可视化理解每一步',
+  icon: '🧮',
+  color: '#c084fc',
+  gradient: 'from-purple-500 to-indigo-400',
+  execLangs: ['javascript', 'go', 'rust', 'cpp'],
+};
+
+export const LEARNABLE_LANGS = LANGUAGES.filter((l) => l.learnable !== false);
+
+/** 闯关地图顶部的课程卡片列表（语言课 + 算法课） */
+export const COURSES: CourseDef[] = [
+  ...LEARNABLE_LANGS.map((l) => ({
+    id: l.id as CourseId,
+    name: l.name,
+    tagline: l.tagline,
+    icon: l.id === 'go' ? '🐹' : l.id === 'rust' ? '🦀' : '🐉',
+    color: l.color,
+    gradient: l.gradient,
+    execLangs: [l.id],
+  })),
+  ALGO_TRACK,
+];
+
+export const COURSE_MAP: Record<CourseId, CourseDef> = Object.fromEntries(
+  COURSES.map((c) => [c.id, c]),
+) as Record<CourseId, CourseDef>;
+
+export function getCourse(id: string | undefined): CourseDef | undefined {
+  return id ? COURSE_MAP[id as CourseId] : undefined;
+}
+
+/** 关卡执行配置（语言课直接取语言；算法课由作答语言决定） */
+export function executorOf(course: CourseId, execLang?: LanguageId): ExecutorConfig {
+  if (course === 'algo') {
+    const lang = execLang ?? 'javascript';
+    return LANG_MAP[lang].executor;
+  }
+  return LANG_MAP[course].executor;
 }

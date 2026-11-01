@@ -10,7 +10,8 @@ import { CodeEditor } from '@/components/CodeEditor';
 import { Markdown } from '@/components/Markdown';
 import { DiffView } from '@/components/DiffView';
 import { Stars } from '@/components/Stars';
-import { LANG_MAP } from '@/data/languages/registry';
+import { AlgoVisualizer } from '@/components/AlgoVisualizer';
+import { COURSE_MAP, LANG_MAP } from '@/data/languages/registry';
 import { dailyLevel, getLevel, nextLevel, isLevelUnlocked } from '@/data/languages';
 import { MODULE_MAP } from '@/data/modules';
 import { getRank } from '@/data/ranks';
@@ -18,7 +19,7 @@ import { DIFFICULTY_COLOR, DIFFICULTY_LABEL } from '@/game/xp';
 import { executeCode, judgeLevel } from '@/judge/judge';
 import { emitToast } from '@/lib/toast-bus';
 import { starsFor, todayKey, useProgress } from '@/store/progress';
-import type { ExecResult, JudgeCaseResult, JudgeResult } from '@/types';
+import type { ExecResult, JudgeCaseResult, JudgeResult, LanguageId } from '@/types';
 
 type Tab = 'task' | 'brief' | 'hints' | 'tests';
 
@@ -47,13 +48,16 @@ export function LevelPlay() {
   const [submitting, setSubmitting] = useState(false);
   const [judge, setJudge] = useState<JudgeResult | null>(null);
   const [judgeProgress, setJudgeProgress] = useState({ done: 0, total: 0 });
+  const [execLang, setExecLang] = useState<LanguageId>('javascript');
   const [victory, setVictory] = useState<null | {
     stars: number; xpGained: number; isDaily: boolean; newAchievements: number; rankUp: string | null;
   }>(null);
   const rankBefore = useRef(getRank(useProgress.getState().xp).rank.name);
   const confettiFired = useRef(false);
 
-  const lang = level ? LANG_MAP[level.lang] : undefined;
+  const lang = level ? LANG_MAP[level.lang as LanguageId] : undefined;
+  const course = level ? COURSE_MAP[level.lang] : undefined;
+  const isAlgo = Boolean(level?.algo);
   const stat = level ? levelStats[level.id] : undefined;
   const completed = Boolean(stat && stat.stars > 0);
   const isDaily = level ? dailyLevel().id === level.id : false;
@@ -61,9 +65,25 @@ export function LevelPlay() {
   const unlocked = level ? isLevelUnlocked(level, new Set(Object.keys(levelStats).filter((k) => levelStats[k].stars > 0))) : false;
   const next = level ? nextLevel(level) : undefined;
 
+  const draftKey = isAlgo ? `${level?.id}:${execLang}` : (level?.id ?? '');
+  const currentStarter = level ? (level.algo?.starters[execLang] ?? level.starter ?? '') : '';
+  const currentSolution = level ? (level.algo?.solutions[execLang] ?? level.solution ?? '') : '';
+  const execMonaco = isAlgo ? LANG_MAP[execLang].monaco : (lang?.monaco ?? 'plaintext');
+  const execFileName = isAlgo ? LANG_MAP[execLang].fileName : (lang?.fileName ?? 'main');
+
+  const switchExecLang = (l: LanguageId) => {
+    if (!level) return;
+    setExecLang(l);
+    const draft = drafts[`${level.id}:${l}`];
+    setCode(draft ?? level.algo?.starters[l] ?? '');
+    setRunResult(null);
+  };
+
   useEffect(() => {
     if (!level) return;
-    setCode(drafts[level.id] ?? level.starter);
+    setExecLang('javascript');
+    const initDraft = level.algo ? drafts[`${level.id}:javascript`] : drafts[level.id];
+    setCode(initDraft ?? level.algo?.starters['javascript'] ?? level.starter ?? '');
     setRunResult(null);
     setJudge(null);
     setVictory(null);
@@ -78,18 +98,18 @@ export function LevelPlay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level?.id]);
 
-  // 代码草稿防抖保存
+  // 代码草稿防抖保存（算法关按作答语言分键）
   const saveTimer = useRef<ReturnType<typeof setTimeout>>();
   const onCodeChange = useCallback(
     (v: string) => {
       setCode(v);
       clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => saveDraft(level?.id ?? '', v), 600);
+      saveTimer.current = setTimeout(() => saveDraft(draftKey, v), 600);
     },
-    [level?.id, saveDraft],
+    [draftKey, saveDraft],
   );
 
-  if (!level || !lang) {
+  if (!level || !course) {
     return (
       <div className="grid place-items-center py-24 text-slate-400">
         <div className="text-center">
@@ -124,7 +144,7 @@ export function LevelPlay() {
     setRunResult(null);
     recordRun(false);
     try {
-      const res = await executeCode({ lang: level.lang, source: code, stdin });
+      const res = await executeCode({ lang: (isAlgo ? execLang : level.lang) as LanguageId, source: code, stdin });
       setRunResult(res);
     } catch (err) {
       setRunResult({
@@ -144,7 +164,7 @@ export function LevelPlay() {
     setJudgeProgress({ done: 0, total: level.tests.length });
     setTab('tests');
     try {
-      const result = await judgeLevel(level.lang, code, level.tests, (r, done, total) => {
+      const result = await judgeLevel((isAlgo ? execLang : level.lang) as LanguageId, code, level.tests, (r, done, total) => {
         setJudgeProgress({ done, total });
         setJudge((prev) => {
           const cases = prev?.cases ? [...prev.cases] : [];
@@ -187,8 +207,8 @@ export function LevelPlay() {
 
   const resetCode = () => {
     if (confirm('确定要重置为本关起始代码吗？当前修改将丢失。')) {
-      setCode(level.starter);
-      saveDraft(level.id, level.starter);
+      setCode(currentStarter);
+      saveDraft(draftKey, currentStarter);
     }
   };
 
@@ -215,7 +235,7 @@ export function LevelPlay() {
           to={`/learn/${level.lang}`}
           className="flex items-center gap-1 rounded-lg border border-night-700 bg-night-850 px-2.5 py-1.5 text-xs text-slate-400 transition-colors hover:text-slate-200"
         >
-          <ChevronLeft size={14} /> {lang.name} · {mod.name}
+          <ChevronLeft size={14} /> {course?.name} · {mod.name}
         </Link>
         <h1 className="text-lg font-bold text-slate-100">
           <span className="mr-2 text-slate-500">#{level.order}</span>
@@ -267,6 +287,11 @@ export function LevelPlay() {
           <div className="max-h-[calc(100vh-220px)] overflow-y-auto rounded-xl border border-night-700 bg-night-900 p-4 lg:sticky lg:top-20">
             {tab === 'task' && (
               <div>
+                {level.visualizer && (
+                  <div className="mb-3">
+                    <AlgoVisualizer kind={level.visualizer.kind} param={level.visualizer.param} />
+                  </div>
+                )}
                 <div className="mb-3 rounded-lg border border-quest-500/25 bg-quest-500/8 p-3">
                   <div className="mb-1.5 text-xs font-bold uppercase tracking-wider text-quest-400">本关目标</div>
                   <ul className="space-y-1">
@@ -301,7 +326,16 @@ export function LevelPlay() {
               </div>
             )}
 
-            {tab === 'brief' && <Markdown text={level.brief} />}
+            {tab === 'brief' && (
+              <div>
+                {level.visualizer && (
+                  <div className="mb-3">
+                    <AlgoVisualizer kind={level.visualizer.kind} param={level.visualizer.param} />
+                  </div>
+                )}
+                <Markdown text={level.brief} />
+              </div>
+            )}
 
             {tab === 'hints' && (
               <div className="space-y-3">
@@ -356,9 +390,25 @@ export function LevelPlay() {
         {/* 右：编辑器 + 输出 */}
         <div className="lg:col-span-3">
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="rounded-md border px-2 py-1 font-mono text-xs font-semibold" style={{ borderColor: lang.color + '55', color: lang.color }}>
-              {lang.fileName}
+            <span className="rounded-md border px-2 py-1 font-mono text-xs font-semibold" style={{ borderColor: (isAlgo ? LANG_MAP[execLang].color : lang?.color ?? '#659ad2') + '55', color: isAlgo ? LANG_MAP[execLang].color : lang?.color ?? '#659ad2' }}>
+              {execFileName}
             </span>
+            {isAlgo && (
+              <div className="flex gap-1 rounded-lg border border-night-700 bg-night-900 p-0.5">
+                {(['javascript', 'go', 'rust', 'cpp'] as LanguageId[]).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => switchExecLang(l)}
+                    className={`rounded-md px-2 py-1 text-[11px] font-semibold transition-colors ${
+                      execLang === l ? 'text-white' : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                    style={execLang === l ? { background: LANG_MAP[l].color + '33', color: LANG_MAP[l].color } : undefined}
+                  >
+                    {LANG_MAP[l].name}
+                  </button>
+                ))}
+              </div>
+            )}
             <button
               onClick={resetCode}
               className="flex items-center gap-1 rounded-md border border-night-700 px-2 py-1 text-xs text-slate-400 hover:text-slate-200"
@@ -385,7 +435,7 @@ export function LevelPlay() {
           </div>
 
           <div className="h-[46vh] min-h-[320px] lg:h-[54vh]">
-            <CodeEditor value={code} language={lang.monaco} onChange={onCodeChange} />
+            <CodeEditor value={code} language={execMonaco} onChange={onCodeChange} />
           </div>
 
           <div className="mt-3">
@@ -432,10 +482,10 @@ export function LevelPlay() {
       <AnimatePresence>
         {answerOpen && (
           <AnswerModal
-            code={level.solution}
+            code={currentSolution}
             onClose={() => setAnswerOpen(false)}
             onCopy={() => {
-              navigator.clipboard.writeText(level.solution).then(() => {
+              navigator.clipboard.writeText(currentSolution).then(() => {
                 emitToast({ kind: 'info', text: '参考答案已复制，粘贴后先理解再提交' });
                 setAnswerOpen(false);
               });

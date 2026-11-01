@@ -14,6 +14,9 @@ export const godboltProvider: ExecutionProvider = {
 
   async execute(req: ExecRequest): Promise<ExecResult> {
     const lang = LANG_MAP[req.lang];
+    if (!lang.executor.godboltId) {
+      throw new Error(`${lang.name} 不支持云端执行`);
+    }
     const lines = (arr?: { text: string }[]) =>
       (arr ?? []).map((l) => l.text ?? '').join('\n');
 
@@ -31,15 +34,13 @@ export const godboltProvider: ExecutionProvider = {
       allowStoreCodeDebug: false,
     };
 
-    const res = await fetchWithRetry(`${API}/${lang.executor.godboltId}/compile`, {
-      method: 'POST',
+    const res = await fetchWithRetry(`${API}/${lang.executor.godboltId}/compile`, {      method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(body),
     });
 
     if (!res.ok) throw new Error(`Godbolt HTTP ${res.status}`);
     const r = await res.json();
-
     const timedOut = Boolean(r.timedOut);
     const didExecute = r.didExecute === true;
 

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { CalendarDays, ChevronRight, Flame, Play, Zap } from 'lucide-react';
 import { ACHIEVEMENTS } from '@/data/achievements';
 import { dailyLevel, levelsOfChapter, totalLevels } from '@/data/languages';
-import { LANGUAGES } from '@/data/languages/registry';
+import { COURSES, LANGUAGES } from '@/data/languages/registry';
 import { MODULES } from '@/data/modules';
 import { getRank } from '@/data/ranks';
 import { useProgress } from '@/store/progress';
@@ -128,28 +128,26 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* 语言进度 */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {LANGUAGES.map((l) => {
-          const all = [
-            ...levelsOfChapter(l.id, 'basic'), ...levelsOfChapter(l.id, 'paradigm'),
-            ...levelsOfChapter(l.id, 'advanced'), ...levelsOfChapter(l.id, 'tips'),
-            ...levelsOfChapter(l.id, 'best'), ...levelsOfChapter(l.id, 'integration'),
-          ];
+      {/* 课程进度 */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {COURSES.map((c) => {
+          const all = MODULES.flatMap((m) => levelsOfChapter(c.id, m.id));
           const d = all.filter((x) => completedIds.has(x.id)).length;
           const stars = all.reduce((acc, x) => acc + (levelStats[x.id]?.stars ?? 0), 0);
           const ratio = all.length ? d / all.length : 0;
           return (
             <Link
-              key={l.id}
-              to={`/learn/${l.id}`}
-              className="flex items-center gap-4 rounded-2xl border border-night-700 bg-night-900 p-4 transition-colors hover:border-night-600"
+              key={c.id}
+              to={`/learn/${c.id}`}
+              className="flex items-center gap-3 rounded-2xl border border-night-700 bg-night-900 p-4 transition-colors hover:border-night-600"
             >
-              <ProgressRing ratio={ratio} color={l.color} />
+              <ProgressRing ratio={ratio} color={c.color} />
               <div className="min-w-0 flex-1">
-                <div className="font-black" style={{ color: l.color }}>{l.name}</div>
+                <div className="flex items-center gap-1.5 font-black" style={{ color: c.color }}>
+                  <span>{c.icon}</span> {c.name}
+                </div>
                 <div className="text-xs text-slate-500">{d}/{all.length} 关 · ★ {stars}</div>
-                <div className="mt-1.5 text-[11px] text-slate-600">{nextChapterLabel(l.id, completedIds)}</div>
+                <div className="mt-1.5 text-[11px] text-slate-600">{nextChapterLabel(c.id, completedIds)}</div>
               </div>
               <ChevronRight size={15} className="text-slate-600" />
             </Link>

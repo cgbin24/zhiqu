@@ -2,16 +2,24 @@
 
 /* ---------- 语言 ---------- */
 
-export type LanguageId = 'go' | 'rust' | 'cpp';
+export type LanguageId = 'go' | 'rust' | 'cpp' | 'javascript';
 
-/** 执行器配置：主用 Godbolt（最新版本），备用 Wandbox */
+/** 课程轨道：三门语言课 + 算法课 */
+export type CourseId = 'go' | 'rust' | 'cpp' | 'javascript' | 'algo';
+
+/** 算法关可选择的作答语言 */
+export type AlgoLang = 'go' | 'rust' | 'cpp' | 'javascript';
+
+/** 执行器配置：godbolt（云端最新版本）/ local（浏览器本地执行，仅 JS） */
 export interface ExecutorConfig {
   /** Compiler Explorer 编译器 id，如 gl1260 */
-  godboltId: string;
+  godboltId?: string;
   /** 附加编译参数，如 "-std=c++20" */
   godboltArgs?: string;
   /** Wandbox 备用编译器 id，如 go-1.23.2 */
   wandboxId?: string;
+  /** 执行方式：默认 godbolt 云端；local = 浏览器内直接执行（JS） */
+  provider?: 'godbolt' | 'local';
 }
 
 export interface LanguageDef {
@@ -29,6 +37,14 @@ export interface LanguageDef {
   executor: ExecutorConfig;
   /** Playground 默认模板 */
   template: string;
+  /** 是否作为独立课程出现在闯关地图（JS 仅作为执行语言与练习场语言） */
+  learnable?: boolean;
+}
+
+/** 算法关多语言代码集 */
+export interface AlgoCodeSet {
+  starters: Partial<Record<AlgoLang, string>>;
+  solutions: Partial<Record<AlgoLang, string>>;
 }
 
 /* ---------- 模块 / 章节 / 关卡 ---------- */
@@ -58,10 +74,26 @@ export interface TestCase {
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
+/** 算法可视化种类（component: AlgoVisualizer） */
+export type AlgoVizKind =
+  | 'sort'            // param: bubble | insertion | merge | quick | selection
+  | 'binary-search'   // 二分查找
+  | 'two-pointer'     // 对撞双指针
+  | 'sliding-window'  // 滑动窗口
+  | 'prefix-sum'      // 前缀和构建
+  | 'recursion-tree'  // 递归调用树
+  | 'hash-table'      // 哈希表插入与冲突
+  | 'stack'           // 栈操作（括号匹配）
+  | 'linked-list'     // 链表指针操作
+  | 'tree-traversal'  // 二叉树遍历
+  | 'grid'            // param: bfs | dfs 网格搜索
+  | 'dp-table';       // 动态规划填表
+
 export interface Level {
-  /** 全局唯一，如 go-basic-3 */
+  /** 全局唯一，如 go-basic-3 / algo-basic-1 */
   id: string;
-  lang: LanguageId;
+  /** 所属课程轨道（三门语言 或 algo） */
+  lang: CourseId;
   module: ModuleId;
   /** 关卡在章节内的序号（1 起） */
   order: number;
@@ -75,10 +107,14 @@ export interface Level {
   brief: string;
   /** 任务描述（Markdown） */
   task: string;
-  /** 起始代码骨架 */
-  starter: string;
-  /** 参考答案（用于验证与「查看答案」） */
-  solution: string;
+  /** 起始代码骨架（单语言课程使用） */
+  starter?: string;
+  /** 参考答案（单语言课程使用；算法课用 algo 字段） */
+  solution?: string;
+  /** 算法课：多语言起始代码与参考答案（存在时 LevelPlay 出现语言切换） */
+  algo?: AlgoCodeSet;
+  /** 算法可视化配置 */
+  visualizer?: { kind: AlgoVizKind; param?: string };
   /** 渐进提示（3 级） */
   hints: [string, string, string];
   tests: TestCase[];
@@ -140,6 +176,7 @@ export interface RankDef {
 export type AchievementCheckCtx = {
   completedCount: number;
   langCompleted: Record<LanguageId, number>;
+  algoCompleted: number;
   moduleCompleted: Record<ModuleId, number>;
   chapterCleared: number;
   perfectChapters: number;

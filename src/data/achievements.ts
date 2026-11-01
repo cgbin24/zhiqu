@@ -76,6 +76,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (c) => c.langCompleted.rust >= 42, progress: (c) => [Math.min(c.langCompleted.rust, 42), 42] },
   { id: 'cpp-master', name: 'C++ 宗师', desc: '完成 C++ 全部关卡', icon: '🐉', rarity: 'legendary',
     check: (c) => c.langCompleted.cpp >= 42, progress: (c) => [Math.min(c.langCompleted.cpp, 42), 42] },
+  { id: 'algo-master', name: '算法大师', desc: '完成算法课全部关卡', icon: '🧮', rarity: 'legendary',
+    check: (c) => c.algoCompleted >= 42, progress: (c) => [Math.min(c.algoCompleted, 42), 42] },
 
   // —— 术语百科 ——
   { id: 'term-novice', name: '术语新丁', desc: '浏览 20 个术语词条', icon: '📖', rarity: 'common',
