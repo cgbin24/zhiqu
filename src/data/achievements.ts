@@ -73,6 +73,20 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (c) => c.langCompleted.rust >= 42, progress: (c) => [Math.min(c.langCompleted.rust, 42), 42] },
   { id: 'cpp-master', name: 'C++ 宗师', desc: '完成 C++ 全部关卡', icon: '🐉', rarity: 'legendary',
     check: (c) => c.langCompleted.cpp >= 42, progress: (c) => [Math.min(c.langCompleted.cpp, 42), 42] },
+
+  // —— 术语百科 ——
+  { id: 'term-novice', name: '术语新丁', desc: '浏览 20 个术语词条', icon: '📖', rarity: 'common',
+    check: (c) => c.viewedTermsCount >= 20, progress: (c) => [Math.min(c.viewedTermsCount, 20), 20] },
+  { id: 'term-explorer', name: '百科漫游者', desc: '浏览 60 个术语词条', icon: '📚', rarity: 'rare',
+    check: (c) => c.viewedTermsCount >= 60, progress: (c) => [Math.min(c.viewedTermsCount, 60), 60] },
+  { id: 'term-completionist', name: '行走的百科全书', desc: '浏览全部术语词条', icon: '🗃️', rarity: 'legendary',
+    check: (c) => c.viewedTermsCount >= 175, progress: (c) => [Math.min(c.viewedTermsCount, 175), 175] },
+  { id: 'quiz-10', name: '小试词锋', desc: '术语测验累计答对 10 题', icon: '🎓', rarity: 'common',
+    check: (c) => c.quizCorrect >= 10, progress: (c) => [Math.min(c.quizCorrect, 10), 10] },
+  { id: 'quiz-100', name: '词汇大师', desc: '术语测验累计答对 100 题', icon: '🏅', rarity: 'epic',
+    check: (c) => c.quizCorrect >= 100, progress: (c) => [Math.min(c.quizCorrect, 100), 100] },
+  { id: 'quiz-perfect', name: '满分测验', desc: '术语测验获得一次满分', icon: '💯', rarity: 'rare',
+    check: (c) => c.quizPerfectRounds >= 1, progress: (c) => [Math.min(c.quizPerfectRounds, 1), 1] },
 ];
 
 export const ACHIEVEMENT_MAP: Record<string, AchievementDef> = Object.fromEntries(

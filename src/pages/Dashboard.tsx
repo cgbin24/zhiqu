@@ -192,6 +192,19 @@ export function Dashboard() {
           ))}
         </div>
       </div>
+
+      {/* 术语百科入口 */}
+      <Link
+        to="/terms"
+        className="group flex items-center gap-3 rounded-2xl border border-quest-500/40 bg-gradient-to-r from-quest-500/12 to-fuchsia-500/8 p-4 transition-all hover:border-quest-500/70"
+      >
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-quest-500 to-fuchsia-500 text-lg shadow-lg shadow-quest-500/25">📖</span>
+        <div className="min-w-0 flex-1">
+          <div className="font-bold text-slate-100">术语百科 <span className="ml-1 text-xs font-normal text-slate-400">前端 · 后端 · 嵌入式 · 运维 · 网络 · Agent · AI</span></div>
+          <div className="text-xs text-slate-400">175+ 核心开发术语：概念精讲、术语关系、代码示例，测验模式可得 XP</div>
+        </div>
+        <ChevronRight size={16} className="text-quest-400 transition-transform group-hover:translate-x-1" />
+      </Link>
     </div>
   );
 }

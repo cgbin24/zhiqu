@@ -53,7 +53,12 @@ export interface ProgressState {
     firstTryWins: number;
     failedThenPassed: boolean;
     dailyDone: number;
+    quizCorrect: number;
+    quizRounds: number;
+    quizPerfectRounds: number;
   };
+  /** 术语百科：已浏览术语 id -> true */
+  viewedTerms: Record<string, true>;
   /** 每日挑战完成记录：date -> levelId */
   dailyLog: Record<string, string>;
   lastLevelId: string | null;
@@ -72,6 +77,9 @@ export interface ProgressState {
   recordRun: (playground?: boolean) => void;
   saveDraft: (levelId: string, code: string) => void;
   savePlayground: (lang: string, code: string) => void;
+  markTermViewed: (termId: string) => void;
+  /** 术语测验结算：答对数计入 XP（每题 +2，满分一轮 +10），返回新解锁成就 */
+  recordQuiz: (correct: number, total: number) => { xpGained: number; perfect: boolean; newAchievements: AchievementDef[] };
   setNickname: (n: string) => void;
   touchStreak: () => void;
   setLastLevel: (id: string) => void;
@@ -134,6 +142,9 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
     dailyDone: s.counters.dailyDone,
     playgroundUsed: s.counters.playgroundRuns > 0,
     comebackAfterFail: s.counters.failedThenPassed,
+    viewedTermsCount: Object.keys(s.viewedTerms).length,
+    quizCorrect: s.counters.quizCorrect,
+    quizPerfectRounds: s.counters.quizPerfectRounds,
   };
 }
 
@@ -198,10 +209,14 @@ const initial = {
     firstTryWins: 0,
     failedThenPassed: false,
     dailyDone: 0,
+    quizCorrect: 0,
+    quizRounds: 0,
+    quizPerfectRounds: 0,
   },
   dailyLog: {} as Record<string, string>,
   lastLevelId: null as string | null,
   failingLevels: {} as Record<string, true>,
+  viewedTerms: {} as Record<string, true>,
 };
 
 export const useProgress = create<ProgressState>()(
@@ -302,6 +317,30 @@ export const useProgress = create<ProgressState>()(
 
       savePlayground: (lang, code) =>
         set((s) => ({ playground: { ...s.playground, [lang]: code } })),
+
+      markTermViewed: (termId) =>
+        set((s) => {
+          if (s.viewedTerms[termId]) return s;
+          return { viewedTerms: { ...s.viewedTerms, [termId]: true }, streak: touchStreakObj(s.streak) };
+        }),
+
+      recordQuiz: (correct, total) => {
+        const s = get();
+        const perfect = correct === total && total > 0;
+        const xpGained = correct * 2 + (perfect ? 10 : 0);
+        set({
+          xp: s.xp + xpGained,
+          counters: {
+            ...s.counters,
+            quizCorrect: s.counters.quizCorrect + correct,
+            quizRounds: s.counters.quizRounds + 1,
+            quizPerfectRounds: s.counters.quizPerfectRounds + (perfect ? 1 : 0),
+          },
+          streak: touchStreakObj(s.streak),
+        });
+        const newAchievements = evaluateAchievements(set, get);
+        return { xpGained, perfect, newAchievements };
+      },
 
       setNickname: (n) => set({ nickname: n.trim().slice(0, 16) || '旅行者' }),
 

@@ -20,9 +20,10 @@
 
 - **六大模块完整学习路径**（每种语言 42 关，共 126 关）：
   基础语法结构 → 核心编程思想（OOP/函数式/泛型/并发）→ 进阶技术 → 开发实用技巧 → 行业最佳实践 → 跨领域融会贯通
+- **术语百科**：175+ 核心开发术语覆盖七大领域（前端 / 后端 / 嵌入式 / 运维 / 网络工程 / Agent 开发 / AI），每条含精讲、关联关系、代码示例与面试要点，全库搜索 + 关系跳转 + **术语测验模式（得 XP）**
 - **真实编译执行**：代码在云端以最新稳定版编译器真实运行 —— Go 1.26 · Rust 1.99 · GCC 16.2 (`-std=c++20`)，Godbolt 主引擎 + Wandbox 自动降级备用
 - **自动判题系统**：逐测试点执行、期望/实际输出 diff、隐藏测试点、编译错误定位
-- **游戏化系统**：XP 与七大段位（青铜→宗师）、三星评价、章节解锁、每日挑战（×1.5 XP）、连续学习天数、29 个成就
+- **游戏化系统**：XP 与七大段位（青铜→宗师）、三星评价、章节解锁、每日挑战（×1.5 XP）、连续学习天数、35 个成就
 - **明暗主题**：暗色 / 亮色一键切换，全局平滑过渡不闪烁，Monaco 编辑器主题联动，刷新恢复
 - **零配置练习**：Monaco 编辑器（本地打包，不依赖 CDN）、自定义 stdin 的自由练习场
 - **数据自主**：进度存浏览器 localStorage，支持导出 / 导入 JSON 备份
@@ -60,6 +61,7 @@ npm run preview
 ```bash
 node scripts/verify-levels.mjs go/basic        # 只验证某一章
 node scripts/verify-levels.mjs --full          # 全部 126 关 + starter 防误过检查
+node scripts/verify-terms.mjs                  # 术语数据完整性（关系引用/字段/唯一性）
 ```
 
 ## 🏗️ 架构
@@ -71,14 +73,15 @@ src/
 │   ├── modules.ts    # 六大模块定义（全语言共用骨架）
 │   ├── ranks.ts      # 段位表
 │   ├── achievements.ts
+│   ├── terms/        # ⭐ 术语百科：七领域数据 + 注册表 + 全库搜索
 │   └── languages/
 │       ├── registry.ts       # ⭐ 语言注册表（接入新语言的唯一入口之一）
 │       └── go|rust|cpp/      # 每语言 6 个章节文件（关卡内容）
 ├── judge/            # provider 抽象 + Godbolt/Wandbox + 节流队列 + 判题比对
-├── game/             # XP / 星级 / 段位计算
+├── game/             # XP / 星级 / 段位 / 术语测验出题引擎
 ├── store/progress.ts # zustand + localStorage 持久化
 ├── components/       # 编辑器 / Toast / Diff / 布局 …
-└── pages/            # Dashboard / LearnPath / LevelPlay / Playground / Achievements / Profile
+└── pages/            # Dashboard / LearnPath / LevelPlay / Terms×4 / Playground / Achievements / Profile
 ```
 
 ### 接入新语言

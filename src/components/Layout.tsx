@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Compass, Flame, Gamepad2, Home, Medal, SlidersHorizontal } from 'lucide-react';
+import { BookOpenText, Compass, Flame, Gamepad2, Home, Medal, SlidersHorizontal } from 'lucide-react';
 import { getRank } from '@/data/ranks';
 import { useProgress } from '@/store/progress';
 import { Logo } from './Logo';
@@ -10,6 +10,7 @@ import { Toasts } from './Toasts';
 const NAV = [
   { to: '/', label: '仪表盘', icon: Home, end: true },
   { to: '/learn', label: '闯关', icon: Compass, end: false },
+  { to: '/terms', label: '术语', icon: BookOpenText, end: false },
   { to: '/playground', label: '练习场', icon: Gamepad2, end: false },
   { to: '/achievements', label: '成就', icon: Medal, end: false },
   { to: '/profile', label: '我的', icon: SlidersHorizontal, end: false },

@@ -153,6 +153,9 @@ export type AchievementCheckCtx = {
   dailyDone: number;
   playgroundUsed: boolean;
   comebackAfterFail: boolean;
+  viewedTermsCount: number;
+  quizCorrect: number;
+  quizPerfectRounds: number;
 };
 
 export interface AchievementDef {
