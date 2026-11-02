@@ -1,6 +1,6 @@
 /** 术语百科类型定义 */
 
-export type TermCatId = 'lifecycle' | 'frontend' | 'backend' | 'embedded' | 'devops' | 'network' | 'agent' | 'ai';
+export type TermCatId = 'lifecycle' | 'frontend' | 'backend' | 'embedded' | 'devops' | 'network' | 'security' | 'agent' | 'ai';
 
 /** 术语间关系：to 为另一术语 id，desc 描述两者联系 */
 export interface TermRelation {

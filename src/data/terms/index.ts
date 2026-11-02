@@ -1,6 +1,7 @@
 import { LC_LIFECYCLE } from './lifecycle';
 import { FE_FRONTEND } from './frontend';
 import { NET_NETWORK } from './network';
+import { SEC_SECURITY } from './security';
 import { BE_BACKEND } from './backend';
 import { DEVOPS_DEVOPS } from './devops';
 import { EMB_EMBEDDED } from './embedded';
@@ -13,6 +14,7 @@ export const TERMS: Term[] = [
   ...LC_LIFECYCLE,
   ...FE_FRONTEND,
   ...NET_NETWORK,
+  ...SEC_SECURITY,
   ...BE_BACKEND,
   ...DEVOPS_DEVOPS,
   ...EMB_EMBEDDED,

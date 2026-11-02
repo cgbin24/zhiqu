@@ -8,6 +8,7 @@
 import { LC_LIFECYCLE } from '../src/data/terms/lifecycle.ts';
 import { FE_FRONTEND } from '../src/data/terms/frontend.ts';
 import { NET_NETWORK } from '../src/data/terms/network.ts';
+import { SEC_SECURITY } from '../src/data/terms/security.ts';
 import { BE_BACKEND } from '../src/data/terms/backend.ts';
 import { DEVOPS_DEVOPS } from '../src/data/terms/devops.ts';
 import { EMB_EMBEDDED } from '../src/data/terms/embedded.ts';
@@ -17,6 +18,9 @@ import { AI_AI } from '../src/data/terms/ai.ts';
 const FILE_CAT = {
   lifecycle: LC_LIFECYCLE,
   frontend: FE_FRONTEND,
+  network: NET_NETWORK,
+  security: SEC_SECURITY,
+  backend: BE_BACKEND,
   network: NET_NETWORK,
   backend: BE_BACKEND,
   devops: DEVOPS_DEVOPS,
