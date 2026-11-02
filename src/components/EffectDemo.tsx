@@ -55,6 +55,23 @@ function DemoSwitch({ kind, param }: { kind: EffectDemoKind; param?: string }) {
     case 'progress-ring': return <ProgressRingDemo />;
     case 'bento': return <BentoDemo />;
     case 'timeline': return <TimelineDemo />;
+    /* 高交互 / 沉浸动效 */
+    case 'cursor-trail': return <CursorTrailDemo />;
+    case 'spotlight': return <SpotlightDemo />;
+    case 'glitch': return <GlitchDemo />;
+    case 'matrix-rain': return <MatrixRainDemo />;
+    case 'blob-morph': return <BlobMorphDemo />;
+    case 'scroll-skew': return <ScrollSkewDemo />;
+    case 'svg-draw': return <SvgDrawDemo />;
+    case 'flip-grid': return <FlipGridDemo />;
+    case 'cube-3d': return <Cube3dDemo />;
+    case 'aurora': return <AuroraDemo />;
+    case 'mouse-parallax': return <MouseParallaxDemo />;
+    case 'scramble-letters': return <ScrambleLettersDemo />;
+    case 'starfield': return <StarfieldDemo />;
+    case 'neon-border': return <NeonBorderDemo />;
+    case 'text-stroke': return <TextStrokeDemo />;
+    case 'elastic-drag': return <ElasticDragDemo />;
     default: return <div className="p-4 text-xs text-slate-500">演示未配置</div>;
   }
 }
@@ -786,6 +803,410 @@ function TimelineDemo() {
         ))}
       </div>
       <p className="mt-3 text-[10px] text-slate-500">左侧轴线 + 节点圆点 + 卡片 —— 简历/ roadmap 的经典呈现</p>
+    </div>
+  );
+}
+
+/* ================= 高交互 / 沉浸动效 ================= */
+
+function CursorTrailDemo() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [dots, setDots] = useState<{ id: number; x: number; y: number; c: string }[]>([]);
+  const colors = ['#fbbf24', '#f472b6', '#60a5fa', '#34d399', '#c084fc'];
+  const idRef = useRef(0);
+  return (
+    <div
+      ref={ref}
+      onMouseMove={(e) => {
+        const r = ref.current!.getBoundingClientRect();
+        const id = idRef.current++;
+        setDots((p) => [...p.slice(-24), { id, x: e.clientX - r.left, y: e.clientY - r.top, c: colors[id % colors.length] }]);
+        setTimeout(() => setDots((p) => p.filter((d) => d.id !== id)), 700);
+      }}
+      className="relative h-40 cursor-none overflow-hidden bg-night-950"
+    >
+      {dots.map((d) => (
+        <motion.span
+          key={d.id}
+          initial={{ scale: 1, opacity: 0.9 }}
+          animate={{ scale: 0.2, opacity: 0 }}
+          transition={{ duration: 0.7 }}
+          className="pointer-events-none absolute h-3 w-3 rounded-full"
+          style={{ left: d.x - 6, top: d.y - 6, background: d.c }}
+        />
+      ))}
+      <div className="grid h-full place-items-center text-xs text-slate-500">甩动鼠标，拖尾粒子跟上来 ✨</div>
+    </div>
+  );
+}
+
+function SpotlightDemo() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ x: 50, y: 50 });
+  return (
+    <div
+      ref={ref}
+      onMouseMove={(e) => {
+        const r = ref.current!.getBoundingClientRect();
+        setPos({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
+      }}
+      className="relative h-40 overflow-hidden bg-night-950"
+    >
+      <div className="grid h-full place-items-center">
+        <div className="grid grid-cols-4 gap-1.5">
+          {Array.from({ length: 16 }, (_, i) => (
+            <div key={i} className="h-8 w-8 rounded bg-night-800" />
+          ))}
+        </div>
+      </div>
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: `radial-gradient(circle 90px at ${pos.x}% ${pos.y}%, transparent 0%, rgba(7,11,20,0.92) 100%)` }}
+      />
+      <p className="pointer-events-none absolute bottom-1.5 left-3 text-[10px] text-slate-500">聚光灯照亮卡片，其余隐入黑暗（radial-gradient 遮罩跟随鼠标）</p>
+    </div>
+  );
+}
+
+function GlitchDemo() {
+  return (
+    <div className="grid h-32 place-items-center bg-night-950">
+      <div className="relative font-mono text-4xl font-black tracking-widest text-slate-100">
+        <span className="absolute inset-0 -translate-x-[2px] text-cyan-400/80 [clip-path:polygon(0_2%,100%_2%,100_33%,0_33%)]"
+          style={{ clipPath: 'polygon(0 2%, 100% 2%, 100% 33%, 0 33%)', animation: 'glitch-shift 1.6s infinite steps(2)' }}>
+          GLITCH
+        </span>
+        <span className="absolute inset-0 translate-x-[2px] text-rose-500/80"
+          style={{ clipPath: 'polygon(0 62%, 100% 62%, 100% 100%, 0 100%)', animation: 'glitch-shift 1.2s infinite reverse steps(2)' }}>
+          GLITCH
+        </span>
+        GLITCH
+      </div>
+      <style>{`@keyframes glitch-shift { 0%,90%,100%{transform:translate(0)} 92%{transform:translate(-4px,1px)} 94%{transform:translate(3px,-2px)} 96%{transform:translate(-2px,2px)} }`}</style>
+      <p className="absolute bottom-2 text-[10px] text-slate-600">RGB 分离 + clip-path 切片抖动 = 赛博故障风</p>
+    </div>
+  );
+}
+
+function MatrixRainDemo() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const cv = canvasRef.current!;
+    const ctx = cv.getContext('2d')!;
+    cv.width = cv.offsetWidth; cv.height = cv.offsetHeight;
+    const cols = Math.floor(cv.width / 14);
+    const drops = Array.from({ length: cols }, () => Math.random() * -30);
+    const chars = '01アイウエオ智码コード';
+    let raf = 0;
+    const draw = () => {
+      ctx.fillStyle = 'rgba(7,11,20,0.12)';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.font = '13px monospace';
+      drops.forEach((y, i) => {
+        ctx.fillStyle = Math.random() > 0.96 ? '#d1fae5' : '#22c55e';
+        ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 14, y * 15);
+        drops[i] = y * 15 > cv.height && Math.random() > 0.975 ? 0 : y + 1;
+      });
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <div>
+      <canvas ref={canvasRef} className="h-40 w-full rounded-lg bg-night-950" />
+      <p className="mt-1 px-1 text-[10px] text-slate-500">Canvas + 半透明覆盖拖影 = 数字雨（《黑客帝国》经典）</p>
+    </div>
+  );
+}
+
+function BlobMorphDemo() {
+  return (
+    <div className="grid h-40 place-items-center overflow-hidden bg-night-950">
+      <motion.div
+        animate={{
+          borderRadius: ['58% 42% 63% 37%/45% 55% 45% 55%', '45% 55% 40% 60%/60% 38% 62% 40%', '63% 37% 55% 45%/40% 60% 40% 60%', '58% 42% 63% 37%/45% 55% 45% 55%'],
+          rotate: [0, 90, 180, 360],
+          background: ['#7c5cf0', '#d946ef', '#00add8', '#7c5cf0'],
+        }}
+        transition={{ repeat: Infinity, duration: 9, ease: 'easeInOut' }}
+        className="h-28 w-28 blur-[1px]"
+      />
+      <p className="absolute text-xs font-bold text-white/90">液态果冻</p>
+      <p className="mt-32 text-[10px] text-slate-500">border-radius 多值循环 + 色相变化 = 有机液态变形</p>
+    </div>
+  );
+}
+
+function ScrollSkewDemo() {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [skew, setSkew] = useState(0);
+  const last = useRef(0);
+  return (
+    <div>
+      <div
+        ref={boxRef}
+        onScroll={() => {
+          const el = boxRef.current!;
+          const v = el.scrollTop - last.current;
+          last.current = el.scrollTop;
+          setSkew(Math.max(-9, Math.min(9, v * 0.8)));
+          clearTimeout((boxRef.current as unknown as { t?: ReturnType<typeof setTimeout> }).t);
+          (boxRef.current as unknown as { t?: ReturnType<typeof setTimeout> }).t = setTimeout(() => setSkew(0), 120);
+        }}
+        className="h-40 overflow-y-auto rounded-lg bg-night-900 p-3"
+      >
+        {Array.from({ length: 10 }, (_, i) => (
+          <div key={i} className="mb-2 rounded-lg bg-night-850 p-3 transition-transform duration-150" style={{ transform: `skewY(${skew}deg)` }}>
+            <div className="text-xs font-bold text-slate-200">快滚我 · 卡片 {i + 1}</div>
+            <div className="text-[10px] text-slate-500">滚动越快，卡片歪得越狠，停下回正</div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-1.5 px-1 text-[10px] text-slate-500">↑ 滚动速度 → skewY 倾斜（速度感应变形），GSAP ScrambleText 类效果的免费思路</p>
+    </div>
+  );
+}
+
+function SvgDrawDemo() {
+  const [key, setKey] = useState(0);
+  return (
+    <div className="grid h-32 place-items-center p-3">
+      <svg key={key} width="220" height="80" viewBox="0 0 220 80" className="overflow-visible">
+        <motion.path
+          d="M8 60 C 50 5, 90 85, 130 30 S 200 60, 212 20"
+          fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 2.2, ease: 'easeInOut' }}
+        />
+      </svg>
+      <button onClick={() => setKey((k) => k + 1)} className="mt-1 rounded-lg border border-night-600 px-3 py-1 text-[11px] text-slate-400 hover:text-slate-200">
+        ↻ 重播描边动画
+      </button>
+      <p className="text-[10px] text-slate-500">stroke-dasharray + pathLength 动画 = 线条"画"出来（签名/Logo 描边）</p>
+    </div>
+  );
+}
+
+function FlipGridDemo() {
+  const [order, setOrder] = useState([0, 1, 2, 3, 4, 5]);
+  const [sel, setSel] = useState<number | null>(null);
+  const click = (id: number) => {
+    if (sel === null) { setSel(id); return; }
+    if (sel === id) { setSel(null); return; }
+    setOrder((o) => o.map((x) => (x === sel ? id : x === id ? sel : x)));
+    setSel(null);
+  };
+  return (
+    <div className="p-3">
+      <div className="mx-auto grid max-w-xs grid-cols-3 gap-2">
+        {order.map((id) => (
+          <motion.button
+            key={id}
+            layout
+            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+            onClick={() => click(id)}
+            className={`grid h-16 place-items-center rounded-xl text-sm font-black text-white ${
+              sel === id ? 'bg-amber-400 text-night-950' : ['bg-sky-500/70', 'bg-fuchsia-500/70', 'bg-emerald-500/70', 'bg-rose-500/70', 'bg-violet-500/70', 'bg-cyan-500/70'][id]
+            }`}
+          >
+            {id + 1}
+          </motion.button>
+        ))}
+      </div>
+      <p className="mt-2 text-center text-[10px] text-slate-500">点击两张交换位置 —— FLIP 动画（layout 动画：先算新旧位置再补间）</p>
+    </div>
+  );
+}
+
+function Cube3dDemo() {
+  const [spin, setSpin] = useState(false);
+  const faces = [
+    { t: '前', tf: 'translateZ(40px)' }, { t: '后', tf: 'rotateY(180deg) translateZ(40px)' },
+    { t: '右', tf: 'rotateY(90deg) translateZ(40px)' }, { t: '左', tf: 'rotateY(-90deg) translateZ(40px)' },
+    { t: '上', tf: 'rotateX(90deg) translateZ(40px)' }, { t: '下', tf: 'rotateX(-90deg) translateZ(40px)' },
+  ];
+  return (
+    <div className="grid h-44 place-items-center p-3" style={{ perspective: 500 }}>
+      <motion.div
+        animate={spin ? { rotateX: [0, 360], rotateY: [0, 720] } : { rotateX: -18, rotateY: 32 }}
+        transition={spin ? { repeat: Infinity, duration: 5, ease: 'linear' } : { duration: 0.5 }}
+        className="relative h-20 w-20"
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {faces.map((f, i) => (
+          <div key={i} className="absolute inset-0 grid place-items-center rounded-md border border-white/20 bg-gradient-to-br from-quest-500/70 to-fuchsia-500/50 text-xs font-bold text-white" style={{ transform: f.tf }}>
+            {f.t}
+          </div>
+        ))}
+      </motion.div>
+      <button onClick={() => setSpin((s) => !s)} className="absolute bottom-3 rounded-lg border border-night-600 px-3 py-1 text-[11px] text-slate-400 hover:text-slate-200">
+        {spin ? '⏸ 停止旋转' : '▶ 六面旋转'}
+      </button>
+      <p className="absolute bottom-1 text-[9px] text-slate-600">六面 translateZ + preserve-3d 组装立方体</p>
+    </div>
+  );
+}
+
+function AuroraDemo() {
+  return (
+    <div className="relative h-40 overflow-hidden rounded-lg bg-night-950">
+      <motion.div className="absolute -left-10 top-0 h-32 w-72 rounded-full bg-violet-600/40 blur-3xl"
+        animate={{ x: [0, 120, 40, 0], y: [0, 30, -20, 0], scale: [1, 1.3, 0.9, 1] }} transition={{ repeat: Infinity, duration: 11, ease: 'easeInOut' }} />
+      <motion.div className="absolute right-0 top-6 h-28 w-64 rounded-full bg-cyan-500/40 blur-3xl"
+        animate={{ x: [0, -90, 30, 0], y: [0, -25, 20, 0], scale: [1, 0.85, 1.25, 1] }} transition={{ repeat: Infinity, duration: 13, ease: 'easeInOut' }} />
+      <motion.div className="absolute bottom-0 left-1/3 h-24 w-60 rounded-full bg-rose-500/30 blur-3xl"
+        animate={{ x: [0, 60, -50, 0], y: [0, -18, 24, 0] }} transition={{ repeat: Infinity, duration: 9, ease: 'easeInOut' }} />
+      <div className="absolute inset-0 grid place-items-center">
+        <span className="text-lg font-black tracking-widest text-white/90 drop-shadow-lg">AURORA</span>
+      </div>
+      <p className="absolute bottom-1.5 w-full text-center text-[10px] text-slate-600">多层模糊色块独立漂移 = 极光/流体氛围（Stripe hero 同款思路）</p>
+    </div>
+  );
+}
+
+function MouseParallaxDemo() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [off, setOff] = useState({ x: 0, y: 0 });
+  return (
+    <div
+      ref={ref}
+      onMouseMove={(e) => {
+        const r = ref.current!.getBoundingClientRect();
+        setOff({ x: (e.clientX - r.left) / r.width - 0.5, y: (e.clientY - r.top) / r.height - 0.5 });
+      }}
+      onMouseLeave={() => setOff({ x: 0, y: 0 })}
+      className="relative h-40 overflow-hidden rounded-lg bg-gradient-to-b from-indigo-950 to-night-950"
+    >
+      <div className="absolute inset-0" style={{ transform: `translate(${off.x * 10}px, ${off.y * 8}px)` }}>
+        <span className="absolute left-[15%] top-[20%] text-[10px] text-white/30">✦</span>
+        <span className="absolute left-[60%] top-[15%] text-[8px] text-white/25">✦</span>
+        <span className="absolute left-[80%] top-[55%] text-[11px] text-white/30">✧</span>
+        <span className="absolute left-[30%] top-[60%] text-[8px] text-white/20">✦</span>
+      </div>
+      <div className="absolute inset-0" style={{ transform: `translate(${off.x * 26}px, ${off.y * 20}px)` }}>
+        <span className="absolute left-[45%] top-[38%] text-2xl">🪐</span>
+      </div>
+      <div className="absolute inset-0 grid place-items-center" style={{ transform: `translate(${off.x * 44}px, ${off.y * 34}px)` }}>
+        <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur">鼠标视差 · 三层深度</div>
+      </div>
+      <p className="absolute bottom-1.5 w-full text-center text-[10px] text-slate-600">移动鼠标：远层慢、近层快（速率 10/26/44px）</p>
+    </div>
+  );
+}
+
+const SCRAMBLE_CHARS = '!<>-_\\/[]{}—=+*^?#';
+function ScrambleLettersDemo() {
+  const target = 'CODEQUEST';
+  const [text, setText] = useState(target);
+  const [key, setKey] = useState(0);
+  useEffect(() => {
+    let frame = 0;
+    const t = setInterval(() => {
+      frame++;
+      setText(target.split('').map((ch, i) => (i < frame / 2 ? ch : SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)])).join(''));
+      if (frame / 2 >= target.length) { clearInterval(t); setText(target); }
+    }, 55);
+    return () => clearInterval(t);
+  }, [key]);
+  return (
+    <div className="grid h-32 place-items-center p-3">
+      <div className="text-center">
+        <div className="font-mono text-3xl font-black tracking-widest text-emerald-300">{text}</div>
+        <button onClick={() => setKey((k) => k + 1)} className="mt-3 rounded-lg border border-night-600 px-3 py-1 text-[11px] text-slate-400 hover:text-slate-200">
+          ↻ 乱序解码动画
+        </button>
+        <p className="mt-2 text-[10px] text-slate-500">随机字符逐位"解码"为真实文字（黑客帝国解码风）</p>
+      </div>
+    </div>
+  );
+}
+
+function StarfieldDemo() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const cv = canvasRef.current!;
+    const ctx = cv.getContext('2d')!;
+    cv.width = cv.offsetWidth; cv.height = cv.offsetHeight;
+    const stars = Array.from({ length: 130 }, () => ({ x: Math.random() * cv.width, y: Math.random() * cv.height, z: Math.random() * cv.width }));
+    let raf = 0;
+    const draw = () => {
+      ctx.fillStyle = '#070b14';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      for (const s of stars) {
+        s.z -= 2.2;
+        if (s.z <= 1) { s.z = cv.width; s.x = Math.random() * cv.width; s.y = Math.random() * cv.height; }
+        const k = 128 / s.z;
+        const px = s.x * k + cv.width / 2, py = s.y * k + cv.height / 2;
+        const size = (1 - s.z / cv.width) * 2.4;
+        if (px < 0 || px > cv.width || py < 0 || py > cv.height) continue;
+        ctx.fillStyle = `rgba(255,255,255,${1 - s.z / cv.width})`;
+        ctx.fillRect(px, py, size, size);
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <div>
+      <canvas ref={canvasRef} className="h-40 w-full rounded-lg bg-night-950" />
+      <p className="mt-1 px-1 text-[10px] text-slate-500">伪 3D 星际穿越：z 值递减 + 透视投影（经典 Canvas 粒子）</p>
+    </div>
+  );
+}
+
+function NeonBorderDemo() {
+  return (
+    <div className="grid h-36 place-items-center bg-night-950 p-4">
+      <div className="relative rounded-2xl p-[2px]" style={{ background: 'conic-gradient(from 0deg, #7c5cf0, #f74c00, #22d3ee, #7c5cf0)', animation: 'spin 3s linear infinite' }}>
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+        <div className="rounded-[14px] bg-night-950 px-6 py-4 text-center">
+          <div className="text-sm font-bold text-slate-100">跑马灯渐变边框</div>
+          <div className="mt-1 text-[10px] text-slate-500">conic-gradient 旋转 + 内层遮罩</div>
+        </div>
+      </div>
+      <p className="mt-3 text-[10px] text-slate-600">AI 产品卡片的标志性边框光效</p>
+    </div>
+  );
+}
+
+function TextStrokeDemo() {
+  const [pct, setPct] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setPct((p) => (p >= 100 ? 0 : p + 2)), 40);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="grid h-32 place-items-center bg-night-950">
+      <div className="relative text-6xl font-black">
+        <span className="absolute inset-0 text-transparent" style={{ WebkitTextStroke: '2px #64748b' }}>QUEST</span>
+        <span className="absolute inset-0 text-amber-300" style={{ clipPath: `inset(0 ${100 - pct}% 0 0)`, WebkitTextStroke: '2px #fbbf24' }}>QUEST</span>
+      </div>
+      <p className="absolute bottom-2 text-[10px] text-slate-600">描边文字 + clip-path 逐字填充（滚动时随进度填色）</p>
+    </div>
+  );
+}
+
+function ElasticDragDemo() {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const x = useSpring(useMotionValue(0), { stiffness: 160, damping: 9, mass: 1.1 });
+  const y = useSpring(useMotionValue(0), { stiffness: 160, damping: 9, mass: 1.1 });
+  return (
+    <div ref={boxRef} className="relative grid h-44 place-items-center overflow-hidden rounded-lg bg-gradient-to-br from-night-900 to-night-950">
+      <div className="absolute inset-4 rounded-xl border-2 border-dashed border-night-700" />
+      <motion.div
+        drag
+        dragConstraints={boxRef}
+        dragElastic={0.55}
+        style={{ x, y }}
+        whileDrag={{ scale: 1.08, rotate: 3 }}
+        className="grid h-16 w-40 cursor-grab place-items-center rounded-xl bg-gradient-to-br from-amber-400 to-rose-500 text-sm font-bold text-white shadow-2xl active:cursor-grabbing"
+      >
+        拖我 · 松手弹回
+      </motion.div>
+      <p className="absolute bottom-2 text-[10px] text-slate-600">拖拽 + 低阻尼弹簧 = 果冻般的弹性回弹</p>
     </div>
   );
 }

@@ -9,7 +9,11 @@ export type EffectDemoKind =
   | 'typewriter' | 'text-reveal' | 'count-up' | 'tilt' | 'magnetic' | 'ripple'
   | 'glassmorphism' | 'neumorphism' | 'gradient-animate' | 'neon-glow' | 'custom-cursor'
   | 'card-flip' | 'coverflow' | 'marquee' | 'lightbox' | 'before-after' | 'accordion'
-  | 'magic-line' | 'bottom-sheet' | 'progress-ring' | 'bento' | 'timeline';
+  | 'magic-line' | 'bottom-sheet' | 'progress-ring' | 'bento' | 'timeline'
+  /* 高交互 / 变化莫测（沉浸动效） */
+  | 'cursor-trail' | 'spotlight' | 'glitch' | 'matrix-rain' | 'blob-morph' | 'scroll-skew'
+  | 'svg-draw' | 'flip-grid' | 'cube-3d' | 'aurora' | 'mouse-parallax' | 'scramble-letters'
+  | 'starfield' | 'neon-border' | 'text-stroke' | 'elastic-drag';
 
 /** 术语间关系：to 为另一术语 id，desc 描述两者联系 */
 export interface TermRelation {

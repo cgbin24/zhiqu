@@ -2199,4 +2199,601 @@ scene.add(mesh);
 `,
     exampleLang: 'css',
   },
+  // ==================== 沉浸与高阶动效 ====================
+  {
+    id: 'eff-cursor-trail',
+    name: '拖尾光标粒子',
+    en: 'Cursor Trail Particles',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['指针交互', '粒子', '微交互'],
+    summary: '拖尾光标粒子让鼠标划过处留下渐隐的彩色光点，随移动流淌成尾迹、随静止消散，自定义光标的沉浸高配。',
+    detail: `**效果描述**：甩动鼠标，彩色光点从指针迸出、缩灭，连缀成会消散的流光尾巴——玩上方演示，动起来尾迹随行，静止归于平静。
+
+**实现原理**：mousemove 时取指针坐标生成粒子入队（限 30 个），每个粒子用 framer-motion 的 animate 播放 scale 收缩、opacity 淡出，定时移出队列；Canvas 路线交给 rAF 逐帧绘制衰减。
+
+**适用场景与代表网站**：创意机构官网、游戏感品牌页、艺术家作品集；常与自定义光标组合成"光标即主角"的沉浸体验。
+
+**生产建议**：粒子只碰 transform/opacity，用对象池避免频繁 GC；触屏直接关闭；prefers-reduced-motion 用户完全静态，这一降级是口碑加分项。`,
+    relations: [
+      { to: 'eff-custom-cursor', desc: '同属指针跟随家族：自定义光标换造型，拖尾粒子留轨迹' },
+      { to: 'eff-magnetic', desc: '同为指针驱动的微交互，弹簧与粒子分别负责"吸"与"散"' },
+      { to: 'eff-performance-budget', desc: '粒子的生灭只走 transform/opacity，才是合成层友好做法' },
+    ],
+    example: `// 指针移动：生成粒子入队，700ms 后移除
+onMouseMove={(e) => {
+  const r = ref.current.getBoundingClientRect();
+  const id = idRef.current++;
+  setDots(p => [...p.slice(-24), {        // 最多留 24 个
+    id, x: e.clientX - r.left, y: e.clientY - r.top,
+    c: COLORS[id % COLORS.length],        // 轮换色彩
+  }]);
+  setTimeout(() => setDots(p => p.filter(d => d.id !== id)), 700);
+}}
+// 每个粒子由 framer-motion 播放缩灭：
+// <motion.span initial={{ scale: 1, opacity: .9 }}
+//   animate={{ scale: .2, opacity: 0 }}
+//   transition={{ duration: .7 }} />`,
+    exampleLang: 'jsx',
+    demo: { kind: 'cursor-trail' },
+  },
+  {
+    id: 'eff-spotlight',
+    name: '聚光灯遮罩',
+    en: 'Spotlight Mask',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['遮罩', '指针交互', '氛围'],
+    summary: '聚光灯遮罩让整页隐入黑暗、只照亮鼠标周围一圈，radial-gradient 跟随指针移动，舞台探照般的戏剧感。',
+    detail: `**效果描述**：页面像剧院熄灯，唯指针停留处亮起一束光，扫到哪里哪张卡片显形——上方演示里移动鼠标，16 张卡片在明暗间切换。
+
+**实现原理**：一块 \`pointer-events: none\` 全屏遮罩，背景写 \`radial-gradient(circle at x% y%, 透明, 深色)\`，mousemove 将指针坐标换成百分比写入；也可用 \`mask-image\` 反向只留照亮区。
+
+**适用场景与代表网站**：Vercel 的客户墙卡片随指针点亮、游戏与暗色系官网 hero、作品集的"寻宝式"导览。
+
+**生产建议**：坐标写进 CSS 变量并用 rAF 节流 mousemove；半径随容器尺寸响应；触屏改触摸点或光束入场；prefers-reduced-motion 保留静态光斑。`,
+    relations: [
+      { to: 'eff-custom-cursor', desc: '同为"光标即光源"的指针氛围组合件' },
+      { to: 'eff-gradient-animate', desc: '遮罩本体是 radial-gradient，与渐变家族同源' },
+      { to: 'eff-glassmorphism', desc: '暗色玻璃卡片被聚光灯逐一点亮是暗色官网标配' },
+    ],
+    example: `/* 一层全屏遮罩，光斑位置由 CSS 变量驱动 */
+.spotlight-mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;            /* 不挡交互 */
+  background: radial-gradient(
+    circle 90px at var(--x, 50%) var(--y, 50%),
+    transparent 0%, rgba(7, 11, 20, 0.92) 100%);
+}
+/* JS：mousemove 里 rAF 节流更新变量
+   el.style.setProperty('--x', (px / w * 100) + '%') */`,
+    exampleLang: 'css',
+    demo: { kind: 'spotlight' },
+  },
+  {
+    id: 'eff-glitch',
+    name: '故障文字 Glitch',
+    en: 'Glitch Text',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['文字', '赛博朋克', 'CSS'],
+    summary: '故障文字用红青双色错位与 clip-path 切片抖动模拟信号错乱，让标题瞬间赛博朋克，黑客美学站招牌。',
+    detail: `**效果描述**：标题平时端庄，随机一瞬撕裂成红青两层错位抖动又复原——看上方演示，GLITCH 的三层切片以不同节奏抽搐，赛博味十足。
+
+**实现原理**：同一文字叠三层：底层正常，上两层副本各偏移 ±2px、染青与红，\`clip-path: polygon\` 只露一条水平切片，\`steps(2)\` keyframes 让切片错位跳动，配 \`mix-blend-mode\` 加色散。
+
+**适用场景与代表网站**：赛博朋克与黑客美学站、游戏与潮牌官网、电子音乐专辑页；短促故障比持续故障更显高级。
+
+**生产建议**：transform 与 clip-path 都走合成层，成本低；别放正文按钮影响可读性；prefers-reduced-motion 关抖动留静态错位；单次故障压 0.3s 内。`,
+    relations: [
+      { to: 'eff-text-reveal', desc: '同属文字出场家族：一个优雅浮起，一个失真撕裂' },
+      { to: 'eff-typewriter', desc: '打字机与故障字是终端风 hero 的一静一动组合' },
+      { to: 'eff-performance-budget', desc: 'transform + clip-path 均走合成层，故障再乱也不掉帧' },
+    ],
+    example: `.glitch { position: relative; }
+.glitch::before, .glitch::after {
+  content: attr(data-text);        /* 复制同一份文字 */
+  position: absolute; inset: 0;
+}
+.glitch::before {
+  color: #22d3ee;                  /* 青色残影 */
+  transform: translateX(-2px);
+  clip-path: polygon(0 2%, 100% 2%, 100% 33%, 0 33%);
+  animation: glitch-shift 1.6s infinite steps(2);
+}
+@keyframes glitch-shift {
+  0%, 90%, 100% { transform: translate(0); }
+  92% { transform: translate(-4px, 1px); }
+  94% { transform: translate(3px, -2px); }
+}`,
+    exampleLang: 'css',
+    demo: { kind: 'glitch' },
+  },
+  {
+    id: 'eff-matrix-rain',
+    name: '数字雨',
+    en: 'Matrix Digital Rain',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['Canvas', '氛围', '粒子'],
+    summary: '数字雨让绿色字符沿 Canvas 各列倾泻，半透明覆盖制造拖影，《黑客帝国》式的黑客氛围一眼入魂。',
+    detail: `**效果描述**：满屏 0/1 与片假名沿纵向倾泻，字头亮、字尾拖渐隐绿影——看上方演示，这是 Canvas 逐帧绘制的动态雨幕。
+
+**实现原理**：Canvas 每帧先用半透明背景色 \`fillRect\` 盖一层制造拖影，按列维护 drops 数组记雨头行号，随机取字符 \`fillText\`，雨头触底以概率重置；循环交给 \`requestAnimationFrame\`。
+
+**适用场景与代表网站**：Hacker 美学站、安全与加密产品官网、开发者大会主视觉；《黑客帝国》让它成为程序员的文化暗号。
+
+**生产建议**：按 \`devicePixelRatio\` 缩放画布防糊；列数自适应、移动端减半；页面隐藏时暂停 rAF；prefers-reduced-motion 展示一帧静态雨痕。`,
+    relations: [
+      { to: 'eff-threejs-webgl', desc: 'Canvas 2D 是 WebGL 的轻量前身，复杂粒子场再上 three.js' },
+      { to: 'eff-performance-budget', desc: '全屏 Canvas 每帧重绘，帧率预算与降级策略必须前置' },
+      { to: 'fe-web-worker', desc: '重粒子模拟可移入 Worker，配 OffscreenCanvas 不卡主线程' },
+    ],
+    example: `const cols = Math.floor(cv.width / 14);
+const drops = Array.from({ length: cols }, () => Math.random() * -30);
+const chars = '01アイウエオコード';
+
+function draw() {
+  ctx.fillStyle = 'rgba(7,11,20,0.12)';   // 半透明覆盖 = 拖影
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  drops.forEach((y, i) => {
+    ctx.fillStyle = Math.random() > 0.96 ? '#d1fae5' : '#22c55e';
+    ctx.fillText(chars[(Math.random() * chars.length) | 0],
+                 i * 14, y * 15);
+    drops[i] = y * 15 > cv.height && Math.random() > 0.975
+      ? 0 : y + 1;                        // 触底概率重置
+  });
+  requestAnimationFrame(draw);
+}`,
+    exampleLang: 'js',
+    demo: { kind: 'matrix-rain' },
+  },
+  {
+    id: 'eff-blob-morph',
+    name: '液态果冻变形',
+    en: 'Liquid Blob Morph',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['背景', '变形', '氛围'],
+    summary: '液态果冻变形让色块以 border-radius 八值插值循环舒张收缩、旋转变色，呈现有机的液态与果冻质感。',
+    detail: `**效果描述**：一块色团不停变换轮廓，时而圆润、时而拉长，边转边换色，像水滴果冻般柔软——上方演示里就是 border-radius 插值出的生命感。
+
+**实现原理**：\`border-radius\` 支持 \`a b c d/e f g h\` 八值语法捏出不对称形状，关键帧间浏览器平滑插值；framer-motion 数组 keyframes 循环 radius、rotate 与背景色，叠模糊柔化。
+
+**适用场景与代表网站**：品牌氛围背景、音乐与创意机构官网、空状态装饰；Stripe 与 AI 产品 hero 的有机色块同思路。
+
+**生产建议**：首尾关键帧必须相同否则循环跳变；更自由的液态用 GSAP MorphSVG 做 path 变形；prefers-reduced-motion 定格一帧；别抢正文焦点。`,
+    relations: [
+      { to: 'eff-gradient-animate', desc: '同为氛围色流动：渐变动画动"色"，blob 变形动"形"' },
+      { to: 'eff-gsap', desc: 'SVG path 级液态变形交由 GSAP MorphSVG 更自由' },
+      { to: 'eff-performance-budget', desc: '大面积 blur 半径是隐形开销，叠加层数要克制' },
+    ],
+    example: `<motion.div
+  animate={{
+    borderRadius: [
+      '58% 42% 63% 37%/45% 55% 45% 55%',
+      '45% 55% 40% 60%/60% 38% 62% 40%',
+      '63% 37% 55% 45%/40% 60% 40% 60%',
+      '58% 42% 63% 37%/45% 55% 45% 55%',  // 尾帧 = 首帧
+    ],
+    rotate: [0, 90, 180, 360],
+    background: ['#7c5cf0', '#d946ef', '#00add8', '#7c5cf0'],
+  }}
+  transition={{ repeat: Infinity, duration: 9, ease: 'easeInOut' }}
+  className="h-28 w-28 blur-[1px]"
+/>`,
+    exampleLang: 'jsx',
+    demo: { kind: 'blob-morph' },
+  },
+  {
+    id: 'eff-scroll-skew',
+    name: '滚动速度倾斜',
+    en: 'Scroll Velocity Skew',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['滚动', '速度感', 'skew'],
+    summary: '滚动速度倾斜把滚动速率换算成 skewY 歪斜、停下回正，页面像被拨动的卡片墙般带出速度与惯性。',
+    detail: `**效果描述**：快速滚动时整列卡片顺着手势方向歪斜，越快越斜，一停立刻弹正——在上方演示猛滚几下再停，能看到"果冻被拨动"的速度感。
+
+**实现原理**：记录本次与上次 \`scrollTop\` 差值得到瞬时速度，clamp 到 ±8deg 写入 \`skewY\`，定时器停止后归零；lerp 逐帧平滑，GSAP ScrollTrigger 与 Lenis 都暴露 velocity 可取。
+
+**适用场景与代表网站**：创意机构官网、潮流电商货架、Awwwards 风作品集；横向画廊同样适用（改 skewX）。
+
+**生产建议**：角度控制在 8deg 内、lerp 系数 0.1 左右防抖；skew 走 transform 合成层零成本；prefers-reduced-motion 直接关闭；移动端幅度再降一档。`,
+    relations: [
+      { to: 'eff-lenis', desc: 'Lenis 暴露的 velocity 是 skew 输入的标准来源' },
+      { to: 'eff-gsap', desc: 'ScrollTrigger 的 getVelocity 直接给出滚动速度' },
+      { to: 'eff-scroll-driven', desc: '同为滚动驱动家族：一个跟进度，一个跟速度' },
+    ],
+    example: `let last = 0, skew = 0, smooth = 0, t;
+container.addEventListener('scroll', () => {
+  const v = container.scrollTop - last;       // 瞬时滚动速度
+  last = container.scrollTop;
+  skew = Math.max(-8, Math.min(8, v * 0.8));  // clamp 防过激
+  clearTimeout(t);
+  t = setTimeout(() => (skew = 0), 120);      // 停止回正
+});
+(function raf() {
+  smooth += (skew - smooth) * 0.1;            // lerp 平滑
+  cards.forEach(c => {
+    c.style.transform = 'skewY(' + smooth + 'deg)';
+  });
+  requestAnimationFrame(raf);
+})();`,
+    exampleLang: 'js',
+    demo: { kind: 'scroll-skew' },
+  },
+  {
+    id: 'eff-svg-draw',
+    name: 'SVG 描边动画',
+    en: 'SVG Stroke Drawing',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['SVG', '描边', '出场'],
+    summary: 'SVG 描边动画用 dashoffset 让线条从无到有"画"出来，签名、Logo 与线稿的招牌出场。',
+    detail: `**效果描述**：一条曲线像被隐形画笔现场描绘，从起点生长到终点——点上方演示重播按钮，路径两秒"画"完，仪式感十足。
+
+**实现原理**：\`getTotalLength()\` 求路径总长，\`stroke-dasharray\` 设为该长度、\`stroke-dashoffset\` 过渡到 0；framer-motion 的 \`pathLength\` 封装成 0 到 1，内嵌 CSS 动画同理。
+
+**适用场景与代表网站**：手写签名 hero、Logo 描边开场、地图路线生长、线稿入场；婚礼请柬与作品集常客。
+
+**生产建议**：\`strokeLinecap: round\` 让笔触圆润；多路径 stagger 描绘；进视口再触发；prefers-reduced-motion 直接显示成品线。`,
+    relations: [
+      { to: 'eff-scroll-reveal', desc: '进入视口再触发描边，是最自然的出场时机' },
+      { to: 'eff-text-reveal', desc: '文字浮起与线条描绘常编排在同一场开场里' },
+      { to: 'eff-gsap', desc: 'GSAP DrawSVGPlugin 处理多路径与不规则线型更省心' },
+    ],
+    example: `<motion.path
+  d="M8 60 C 50 5, 90 85, 130 30 S 200 60, 212 20"
+  fill="none"
+  stroke="#fbbf24"
+  strokeWidth="2.5"
+  strokeLinecap="round"
+  initial={{ pathLength: 0 }}      // 0 = 一笔未画
+  animate={{ pathLength: 1 }}      // 1 = 全部画完
+  transition={{ duration: 2.2, ease: 'easeInOut' }}
+  whileInView={{ pathLength: 1 }}  // 进视口才描
+/>
+// 原生等价：dasharray = L；dashoffset 从 L 动画到 0`,
+    exampleLang: 'jsx',
+    demo: { kind: 'svg-draw' },
+  },
+  {
+    id: 'eff-flip-grid',
+    name: 'FLIP 交换布局',
+    en: 'FLIP Layout Animation',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['FLIP', '布局动画', 'spring'],
+    summary: 'FLIP 交换布局先记旧位、改完算新位、再用 transform 反演补间，让"重排"也拥有顺滑的位移动画。',
+    detail: `**效果描述**：点上方演示里的两张色块，它们不是瞬间换位，而是顺滑地滑到对方位置——这种"布局动了也有动画"的魔法，正是 FLIP。
+
+**实现原理**：FLIP 四步：**F**irst 记录旧位置矩形 → **L**ast 执行 DOM 变更 → **I**nvert 用 transform 反向偏移回旧位 → **P**lay 过渡回零；framer-motion \`layout\` 一行全自动四步，配 spring。
+
+**适用场景与代表网站**：筛选排序网格、看板换列、相册重排、列表增删；Trello 与 Linear 的卡片挪动皆有它影子。
+
+**生产建议**：手写易漏边界，用 framer-motion \`layout\` 或 GSAP Flip 插件；scale 反演致文字失真可自动矫正；prefers-reduced-motion 跳过补间。`,
+    relations: [
+      { to: 'fe-reflow-refrepaint', desc: 'FLIP 的本质是让重排只发生一次，补间全走 transform' },
+      { to: 'eff-gsap', desc: 'GSAP Flip 插件是手写 FLIP 的工业级替代' },
+      { to: 'eff-performance-budget', desc: 'Invert/Play 只动画 transform，天然合成层友好' },
+    ],
+    example: `<motion.button
+  layout                    // 关键：位置变化自动补间
+  transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+  onClick={swap}
+/>
+// 手写 FLIP 的骨架（framer 内部做的事）：
+// const first = el.getBoundingClientRect();  // First
+// swapDom();                                  // Last
+// const last = el.getBoundingClientRect();
+// const dx = first.left - last.left;
+// const dy = first.top - last.top;
+// el.style.transform =                        // Invert
+//   'translate(' + dx + 'px,' + dy + 'px)';
+// requestAnimationFrame(() => { el.style.transform = ''; }); // Play`,
+    exampleLang: 'jsx',
+    demo: { kind: 'flip-grid' },
+  },
+  {
+    id: 'eff-cube-3d',
+    name: '3D 旋转立方体',
+    en: 'CSS 3D Cube',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['3D', 'CSS', 'perspective'],
+    summary: '3D 旋转立方体用六面 translateZ + preserve-3d 纯 CSS 组装，透视下六面翻滚。',
+    detail: `**效果描述**：一个真三维立方体悬浮页面上，点上方演示的按钮，它便沿两轴向持续翻滚，六面依次掠过眼前——全部由 CSS 组装。
+
+**实现原理**：外层 \`perspective\` 给透视；本体 \`preserve-3d\`；六面各自 \`rotateY/X(±90/180deg) translateZ(边长一半)\` 拼合；framer 循环 rotateX/Y 即旋转。
+
+**适用场景与代表网站**：产品多面展示、骰子与抽奖组件、简历六宫格、立体相框盒；单几何体 3D 的 CSS 能力天花板。
+
+**生产建议**：面数少 CSS 足够，复杂模型交棒 three.js；preserve-3d 与祖先 overflow 裁剪互斥；prefers-reduced-motion 停自转、留点击切换。`,
+    relations: [
+      { to: 'eff-tilt', desc: '同吃 perspective + preserve-3d 一套 3D 语法' },
+      { to: 'eff-threejs-webgl', desc: 'CSS 3D 只够单几何体，真场景与光照要交棒 three.js' },
+      { to: 'eff-performance-budget', desc: '六个面即六个合成层，层数与面积是移动端门槛' },
+    ],
+    example: `const faces = [
+  { t: '前', tf: 'translateZ(40px)' },
+  { t: '后', tf: 'rotateY(180deg) translateZ(40px)' },
+  { t: '右', tf: 'rotateY(90deg) translateZ(40px)' },
+  { t: '左', tf: 'rotateY(-90deg) translateZ(40px)' },
+  { t: '上', tf: 'rotateX(90deg) translateZ(40px)' },
+  { t: '下', tf: 'rotateX(-90deg) translateZ(40px)' },
+];
+<div style={{ perspective: 500 }}>
+  <motion.div
+    animate={{ rotateX: [0, 360], rotateY: [0, 720] }}
+    transition={{ repeat: Infinity, duration: 5, ease: 'linear' }}
+    style={{ transformStyle: 'preserve-3d' }}>
+    {faces.map(f =>
+      <div style={{ transform: f.tf }}>{f.t}</div>)}
+  </motion.div>
+</div>`,
+    exampleLang: 'jsx',
+    demo: { kind: 'cube-3d' },
+  },
+  {
+    id: 'eff-aurora',
+    name: '极光氛围背景',
+    en: 'Aurora Background',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['背景', '氛围', '渐变'],
+    summary: '极光氛围背景用多层模糊色块各自缓慢漂移、彼此叠加，晕染出 Stripe 首页式的流动极光与高级感。',
+    detail: `**效果描述**：紫、青、玫红三团光晕在暗底上各自漂移、相遇又散开，像高空极光缓慢流动呼吸——看上方演示，暗色页面的氛围感直接拉满。
+
+**实现原理**：三个绝对定位色块，超大 \`blur\` 加半透明，各自用不同 duration 与相位的循环 keyframes 驱动 x/y/scale，错开节奏避免"齐步走"；叠加噪点纹理更像真极光，WebGL shader 噪声是终极形态。
+
+**适用场景与代表网站**：Stripe 官网 hero 是极光背景的教科书案例；AI 产品发布会 KV、SaaS 落地页与播客平台头图广泛采用。
+
+**生产建议**：层数控制在 3~4 层，大面积 blur 是移动端性能大坑，可预渲染成静态图或视频；prefers-reduced-motion 提供静态渐变兜底；正文对比度要达标。`,
+    relations: [
+      { to: 'eff-gradient-animate', desc: '极光是渐变动画的氛围化升级：从线性流动到光晕漂移' },
+      { to: 'eff-threejs-webgl', desc: 'shader 噪声极光是 WebGL 高配路线，细节更真' },
+      { to: 'eff-performance-budget', desc: '大半径 blur 与多层叠加是预算大头，移动端要降级' },
+    ],
+    example: `<motion.div
+  className="absolute -left-10 top-0 h-32 w-72 rounded-full
+             bg-violet-600/40 blur-3xl"
+  animate={{ x: [0, 120, 40, 0], y: [0, 30, -20, 0],
+             scale: [1, 1.3, 0.9, 1] }}
+  transition={{ repeat: Infinity, duration: 11, ease: 'easeInOut' }}
+/>
+<motion.div
+  className="absolute right-0 top-6 h-28 w-64 rounded-full
+             bg-cyan-500/40 blur-3xl"
+  animate={{ x: [0, -90, 30, 0], y: [0, -25, 20, 0] }}
+  transition={{ repeat: Infinity, duration: 13, ease: 'easeInOut' }}
+/>
+// 三层以上、duration 互质（11s/13s/9s）→ 永不重复的组合感`,
+    exampleLang: 'jsx',
+    demo: { kind: 'aurora' },
+  },
+  {
+    id: 'eff-mouse-parallax',
+    name: '鼠标多层视差',
+    en: 'Mouse Parallax',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['指针交互', '视差', '纵深'],
+    summary: '鼠标多层视差把画面拆成远中近多层、按不同速率响应指针位移，一只鼠标就能摇出的空间纵深。',
+    detail: `**效果描述**：移动鼠标，远景星尘轻挪、中景星球多跟些、近景卡片跟得最凶，速率差"骗"出空间深度——去上方演示晃晃。
+
+**实现原理**：mousemove 把指针归一化到 -0.5~0.5，每层乘各自系数（10/26/44px）写入 \`translate\`，useSpring 或 lerp 平滑；进阶用 \`translateZ\` 差异借 perspective 生真透视。
+
+**适用场景与代表网站**：Apple 官网产品页与游戏官网主视觉是代表；3D 卡片 hero、星球与地图类创意站常用三到四层。
+
+**生产建议**：层数 3~4、位移≤50px 防穿帮；mouseleave 回中；触屏换陀螺仪 \`deviceorientation\`；prefers-reduced-motion 保持静态。`,
+    relations: [
+      { to: 'eff-parallax', desc: '滚动视差随滚轮、鼠标视差随指针，同一原理两种输入' },
+      { to: 'eff-tilt', desc: '倾斜是单卡片的 3D 反馈，多层视差是整个场景的纵深' },
+      { to: 'eff-custom-cursor', desc: '指针跟随家族成员，常与自定义光标同屏组装' },
+    ],
+    example: `onMouseMove={(e) => {
+  const r = ref.current.getBoundingClientRect();
+  setOff({
+    x: (e.clientX - r.left) / r.width - 0.5,   // 归一化
+    y: (e.clientY - r.top) / r.height - 0.5,
+  });
+}}
+onMouseLeave={() => setOff({ x: 0, y: 0 })}    // 回中防漂移
+
+<div style={{ transform: 'translate(' + off.x * 10 + 'px,' + off.y * 8  + 'px)' }}>远层</div>
+<div style={{ transform: 'translate(' + off.x * 26 + 'px,' + off.y * 20 + 'px)' }}>中层</div>
+<div style={{ transform: 'translate(' + off.x * 44 + 'px,' + off.y * 34 + 'px)' }}>近层</div>
+// 速率 10/26/44 递增 → 指针一动，深度立现`,
+    exampleLang: 'jsx',
+    demo: { kind: 'mouse-parallax' },
+  },
+  {
+    id: 'eff-scramble-letters',
+    name: '乱序解码文字',
+    en: 'Scramble / Decode Text',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['文字', '黑客风', '出场'],
+    summary: '乱序解码文字让随机符号逐位落定为真实文案，黑客帝国式解码出场，终端风 hero 的科技感开场白。',
+    detail: `**效果描述**：一串杂乱符号不停翻滚闪烁，从左到右逐位"落定"成 CODEQUEST——点上方演示的重播按钮，像电影里黑客破解密码的瞬间。
+
+**实现原理**：定时器逐帧推进：已解码位数之后的字符从符号池 \`!<>-_\\/[]{}—=+*^?#\` 随机取，之前的替换为真实字符，直到全部落定；GSAP ScrambleTextPlugin 是官方付费插件，手写三十行亦够用。
+
+**适用场景与代表网站**：终端风 hero、安全与加密产品官网、开发者工具与黑客松站点；也常与数字滚动搭配做看板噪声装饰。
+
+**生产建议**：配等宽字体防字符宽度跳动；步进 40~60ms、落定别拖沓；只用于标题级短文本；prefers-reduced-motion 直接展示最终文案，这是无障碍的基本礼貌。`,
+    relations: [
+      { to: 'eff-typewriter', desc: '同为逐字出场：打字机从无到有，解码从乱到真' },
+      { to: 'eff-text-reveal', desc: '三个文字出场组件按气质分工：浮起、打字、解码' },
+      { to: 'eff-gsap', desc: 'ScrambleTextPlugin 是 GSAP 的官方实现，参数更全' },
+    ],
+    example: `const POOL = '!<>-_\\/[]{}—=+*^?#';
+const target = 'CODEQUEST';
+let frame = 0;
+const t = setInterval(() => {
+  frame++;
+  text = target.split('').map((ch, i) =>
+    i < frame / 2              // 已解码区：真实字符
+      ? ch
+      : POOL[(Math.random() * POOL.length) | 0]  // 未解码：随机符号
+  ).join('');
+  if (frame / 2 >= target.length) {
+    clearInterval(t);          // 全部落定
+  }
+}, 55);   // 步进 55ms，逐位落定`,
+    exampleLang: 'js',
+    demo: { kind: 'scramble-letters' },
+  },
+  {
+    id: 'eff-starfield',
+    name: '星空穿越粒子',
+    en: 'Starfield Warp',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['Canvas', '粒子', '3D'],
+    summary: '星空穿越粒子让星点沿 z 轴递减、透视投影后向观众飞掠，伪 3D 星际隧道给页面纵深与速度感。',
+    detail: `**效果描述**：星点从画面深处源源涌来，越近越大越亮，冲出视野边缘后又在远方重生——看上方演示，一场不停歇的星际穿越扑面而来。
+
+**实现原理**：每颗星保存 x/y/z 坐标，每帧 \`z -= speed\`；透视投影 \`k = 焦距/z\`，屏幕坐标 = \`x*k + 画布中心\`，z 越小越靠外、越大越亮；z 耗尽重置回远方，Canvas rAF 驱动循环。
+
+**适用场景与代表网站**：科幻品牌与太空题材官网、游戏登录界面、冥想与助眠 App 的速度感背景；也是开发者个人站的高频彩蛋。
+
+**生产建议**：粒子 100~300 颗即铺满；按 devicePixelRatio 适配防糊；隐藏时暂停 rAF 省电；prefers-reduced-motion 降为静态一帧；进阶换 three.js Points。`,
+    relations: [
+      { to: 'eff-threejs-webgl', desc: 'three.js 的 Points 粒子系统是星空的高配实现' },
+      { to: 'eff-mouse-parallax', desc: '星空天然分远中近层，指针视差让穿越更立体' },
+      { to: 'eff-performance-budget', desc: '全屏 Canvas 逐帧重绘，粒子数与 DPR 都要设上限' },
+    ],
+    example: `// 每颗星: { x, y, z }，z 从画布宽度递减到 1
+const k = 128 / s.z;                    // 透视投影系数
+const px = s.x * k + cv.width / 2;      // 投影到屏幕
+const py = s.y * k + cv.height / 2;
+const size = (1 - s.z / cv.width) * 2.4; // 越近越大
+ctx.fillStyle =
+  'rgba(255,255,255,' + (1 - s.z / cv.width) + ')';
+ctx.fillRect(px, py, size, size);
+
+s.z -= 2.2;                             // 向观众飞来
+if (s.z <= 1) {                         // 飞出视野 → 远方重生
+  s.z = cv.width;
+  s.x = Math.random() * cv.width;
+  s.y = Math.random() * cv.height;
+}`,
+    exampleLang: 'js',
+    demo: { kind: 'starfield' },
+  },
+  {
+    id: 'eff-neon-border',
+    name: '跑马灯渐变边框',
+    en: 'Marquee Gradient Border',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['边框', '渐变', 'conic-gradient'],
+    summary: '跑马灯渐变边框让 conic-gradient 沿边框旋转流淌、内层遮出内容区，AI 产品卡片的标志性光圈。',
+    detail: `**效果描述**：一道彩虹光环沿卡片边框匀速绕圈流动，内容区安然不动——看上方演示，这就是当下 AI 产品卡片的标志性光圈。
+
+**实现原理**：外层背景铺 \`conic-gradient(多色收尾闭合)\` 用 keyframes 旋转，内层同色背景只留 2px 边缘即成光圈；更优雅的写法是 \`@property --angle\` 注册角度变量，让渐变本身转动而非旋转盒子。
+
+**适用场景与代表网站**：AI 定价卡与订阅按钮、SaaS 特性强调卡、Vercel 与 Linear 风 landing 的 highlight 区块。
+
+**生产建议**：转背景不转元素，文字才不跟着晃；\`@property\` 老浏览器要静态兜底；prefers-reduced-motion 停旋转留静态光圈；开销极低放心常用。`,
+    relations: [
+      { to: 'eff-gradient-animate', desc: '渐变动画家族的边框特化：linear 流动升级为 conic 绕圈' },
+      { to: 'eff-glassmorphism', desc: '光圈边框内嵌毛玻璃面板，是暗色 SaaS 卡的黄金组合' },
+      { to: 'eff-performance-budget', desc: '只旋转背景层，不触发布局重排，开销极低' },
+    ],
+    example: `.glow-border {
+  position: relative;
+  border-radius: 16px;
+  padding: 2px;                     /* 边框厚度 */
+  background: conic-gradient(
+    from 0deg, #7c5cf0, #f74c00, #22d3ee, #7c5cf0);
+  animation: spin 3s linear infinite;
+}
+.glow-border > .inner {
+  border-radius: 14px;
+  background: #070b14;              /* 遮出内容区 */
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+/* 进阶：@property --angle +
+   conic-gradient(from var(--angle) ...) */`,
+    exampleLang: 'css',
+    demo: { kind: 'neon-border' },
+  },
+  {
+    id: 'eff-text-stroke',
+    name: '描边文字填充',
+    en: 'Text Stroke Fill',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['文字', 'clip-path', '滚动'],
+    summary: '描边文字用 text-stroke 画空心、clip-path 按进度填实色，滚动叙事的招牌大标题。',
+    detail: `**效果描述**：巨大的空心标题躺着，随进度一道实色从左向右"灌满"它——看上方演示，QUEST 被循环填色，像进度条长在字上。
+
+**实现原理**：同段文字叠两层：底层 \`-webkit-text-stroke\` 描边、填充透明；上层实色以 \`clip-path: inset(0 X% 0 0)\` 右往左裁，X 由滚动进度或定时器驱动；两层字体一致才严丝合缝。
+
+**适用场景与代表网站**：滚动叙事大标题逐字填色、作品集章节转场、潮牌 slogan 与专辑封面字；award 站常见。
+
+**生产建议**：描边 1.5~2px 最耐看，移动端大字号加粗到 2.5px；ScrollTrigger scrub 绑进度最顺；prefers-reduced-motion 直接给实心字；可换 inset 四边做变体。`,
+    relations: [
+      { to: 'eff-scroll-driven', desc: '填充百分比绑到滚动进度，标题便随叙事逐步显形' },
+      { to: 'eff-text-reveal', desc: '文字动效家族：浮起管入场，描边填充管过程感' },
+      { to: 'eff-gsap', desc: 'ScrollTrigger scrub 是驱动填充进度的标准方案' },
+    ],
+    example: `<div className="relative text-6xl font-black">
+  {/* 底层：空心描边 */}
+  <span style={{ WebkitTextStroke: '2px #64748b',
+                 color: 'transparent' }}>
+    QUEST
+  </span>
+  {/* 上层：实色，按进度裁切 */}
+  <span
+    className="absolute inset-0 text-amber-300"
+    style={{ WebkitTextStroke: '2px #fbbf24',
+             clipPath: 'inset(0 ' + (100 - pct) + '% 0 0)' }}>
+    QUEST
+  </span>
+</div>
+// pct 来自滚动进度（ScrollTrigger scrub）或定时循环`,
+    exampleLang: 'jsx',
+    demo: { kind: 'text-stroke' },
+  },
+  {
+    id: 'eff-elastic-drag',
+    name: '弹性果冻拖拽',
+    en: 'Elastic Drag',
+    cat: 'effects',
+    sub: '沉浸与高阶动效',
+    tags: ['拖拽', '弹簧物理', '微交互'],
+    summary: '弹性果冻拖拽在拖动中放大微转、松手后以低阻尼弹簧振荡回弹，把拖拽做出果冻般的物理手感。',
+    detail: `**效果描述**：捏住卡片拖走，它微微放大歪头；松手瞬间像果冻荡两下弹回——去上方演示拖一拖，手感立刻上头。
+
+**实现原理**：framer-motion 用 \`drag\` 配 \`dragConstraints\` 定边界，\`dragElastic\` 管越界橡皮筋阻力；回弹交给 \`useSpring\`，低阻尼弹簧过冲振荡；\`whileDrag\` 加缩放与旋转。
+
+**适用场景与代表网站**：看板卡片、抽屉与贴纸白板、游戏化界面；Figma 式工具的卡片挪动、触屏相册甩动回弹同源。
+
+**生产建议**：damping 别低于 8 防无限振荡；触屏记得 \`touch-action: none\` 防滚动打架；prefers-reduced-motion 改高阻尼弹簧——到位即停，交互完整。`,
+    relations: [
+      { to: 'eff-magnetic', desc: '磁吸与弹性拖拽同用弹簧物理，一个吸过来一个荡回去' },
+      { to: 'eff-tilt', desc: '同属 framer 弹簧家族的指针微交互，手感参数可互参考' },
+      { to: 'eff-performance-budget', desc: 'x/y/scale 全走 transform，弹簧补间天然合成层友好' },
+    ],
+    example: `const x = useSpring(useMotionValue(0), {
+  stiffness: 160, damping: 9, mass: 1.1,   // 低阻尼 = 会荡
+});
+const y = useSpring(useMotionValue(0), { stiffness: 160, damping: 9 });
+
+<motion.div
+  drag                          // 自由拖拽
+  dragConstraints={boxRef}      // 限定在容器内
+  dragElastic={0.55}            // 越界橡皮筋阻力
+  style={{ x, y }}              // 回弹走弹簧
+  whileDrag={{ scale: 1.08, rotate: 3 }}
+  className="cursor-grab active:cursor-grabbing"
+/>`,
+    exampleLang: 'jsx',
+    demo: { kind: 'elastic-drag' },
+  },
 ];
