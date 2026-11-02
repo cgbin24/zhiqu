@@ -1,6 +1,15 @@
 /** 术语百科类型定义 */
 
-export type TermCatId = 'lifecycle' | 'frontend' | 'backend' | 'embedded' | 'devops' | 'network' | 'security' | 'agent' | 'ai';
+export type TermCatId = 'lifecycle' | 'frontend' | 'effects' | 'backend' | 'embedded' | 'devops' | 'network' | 'security' | 'agent' | 'ai';
+
+/** 页面效果实时演示种类（组件：EffectDemo） */
+export type EffectDemoKind =
+  | 'masonry' | 'parallax' | 'scroll-reveal' | 'horizontal-scroll' | 'sticky-header'
+  | 'scroll-progress' | 'infinite-scroll' | 'skeleton' | 'preloader' | 'page-transition'
+  | 'typewriter' | 'text-reveal' | 'count-up' | 'tilt' | 'magnetic' | 'ripple'
+  | 'glassmorphism' | 'neumorphism' | 'gradient-animate' | 'neon-glow' | 'custom-cursor'
+  | 'card-flip' | 'coverflow' | 'marquee' | 'lightbox' | 'before-after' | 'accordion'
+  | 'magic-line' | 'bottom-sheet' | 'progress-ring' | 'bento' | 'timeline';
 
 /** 术语间关系：to 为另一术语 id，desc 描述两者联系 */
 export interface TermRelation {
@@ -25,6 +34,8 @@ export interface Term {
   /** 可选代码/配置示例 */
   example?: string;
   exampleLang?: string;
+  /** 页面效果实时演示（effects 领域使用，组件：EffectDemo） */
+  demo?: { kind: EffectDemoKind; param?: string };
   /** 可选面试/实践要点 */
   interview?: string;
 }

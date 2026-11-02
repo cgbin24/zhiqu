@@ -6,6 +6,7 @@ import { TERM_CATEGORY_MAP, getTerm, searchTerms, termsOfCategory } from '@/data
 import type { TermCatId } from '@/data/terms';
 import { Markdown } from '@/components/Markdown';
 import { LifecycleFlow } from '@/components/LifecycleFlow';
+import { EffectDemo } from '@/components/EffectDemo';
 import { useProgress } from '@/store/progress';
 
 export function TermCategoryPage() {
@@ -168,6 +169,11 @@ export function TermDetailPage() {
         <p className="mt-4 rounded-xl border border-quest-500/25 bg-quest-500/8 p-3.5 text-sm leading-relaxed text-slate-300">
           {term.summary}
         </p>
+        {term.demo && (
+          <div className="mt-4">
+            <EffectDemo kind={term.demo.kind} param={term.demo.param} />
+          </div>
+        )}
         <div className="mt-3 flex flex-wrap gap-1.5">
           {term.tags.map((tag) => (
             <span key={tag} className="rounded-md bg-night-800 px-2 py-0.5 text-[11px] text-slate-400">#{tag}</span>

@@ -6,6 +6,7 @@
  *  - cat 与所在文件一致
  */
 import { LC_LIFECYCLE } from '../src/data/terms/lifecycle.ts';
+import { EFF_EFFECTS } from '../src/data/terms/effects.ts';
 import { FE_FRONTEND } from '../src/data/terms/frontend.ts';
 import { NET_NETWORK } from '../src/data/terms/network.ts';
 import { SEC_SECURITY } from '../src/data/terms/security.ts';
@@ -17,6 +18,7 @@ import { AI_AI } from '../src/data/terms/ai.ts';
 
 const FILE_CAT = {
   lifecycle: LC_LIFECYCLE,
+  effects: EFF_EFFECTS,
   frontend: FE_FRONTEND,
   network: NET_NETWORK,
   security: SEC_SECURITY,

@@ -1,4 +1,5 @@
 import { LC_LIFECYCLE } from './lifecycle';
+import { EFF_EFFECTS } from './effects';
 import { FE_FRONTEND } from './frontend';
 import { NET_NETWORK } from './network';
 import { SEC_SECURITY } from './security';
@@ -12,6 +13,7 @@ import type { Term, TermCatId } from './types';
 /** 全部术语（按领域聚合） */
 export const TERMS: Term[] = [
   ...LC_LIFECYCLE,
+  ...EFF_EFFECTS,
   ...FE_FRONTEND,
   ...NET_NETWORK,
   ...SEC_SECURITY,
@@ -55,5 +57,5 @@ export function searchTerms(query: string, cat?: TermCatId): Term[] {
   );
 }
 
-export type { Term, TermCatId, TermCategoryDef } from './types';
+export type { Term, TermCatId, TermCategoryDef, EffectDemoKind } from './types';
 export { TERM_CATEGORIES, TERM_CATEGORY_MAP } from './registry';
