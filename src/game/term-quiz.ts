@@ -95,3 +95,29 @@ export function buildQuizRound(count = 10, cat?: TermCatId): QuizQuestion[] {
   }
   return questions;
 }
+
+/** 错题复习轮：围绕答错的术语出题 */
+export function buildReviewRound(wrongTermIds: string[]): QuizQuestion[] {
+  const pool = TERMS;
+  const questions: QuizQuestion[] = [];
+  for (const id of shuffle(wrongTermIds)) {
+    const term = pool.find((t) => t.id === id);
+    if (!term || !term.summary) continue;
+    const q = Math.random() < 0.6 ? buildSummaryToTerm(term, pool) : buildTermToSummary(term, pool);
+    if (q) questions.push(q);
+    if (questions.length >= 15) break;
+  }
+  return questions;
+}
+
+/** 速答模式题池：量大（限时内答不完也没关系），去重保证不重复出题 */
+export function buildRushPool(max = 60): QuizQuestion[] {
+  const questions: QuizQuestion[] = [];
+  const shuffled = shuffle(TERMS.filter((t) => t.summary));
+  for (const term of shuffled) {
+    if (questions.length >= max) break;
+    const q = Math.random() < 0.5 ? buildSummaryToTerm(term, TERMS) : buildTermToSummary(term, TERMS);
+    if (q) questions.push(q);
+  }
+  return questions;
+}

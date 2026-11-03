@@ -92,6 +92,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (c) => c.quizCorrect >= 100, progress: (c) => [Math.min(c.quizCorrect, 100), 100] },
   { id: 'quiz-perfect', name: '满分测验', desc: '术语测验获得一次满分', icon: '💯', rarity: 'rare',
     check: (c) => c.quizPerfectRounds >= 1, progress: (c) => [Math.min(c.quizPerfectRounds, 1), 1] },
+  { id: 'rush-player', name: '极限速答', desc: '速答模式单局答对 15 题', icon: '⚡', rarity: 'epic',
+    check: (c) => c.quizRushBest >= 15, progress: (c) => [Math.min(c.quizRushBest, 15), 15] },
+  { id: 'active-30', name: '三十日足迹', desc: '累计 30 天有学习活动', icon: '👣', rarity: 'rare',
+    check: (c) => c.activeDays >= 30, progress: (c) => [Math.min(c.activeDays, 30), 30] },
 ];
 
 export const ACHIEVEMENT_MAP: Record<string, AchievementDef> = Object.fromEntries(

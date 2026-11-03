@@ -56,9 +56,14 @@ export interface ProgressState {
     quizCorrect: number;
     quizRounds: number;
     quizPerfectRounds: number;
+    quizRushBest: number;
   };
   /** 术语百科：已浏览术语 id -> true */
   viewedTerms: Record<string, true>;
+  /** 学习活动日志：日期 -> 当日活动次数（热力图用） */
+  activityLog: Record<string, number>;
+  /** 测验错题本：termId -> 答错次数 */
+  quizWrong: Record<string, number>;
   /** 每日挑战完成记录：date -> levelId */
   dailyLog: Record<string, string>;
   lastLevelId: string | null;
@@ -79,7 +84,11 @@ export interface ProgressState {
   savePlayground: (lang: string, code: string) => void;
   markTermViewed: (termId: string) => void;
   /** 术语测验结算：答对数计入 XP（每题 +2，满分一轮 +10），返回新解锁成就 */
-  recordQuiz: (correct: number, total: number) => { xpGained: number; perfect: boolean; newAchievements: AchievementDef[] };
+  recordQuiz: (
+    correct: number,
+    total: number,
+    opts?: { rush?: boolean; bestStreak?: number; wrongTermIds?: string[] },
+  ) => { xpGained: number; perfect: boolean; newAchievements: AchievementDef[] };
   setNickname: (n: string) => void;
   touchStreak: () => void;
   setLastLevel: (id: string) => void;
@@ -153,6 +162,8 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
     viewedTermsCount: Object.keys(s.viewedTerms).length,
     quizCorrect: s.counters.quizCorrect,
     quizPerfectRounds: s.counters.quizPerfectRounds,
+    quizRushBest: s.counters.quizRushBest,
+    activeDays: Object.keys(s.activityLog).length,
   };
 }
 
@@ -172,6 +183,12 @@ function touchStreakObj(streak: StreakState): StreakState {
   if (streak.lastActiveDate === today) return streak;
   const current = streak.lastActiveDate === yesterdayStr() ? streak.current + 1 : 1;
   return { current, best: Math.max(current, streak.best), lastActiveDate: today };
+}
+
+/** 当日活动 +1（热力图数据源） */
+function bumpActivity(log: Record<string, number>): Record<string, number> {
+  const today = localDateStr();
+  return { ...log, [today]: (log[today] ?? 0) + 1 };
 }
 
 /* ---------------- 成就评估 ---------------- */
@@ -220,11 +237,14 @@ const initial = {
     quizCorrect: 0,
     quizRounds: 0,
     quizPerfectRounds: 0,
+    quizRushBest: 0,
   },
   dailyLog: {} as Record<string, string>,
   lastLevelId: null as string | null,
   failingLevels: {} as Record<string, true>,
   viewedTerms: {} as Record<string, true>,
+  activityLog: {} as Record<string, number>,
+  quizWrong: {} as Record<string, number>,
 };
 
 export const useProgress = create<ProgressState>()(
@@ -305,7 +325,7 @@ export const useProgress = create<ProgressState>()(
           };
           failingLevels = { ...s.failingLevels, [levelId]: true };
         }
-        set({ counters, failingLevels, levelStats, streak: touchStreakObj(s.streak) });
+        set({ counters, failingLevels, levelStats, streak: touchStreakObj(s.streak), activityLog: bumpActivity(s.activityLog) });
       },
 
       recordRun: (playground) => {
@@ -317,6 +337,7 @@ export const useProgress = create<ProgressState>()(
             playgroundRuns: s.counters.playgroundRuns + (playground ? 1 : 0),
           },
           streak: touchStreakObj(s.streak),
+          activityLog: bumpActivity(s.activityLog),
         });
       },
 
@@ -332,10 +353,16 @@ export const useProgress = create<ProgressState>()(
           return { viewedTerms: { ...s.viewedTerms, [termId]: true }, streak: touchStreakObj(s.streak) };
         }),
 
-      recordQuiz: (correct, total) => {
+      recordQuiz: (correct, total, opts) => {
         const s = get();
-        const perfect = correct === total && total > 0;
-        const xpGained = correct * 2 + (perfect ? 10 : 0);
+        const rush = Boolean(opts?.rush);
+        const bestStreak = opts?.bestStreak ?? 0;
+        const perfect = correct === total && total > 0 && !rush;
+        const xpGained = rush
+          ? correct + Math.floor(bestStreak / 5) * 3
+          : correct * 2 + (perfect ? 10 : 0);
+        const quizWrong = { ...s.quizWrong };
+        for (const id of opts?.wrongTermIds ?? []) quizWrong[id] = (quizWrong[id] ?? 0) + 1;
         set({
           xp: s.xp + xpGained,
           counters: {
@@ -343,7 +370,10 @@ export const useProgress = create<ProgressState>()(
             quizCorrect: s.counters.quizCorrect + correct,
             quizRounds: s.counters.quizRounds + 1,
             quizPerfectRounds: s.counters.quizPerfectRounds + (perfect ? 1 : 0),
+            quizRushBest: rush ? Math.max(s.counters.quizRushBest, correct) : s.counters.quizRushBest,
           },
+          quizWrong,
+          activityLog: bumpActivity(s.activityLog),
           streak: touchStreakObj(s.streak),
         });
         const newAchievements = evaluateAchievements(set, get);

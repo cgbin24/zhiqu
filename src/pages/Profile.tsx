@@ -14,6 +14,7 @@ export function Profile() {
   const counters = useProgress((s) => s.counters);
   const streak = useProgress((s) => s.streak);
   const achievements = useProgress((s) => s.achievements);
+  const activityLog = useProgress((s) => s.activityLog);
   const resetAll = useProgress((s) => s.resetAll);
   const importAll = useProgress((s) => s.importAll);
 
@@ -99,6 +100,18 @@ export function Profile() {
         <StatCard label="成就解锁" value={`${Object.keys(achievements).length}/${ACHIEVEMENTS.length}`} />
         <StatCard label="每日挑战" value={String(counters.dailyDone)} />
         <StatCard label="一发入魂" value={String(counters.firstTryWins)} />
+        <StatCard label="测验答对" value={String(counters.quizCorrect)} />
+        <StatCard label="速答最佳" value={`${counters.quizRushBest} 题/分钟`} />
+        <StatCard label="活跃天数" value={`${Object.keys(activityLog).length} 天`} />
+      </div>
+
+      {/* 学习活动热力图 */}
+      <div className="rounded-2xl border border-night-700 bg-night-900 p-5">
+        <div className="mb-3 flex flex-wrap items-baseline gap-2">
+          <h2 className="font-bold text-slate-100">📅 学习足迹</h2>
+          <span className="text-xs text-slate-500">最近 26 周 · 越亮代表当天活动越多</span>
+        </div>
+        <ActivityHeatmap />
       </div>
 
       {/* 数据管理 */}
@@ -153,6 +166,66 @@ function StatCard({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl border border-night-700 bg-night-900 p-3.5">
       <div className="text-[11px] text-slate-500">{label}</div>
       <div className="mt-0.5 text-lg font-bold text-slate-100">{value}</div>
+    </div>
+  );
+}
+
+/** GitHub 风格学习热力图：最近 26 周 × 7 天 */
+function ActivityHeatmap() {
+  const activityLog = useProgress((s) => s.activityLog);
+
+  const weeks = useMemo(() => {
+    const cells: { date: string; count: number }[][] = [];
+    const today = new Date();
+    // 从今天所在的周（周日起始）往回推 26 周
+    const end = new Date(today);
+    end.setDate(end.getDate() + (6 - end.getDay())); // 本周周六
+    let cursor = new Date(end);
+    cursor.setDate(cursor.getDate() - 26 * 7 - 1);
+    while (cursor <= end) {
+      const week: { date: string; count: number }[] = [];
+      for (let d = 0; d < 7; d++) {
+        const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
+        week.push({ date: key, count: activityLog[key] ?? 0 });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      cells.push(week);
+    }
+    return cells;
+  }, [activityLog]);
+
+  const level = (n: number) => (n === 0 ? 'bg-night-800' : n <= 2 ? 'bg-quest-500/30' : n <= 5 ? 'bg-quest-500/60' : n <= 10 ? 'bg-quest-500' : 'bg-gold-400');
+  const activeDays = Object.keys(activityLog).length;
+
+  return (
+    <div>
+      <div className="overflow-x-auto pb-1">
+        <div className="flex gap-[3px]">
+          {weeks.map((week, wi) => (
+            <div key={wi} className="flex flex-col gap-[3px]">
+              {week.map((cell) => (
+                <div
+                  key={cell.date}
+                  title={`${cell.date}：${cell.count} 次活动`}
+                  className={`h-3 w-3 rounded-[3px] ${level(cell.count)} ${
+                    cell.count === 0 ? 'opacity-70' : ''
+                  }`}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="mt-2.5 flex items-center gap-3 text-[10px] text-slate-500">
+        <span>累计 {activeDays} 天活跃</span>
+        <span className="ml-auto flex items-center gap-1">
+          少
+          {['bg-night-800', 'bg-quest-500/30', 'bg-quest-500/60', 'bg-quest-500', 'bg-gold-400'].map((c) => (
+            <span key={c} className={`h-2.5 w-2.5 rounded-[2px] ${c}`} />
+          ))}
+          多
+        </span>
+      </div>
     </div>
   );
 }

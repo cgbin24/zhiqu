@@ -193,6 +193,8 @@ export type AchievementCheckCtx = {
   viewedTermsCount: number;
   quizCorrect: number;
   quizPerfectRounds: number;
+  quizRushBest: number;
+  activeDays: number;
 };
 
 export interface AchievementDef {
