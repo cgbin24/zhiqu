@@ -7,6 +7,8 @@
  */
 import { LC_LIFECYCLE } from '../src/data/terms/lifecycle.ts';
 import { EFF_EFFECTS } from '../src/data/terms/effects.ts';
+import { DSA_DSA } from '../src/data/terms/dsa.ts';
+import { TOOLS_TOOLS } from '../src/data/terms/tools.ts';
 import { FE_FRONTEND } from '../src/data/terms/frontend.ts';
 import { NET_NETWORK } from '../src/data/terms/network.ts';
 import { SEC_SECURITY } from '../src/data/terms/security.ts';
@@ -19,6 +21,8 @@ import { AI_AI } from '../src/data/terms/ai.ts';
 const FILE_CAT = {
   lifecycle: LC_LIFECYCLE,
   effects: EFF_EFFECTS,
+  dsa: DSA_DSA,
+  tools: TOOLS_TOOLS,
   frontend: FE_FRONTEND,
   network: NET_NETWORK,
   security: SEC_SECURITY,

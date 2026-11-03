@@ -1,6 +1,6 @@
 /** 术语百科类型定义 */
 
-export type TermCatId = 'lifecycle' | 'frontend' | 'effects' | 'backend' | 'embedded' | 'devops' | 'network' | 'security' | 'agent' | 'ai';
+export type TermCatId = 'lifecycle' | 'frontend' | 'effects' | 'backend' | 'embedded' | 'devops' | 'network' | 'security' | 'dsa' | 'tools' | 'agent' | 'ai';
 
 /** 页面效果实时演示种类（组件：EffectDemo） */
 export type EffectDemoKind =
@@ -13,7 +13,8 @@ export type EffectDemoKind =
   /* 高交互 / 变化莫测（沉浸动效） */
   | 'cursor-trail' | 'spotlight' | 'glitch' | 'matrix-rain' | 'blob-morph' | 'scroll-skew'
   | 'svg-draw' | 'flip-grid' | 'cube-3d' | 'aurora' | 'mouse-parallax' | 'scramble-letters'
-  | 'starfield' | 'neon-border' | 'text-stroke' | 'elastic-drag';
+  | 'starfield' | 'neon-border' | 'text-stroke' | 'elastic-drag'
+  | 'dijkstra';
 
 /** 术语间关系：to 为另一术语 id，desc 描述两者联系 */
 export interface TermRelation {

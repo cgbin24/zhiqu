@@ -1022,6 +1022,7 @@ int main() {
     order: 5,
     title: 'Dijkstra 最短路',
     difficulty: 5,
+    visualizer: { kind: 'dijkstra' },
     xp: 45,
     goals: [
       '掌握 Dijkstra 的贪心流程与松弛操作',

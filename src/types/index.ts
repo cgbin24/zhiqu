@@ -87,7 +87,8 @@ export type AlgoVizKind =
   | 'linked-list'     // 链表指针操作
   | 'tree-traversal'  // 二叉树遍历
   | 'grid'            // param: bfs | dfs 网格搜索
-  | 'dp-table';       // 动态规划填表
+  | 'dp-table'        // 动态规划填表
+  | 'dijkstra';       // Dijkstra 最短路（权重图）
 
 export interface Level {
   /** 全局唯一，如 go-basic-3 / algo-basic-1 */
