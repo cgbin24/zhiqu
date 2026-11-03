@@ -1,0 +1,231 @@
+import type { LanguageId } from '@/types';
+
+export interface CodeSnippet {
+  title: string;
+  code: string;
+  note?: string;
+}
+
+/** 各语言常用代码片段速查 —— 学习时随手查，复制即用 */
+export const SNIPPETS: Record<LanguageId, CodeSnippet[]> = {
+  javascript: [
+    {
+      title: '读入与输出（平台沙箱内置）',
+      code: `const n = Number(readline());   // 读一行转数字
+const arr = readInts();          // 读一行整数数组
+console.log("结果:", n, arr);    // 多值空格分隔`,
+      note: 'readline / readInts 已自动注入，无需 require',
+    },
+    {
+      title: '数组排序（数字要传比较器）',
+      code: `arr.sort((a, b) => a - b);  // 升序
+arr.sort((a, b) => b - a);  // 降序
+arr.sort();                 // ⚠️ 字符串序！数字会乱`,
+    },
+    {
+      title: 'map / filter / reduce 三件套',
+      code: `arr.map(x => x * 2);              // 一一变换
+arr.filter(x => x % 2 === 0);     // 筛选
+arr.reduce((sum, x) => sum + x, 0); // 聚合求和`,
+    },
+    {
+      title: '字符串常用方法',
+      code: `s.split(' ').join('-');   // 分割与拼接
+s.slice(1, 4);            // 截取 [1,4)
+s.padStart(2, '0');       // 补零："7"→"07"
+s.repeat(3);              // 重复
+s.charCodeAt(0);          // 字符 → 编码`,
+    },
+    {
+      title: 'Map 与对象计数',
+      code: `const cnt = new Map();
+for (const x of arr) cnt.set(x, (cnt.get(x) ?? 0) + 1);
+// 对象写法：obj[x] = (obj[x] ?? 0) + 1;`,
+    },
+    {
+      title: 'Set 去重',
+      code: `const uniq = [...new Set(arr)];
+const has = new Set(arr).has(42);`,
+    },
+    {
+      title: '解构交换与多返回',
+      code: `[a, b] = [b, a];                 // 交换
+function divmod(a, b) { return [a / b | 0, a % b]; }
+const [q, r] = divmod(17, 5);    // 3, 2`,
+    },
+    {
+      title: '常用数学',
+      code: `Math.floor(x); Math.abs(x);
+Math.max(...arr);   // ⚠️ 大数组用 reduce 防参数上限
+Number.isInteger(x);`,
+    },
+  ],
+  go: [
+    {
+      title: '读入（单个/一行多值）',
+      code: `var n int
+fmt.Scan(&n)                    // 空白分隔自动读
+var a, b int
+fmt.Scan(&a, &b)                // 一行 "3 7" 也行`,
+    },
+    {
+      title: '读一整行（含空格的字符串）',
+      code: `reader := bufio.NewReader(os.Stdin)
+s, _ := reader.ReadString('\\n')
+s = strings.TrimSpace(s)        // 去掉末尾换行`,
+      note: '需要 import "bufio" "os" "strings"',
+    },
+    {
+      title: '输出格式化',
+      code: `fmt.Println(a, b)               // 空格分隔 + 换行
+fmt.Printf("%d %s %.2f\\n", n, s, f)
+fmt.Printf("%02d:%02d\\n", h, m) // 补零`,
+    },
+    {
+      title: '切片操作',
+      code: `s := make([]int, 0, n)
+s = append(s, 42)
+len(s), s[0], s[len(s)-1]
+sort.Ints(s)                    // 升序（需 sort 包）`,
+    },
+    {
+      title: 'map 计数',
+      code: `cnt := make(map[int]int)
+cnt[x]++                        // 零值可直接用
+for k, v := range cnt { fmt.Println(k, v) }`,
+    },
+    {
+      title: '遍历三种写法',
+      code: `for i := 0; i < n; i++ { }
+for i, v := range slice { }     // 下标+值
+for { break }                   // 无限循环`,
+    },
+    {
+      title: '字符串处理（strings 包）',
+      code: `strings.Fields(s)              // 按空白切分
+strings.Split(s, ",")
+strings.Join(parts, "+")
+strings.Contains(s, "go")`,
+    },
+    {
+      title: '自定义排序',
+      code: `sort.Slice(s, func(i, j int) bool {
+    return s[i] < s[j]
+})`,
+    },
+  ],
+  rust: [
+    {
+      title: '读入一行并解析',
+      code: `let mut line = String::new();
+std::io::stdin().read_line(&mut line).unwrap();
+let n: i64 = line.trim().parse().unwrap();`,
+    },
+    {
+      title: '一行读多个整数',
+      code: `let mut line = String::new();
+std::io::stdin().read_line(&mut line).unwrap();
+let mut it = line.split_whitespace();
+let (a, b) = (it.next().unwrap().parse::<i64>().unwrap(),
+              it.next().unwrap().parse::<i64>().unwrap());`,
+      note: '也可收集成 Vec：line.split_whitespace().map(|x| x.parse::<i64>().unwrap()).collect::<Vec<_>>()',
+    },
+    {
+      title: '输出格式化',
+      code: `println!("{}", x);            // 标准
+println!("{:.2}", f);          // 两位小数
+println!("{:?}", vec);         // Debug 打印容器
+print!("不换行");`,
+    },
+    {
+      title: 'Vec 常用操作',
+      code: `let mut v: Vec<i64> = vec![3, 1, 2];
+v.push(4);
+v.sort();
+let sum: i64 = v.iter().sum();
+let max = *v.iter().max().unwrap();`,
+    },
+    {
+      title: 'HashMap 计数',
+      code: `use std::collections::HashMap;
+let mut cnt = HashMap::new();
+for x in arr { *cnt.entry(x).or_insert(0) += 1; }`,
+    },
+    {
+      title: '迭代器链',
+      code: `let evens: Vec<i64> = (1..=n).filter(|x| x % 2 == 0).collect();
+let total: i64 = v.iter().map(|x| x * 2).sum();`,
+    },
+    {
+      title: '字符串 String 与 &str',
+      code: `let mut s = String::new();     // 可增长
+s.push('a'); s.push_str("bc");
+let t: &str = &s[0..2];        // 切片
+for c in s.chars() { }         // 按字符遍历`,
+    },
+    {
+      title: 'match 与 if let',
+      code: `match opt {
+    Some(v) => println!("得到 {}", v),
+    None => println!("空"),
+}
+if let Some(v) = opt { }       // 只关心一种情况`,
+    },
+  ],
+  cpp: [
+    {
+      title: 'IO 加速三件套（大输入必加）',
+      code: `std::ios::sync_with_stdio(false);
+std::cin.tie(nullptr);
+// 之后 cin >> 与大量读入快很多`,
+    },
+    {
+      title: '读入与输出',
+      code: `int n; std::cin >> n;
+std::cout << n << "\\n";        // \\n 比 endl 快
+std::string line;
+std::getline(std::cin, line);  // 读整行`,
+    },
+    {
+      title: 'vector 常用操作',
+      code: `std::vector<int> v;
+v.push_back(42);
+v.size(); v.back(); v.pop_back();
+std::sort(v.begin(), v.end()); // 需 <algorithm>`,
+    },
+    {
+      title: '自定义排序（lambda）',
+      code: `std::sort(v.begin(), v.end(), [](int a, int b) {
+    return a > b;   // 降序
+});`,
+    },
+    {
+      title: 'map / unordered_map 计数',
+      code: `std::map<std::string, int> cnt;   // 有序
+cnt["apple"]++;
+for (auto& [k, v] : cnt) { }      // C++17 结构化绑定
+// unordered_map 更快但不保序`,
+    },
+    {
+      title: 'string 常用操作',
+      code: `s.size(); s.length();
+s.substr(1, 3);            // 截取
+s.find("ab");              // 下标，找不到= npos
+std::to_string(42);        // 数字 → 字符串
+std::stoi(s);              // 字符串 → int`,
+    },
+    {
+      title: '范围 for 与结构化绑定',
+      code: `for (int x : v) { }
+for (auto& [k, v] : mp) { }  // C++17
+for (int i = 0; i < n; i++) { }`,
+    },
+    {
+      title: '常用数学与工具',
+      code: `#include <cmath>
+std::abs(x); std::sqrt(x);
+std::max(a, b); std::minmax(a, b);
+std::swap(a, b);`,
+    },
+  ],
+};

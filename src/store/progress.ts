@@ -64,6 +64,8 @@ export interface ProgressState {
   activityLog: Record<string, number>;
   /** 测验错题本：termId -> 答错次数 */
   quizWrong: Record<string, number>;
+  /** 关卡学习笔记：levelId -> 笔记内容 */
+  notes: Record<string, string>;
   /** 每日挑战完成记录：date -> levelId */
   dailyLog: Record<string, string>;
   lastLevelId: string | null;
@@ -82,6 +84,7 @@ export interface ProgressState {
   recordRun: (playground?: boolean) => void;
   saveDraft: (levelId: string, code: string) => void;
   savePlayground: (lang: string, code: string) => void;
+  saveNote: (levelId: string, text: string) => void;
   markTermViewed: (termId: string) => void;
   /** 术语测验结算：答对数计入 XP（每题 +2，满分一轮 +10），返回新解锁成就 */
   recordQuiz: (
@@ -243,6 +246,7 @@ const initial = {
   lastLevelId: null as string | null,
   failingLevels: {} as Record<string, true>,
   viewedTerms: {} as Record<string, true>,
+  notes: {} as Record<string, string>,
   activityLog: {} as Record<string, number>,
   quizWrong: {} as Record<string, number>,
 };
@@ -346,6 +350,9 @@ export const useProgress = create<ProgressState>()(
 
       savePlayground: (lang, code) =>
         set((s) => ({ playground: { ...s.playground, [lang]: code } })),
+
+      saveNote: (levelId, text) =>
+        set((s) => ({ notes: { ...s.notes, [levelId]: text }, streak: touchStreakObj(s.streak), activityLog: bumpActivity(s.activityLog) })),
 
       markTermViewed: (termId) =>
         set((s) => {

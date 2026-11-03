@@ -11,6 +11,8 @@ import { Markdown } from '@/components/Markdown';
 import { DiffView } from '@/components/DiffView';
 import { Stars } from '@/components/Stars';
 import { AlgoVisualizer } from '@/components/AlgoVisualizer';
+import { SnippetDrawer } from '@/components/SnippetDrawer';
+import { BookMarked, StickyNote } from 'lucide-react';
 import { COURSE_MAP, LANG_MAP } from '@/data/languages/registry';
 import { dailyLevel, getLevel, nextLevel, isLevelUnlocked } from '@/data/languages';
 import { MODULE_MAP } from '@/data/modules';
@@ -21,7 +23,7 @@ import { emitToast } from '@/lib/toast-bus';
 import { starsFor, todayKey, useProgress } from '@/store/progress';
 import type { ExecResult, JudgeCaseResult, JudgeResult, LanguageId } from '@/types';
 
-type Tab = 'task' | 'brief' | 'hints' | 'tests';
+type Tab = 'task' | 'brief' | 'hints' | 'notes' | 'tests';
 
 export function LevelPlay() {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +39,8 @@ export function LevelPlay() {
   const hintsUsedFn = useProgress((s) => s.hintsUsedThisLevel);
   const completeLevel = useProgress((s) => s.completeLevel);
   const setLastLevel = useProgress((s) => s.setLastLevel);
+  const saveNote = useProgress((s) => s.saveNote);
+  const notes = useProgress((s) => s.notes);
 
   const [tab, setTab] = useState<Tab>('task');
   const [hintsOpen, setHintsOpen] = useState(0);
@@ -49,6 +53,8 @@ export function LevelPlay() {
   const [judge, setJudge] = useState<JudgeResult | null>(null);
   const [judgeProgress, setJudgeProgress] = useState({ done: 0, total: 0 });
   const [execLang, setExecLang] = useState<LanguageId>('javascript');
+  const [snippetOpen, setSnippetOpen] = useState(false);
+  const [noteText, setNoteText] = useState('');
   const [victory, setVictory] = useState<null | {
     stars: number; xpGained: number; isDaily: boolean; newAchievements: number; rankUp: string | null;
   }>(null);
@@ -91,12 +97,41 @@ export function LevelPlay() {
     setAnswerOpen(false);
     setTab('task');
     setStdin(level.tests.find((t) => !t.hidden)?.stdin ?? '');
+    setNoteText(notes[level.id] ?? '');
     rankBefore.current = getRank(useProgress.getState().xp).rank.name;
     confettiFired.current = false;
     setLastLevel(level.id);
     window.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level?.id]);
+
+  // 笔记防抖保存
+  const noteTimer = useRef<ReturnType<typeof setTimeout>>();
+  const onNoteChange = useCallback(
+    (v: string) => {
+      setNoteText(v);
+      clearTimeout(noteTimer.current);
+      noteTimer.current = setTimeout(() => saveNote(level?.id ?? '', v), 700);
+    },
+    [level?.id, saveNote],
+  );
+
+  // 键盘快捷键：Ctrl+Enter 运行，Ctrl+S 保存草稿
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (!running && !submitting) doRun();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveDraft(draftKey, code);
+        emitToast({ kind: 'info', text: '草稿已保存' });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, submitting, draftKey, code]);
 
   // 代码草稿防抖保存（算法关按作答语言分键）
   const saveTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -265,6 +300,7 @@ export function LevelPlay() {
               ['task', '任务', Trophy],
               ['brief', '知识', BookOpen],
               ['hints', '提示', Lightbulb],
+              ['notes', '笔记', StickyNote],
               ['tests', '结果', Terminal],
             ] as const).map(([key, label, Icon]) => (
               <button
@@ -323,6 +359,22 @@ export function LevelPlay() {
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {tab === 'notes' && (
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-400">📝 我的学习笔记（自动保存）</span>
+                  <span className="text-[10px] text-slate-600">思路 / 踩坑 / 复杂度分析…</span>
+                </div>
+                <textarea
+                  value={noteText}
+                  onChange={(e) => onNoteChange(e.target.value)}
+                  rows={14}
+                  placeholder={'例：\n· 这题的关键是发现 xxx\n· 坑：边界 n=1 要特判\n· 复杂度 O(n log n)，1e5 规模可过'}
+                  className="w-full resize-y rounded-xl border border-night-700 bg-night-950 p-3 font-mono text-xs leading-relaxed text-slate-200 outline-none focus:border-quest-500/50"
+                />
               </div>
             )}
 
@@ -410,6 +462,13 @@ export function LevelPlay() {
               </div>
             )}
             <button
+              onClick={() => setSnippetOpen(true)}
+              className="flex items-center gap-1 rounded-md border border-night-700 px-2 py-1 text-xs text-slate-400 hover:text-amber-300"
+              title="代码片段速查（常用语法）"
+            >
+              <BookMarked size={12} /> 片段
+            </button>
+            <button
               onClick={resetCode}
               className="flex items-center gap-1 rounded-md border border-night-700 px-2 py-1 text-xs text-slate-400 hover:text-slate-200"
               title="重置为起始代码"
@@ -459,6 +518,14 @@ export function LevelPlay() {
           </div>
         </div>
       </div>
+
+      {/* 代码片段速查抽屉 */}
+      <SnippetDrawer
+        open={snippetOpen}
+        onClose={() => setSnippetOpen(false)}
+        lang={execLang}
+        onLangChange={setExecLang}
+      />
 
       {/* 通关庆祝 */}
       <AnimatePresence>
