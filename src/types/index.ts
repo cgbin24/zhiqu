@@ -199,6 +199,7 @@ export type AchievementCheckCtx = {
   quizCorrect: number;
   quizPerfectRounds: number;
   quizRushBest: number;
+  easterEggFound: boolean;
   activeDays: number;
 };
 

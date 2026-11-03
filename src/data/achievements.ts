@@ -96,6 +96,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (c) => c.quizRushBest >= 15, progress: (c) => [Math.min(c.quizRushBest, 15), 15] },
   { id: 'active-30', name: '三十日足迹', desc: '累计 30 天有学习活动', icon: '👣', rarity: 'rare',
     check: (c) => c.activeDays >= 30, progress: (c) => [Math.min(c.activeDays, 30), 30] },
+  { id: 'easter-egg', name: '彩蛋猎人', desc: '发现隐藏在页面里的彩蛋', icon: '🥚', rarity: 'epic',
+    check: (c) => c.easterEggFound, progress: (c) => [c.easterEggFound ? 1 : 0, 1] },
 ];
 
 export const ACHIEVEMENT_MAP: Record<string, AchievementDef> = Object.fromEntries(

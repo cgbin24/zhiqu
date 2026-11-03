@@ -185,7 +185,7 @@ function RushGame({ onExit }: { onExit: () => void }) {
   const [done, setDone] = useState(false);
   const settle = useProgress((s) => s.recordQuiz);
 
-  const q = pool[idx];
+  const q = pool[Math.min(idx, pool.length - 1)];
 
   useEffect(() => {
     if (done) return;
@@ -237,7 +237,7 @@ function RushGame({ onExit }: { onExit: () => void }) {
   }, [idx, pool.length, done]);
 
   if (done) {
-    return <RushResult correct={correct} bestStreak={bestStreak} />;
+    return <RushResult correct={correct} bestStreak={bestStreak} wrongIds={wrongIds} />;
   }
   if (!q) return <div className="py-24 text-center text-slate-400">出题中…</div>;
 
@@ -318,7 +318,7 @@ function RushGame({ onExit }: { onExit: () => void }) {
   );
 }
 
-function RushResult({ correct, bestStreak }: { correct: number; bestStreak: number }) {
+function RushResult({ correct, bestStreak, wrongIds }: { correct: number; bestStreak: number; wrongIds: string[] }) {
   const rushBest = useProgress((s) => s.counters.quizRushBest);
   const isNewRecord = correct >= rushBest && correct > 0;
   return (
@@ -331,6 +331,22 @@ function RushResult({ correct, bestStreak }: { correct: number; bestStreak: numb
         <div className="mt-1 text-sm text-slate-400">60 秒 · 最长连击 🔥{bestStreak}</div>
         {isNewRecord && <div className="mt-2 inline-block rounded-lg bg-gold-500/20 px-3 py-1 text-xs font-bold text-gold-300">🏅 新纪录！</div>}
         <div className="mt-4 text-sm text-slate-400">历史最佳：{Math.max(rushBest, correct)} 题</div>
+        {wrongIds.length > 0 && (
+          <div className="mt-4 rounded-xl border border-night-700 bg-night-900 p-3 text-left">
+            <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-300">本局错题（点击复习）</div>
+            <div className="flex flex-wrap gap-1.5">
+              {wrongIds.map((id) => {
+                const t = getTerm(id);
+                if (!t) return null;
+                return (
+                  <Link key={id} to={`/terms/${t.cat}/${t.id}`} className="rounded-md border border-night-700 bg-night-850 px-2 py-1 text-[11px] text-slate-300 hover:border-rose-400/60 hover:text-rose-300">
+                    {t.name}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div className="mt-6 flex justify-center gap-2">
           <button onClick={() => window.location.reload()} className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-rose-500 px-4 py-2.5 text-sm font-bold text-white hover:brightness-110">
             <RotateCcw size={14} /> 再来一局

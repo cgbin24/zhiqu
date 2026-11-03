@@ -29,8 +29,6 @@ const FILE_CAT = {
   network: NET_NETWORK,
   security: SEC_SECURITY,
   backend: BE_BACKEND,
-  network: NET_NETWORK,
-  backend: BE_BACKEND,
   devops: DEVOPS_DEVOPS,
   embedded: EMB_EMBEDDED,
   agent: AGENT_AGENT,
@@ -38,6 +36,7 @@ const FILE_CAT = {
 };
 
 const errors = [];
+const warnings = [];
 const all = [];
 
 for (const [cat, terms] of Object.entries(FILE_CAT)) {
@@ -50,6 +49,7 @@ for (const [cat, terms] of Object.entries(FILE_CAT)) {
     if (!t.en) errors.push(`${where}: 缺少 en`);
     if (!t.sub) errors.push(`${where}: 缺少 sub`);
     if (!t.summary || t.summary.length < 10) errors.push(`${where}: summary 为空或过短`);
+    if (t.summary && t.summary.length > 62) warnings.push(`${where}: summary 超长(${t.summary.length} 字，上限 60)`);
     if (!t.detail || t.detail.length < 40) errors.push(`${where}: detail 为空或过短`);
     if (!Array.isArray(t.tags) || t.tags.length === 0) errors.push(`${where}: 缺少 tags`);
     for (const r of t.relations ?? []) {
@@ -64,6 +64,13 @@ const ids = new Set();
 for (const t of all) {
   if (ids.has(t.id)) errors.push(`id 重复: ${t.id}`);
   ids.add(t.id);
+}
+// 跨领域同名检测（同名术语会互相干扰测验与搜索）
+const nameMap = new Map();
+for (const t of all) {
+  const key = t.name.toLowerCase();
+  if (nameMap.has(key)) warnings.push(`同名术语："${t.name}" 同时存在于 ${nameMap.get(key)} 与 ${t.cat}/${t.id}`);
+  else nameMap.set(key, `${t.cat}/${t.id}`);
 }
 for (const t of all) {
   for (const r of t.relations ?? []) {

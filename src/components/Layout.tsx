@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { BookOpenText, Compass, Flame, Gamepad2, Home, Medal, SlidersHorizontal } from 'lucide-react';
 import { getRank } from '@/data/ranks';
 import { useProgress } from '@/store/progress';
@@ -21,6 +23,22 @@ export function Layout() {
   const streak = useProgress((s) => s.streak.current);
   const location = useLocation();
   const { rank } = getRank(xp);
+
+  // 彩蛋：连续键入 "zhiqu" 触发庆祝 + 隐藏成就
+  const keyBuffer = useRef('');
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.length !== 1) return;
+      keyBuffer.current = (keyBuffer.current + e.key.toLowerCase()).slice(-5);
+      if (keyBuffer.current === 'zhiqu') {
+        keyBuffer.current = '';
+        confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 }, colors: ['#7c5cf0', '#fbbf24', '#34d399'] });
+        useProgress.getState().foundEasterEgg();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col">
