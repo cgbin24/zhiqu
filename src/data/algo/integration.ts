@@ -231,6 +231,7 @@ int main() {
     order: 2,
     title: '合并区间',
     difficulty: 3,
+    visualizer: { kind: 'merge-interval' },
     xp: 30,
     goals: [
       '掌握"排序 → 扫描 → 合并"的区间问题框架',
@@ -477,6 +478,7 @@ int main() {
     order: 3,
     title: 'LRU 缓存模拟',
     difficulty: 4,
+    visualizer: { kind: 'lru' },
     xp: 40,
     goals: [
       '理解 LRU 淘汰策略与"使用即刷新"',

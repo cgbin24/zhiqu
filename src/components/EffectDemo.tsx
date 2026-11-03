@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion';
 import type { EffectDemoKind } from '@/data/terms';
 
@@ -72,7 +72,6 @@ function DemoSwitch({ kind, param }: { kind: EffectDemoKind; param?: string }) {
     case 'neon-border': return <NeonBorderDemo />;
     case 'text-stroke': return <TextStrokeDemo />;
     case 'elastic-drag': return <ElasticDragDemo />;
-    case 'dijkstra': return <DijkstraDemo />;
     default: return <div className="p-4 text-xs text-slate-500">演示未配置</div>;
   }
 }
@@ -1214,131 +1213,4 @@ function ElasticDragDemo() {
 
 /* ================= Dijkstra 最短路 ================= */
 
-const DIJ_NODES = [
-  { id: 'A', x: 8, y: 50 },
-  { id: 'B', x: 32, y: 16 }, { id: 'C', x: 32, y: 84 },
-  { id: 'D', x: 58, y: 50 },
-  { id: 'E', x: 84, y: 18 }, { id: 'F', x: 84, y: 82 },
-];
-const DIJ_EDGES: [string, string, number][] = [
-  ['A', 'B', 4], ['A', 'C', 2], ['B', 'C', 1], ['B', 'D', 5],
-  ['C', 'D', 8], ['C', 'E', 10], ['D', 'E', 2], ['D', 'F', 6], ['E', 'F', 3],
-];
 
-interface DijFrame {
-  caption: string;
-  dist: Record<string, number | '∞'>;
-  settled: string[];
-  current?: string;
-  relaxed?: string;
-  updated?: boolean;
-}
-
-function dijkstraFrames() {
-  const out: { kind: 'dijkstra'; f: DijFrame }[] = [];
-  const dist: Record<string, number | '∞'> = { A: 0, B: '∞', C: '∞', D: '∞', E: '∞', F: '∞' };
-  const settled: string[] = [];
-  const adj: Record<string, [string, number][]> = {};
-  for (const [u, v, w] of DIJ_EDGES) {
-    (adj[u] ??= []).push([v, w]);
-    (adj[v] ??= []).push([u, w]);
-  }
-  const snap = (f: { caption: string; current?: string; relaxed?: string; updated?: boolean }) =>
-    out.push({ kind: 'dijkstra', f: { ...f, dist: { ...dist }, settled: [...settled] } });
-
-  snap({ caption: 'Dijkstra：从起点 A 出发，dist 记录"当前已知最短距离"，初始只有 A 是 0' });
-  while (settled.length < DIJ_NODES.length) {
-    // 选未定格中 dist 最小者
-    let best: string | null = null;
-    let bestVal = Infinity;
-    for (const n of DIJ_NODES) {
-      if (settled.includes(n.id)) continue;
-      const d = dist[n.id];
-      if (typeof d === 'number' && d < bestVal) { bestVal = d; best = n.id; }
-    }
-    if (best === null) break;
-    settled.push(best);
-    snap({ caption: `选出未定格中 dist 最小的节点 ${best}（=${bestVal}），定格：它以后不会再变更短`, current: best });
-    for (const [v, w] of adj[best] ?? []) {
-      if (settled.includes(v)) continue;
-      const old = dist[v];
-      const nd = bestVal + w;
-      if (typeof old === 'number' && old <= nd) {
-        snap({ caption: `尝试松弛 ${best}→${v}：${bestVal}+${w}=${nd} 不优于现有 ${old}，跳过`, current: best, relaxed: v, updated: false });
-      } else {
-        dist[v] = nd;
-        snap({ caption: `松弛 ${best}→${v}：${bestVal}+${w}=${nd} ${typeof old === 'number' ? `< 旧值 ${old}` : '（首次可达）'} → 更新 dist[${v}]=${nd}`, current: best, relaxed: v, updated: true });
-      }
-    }
-  }
-  const orderStr = settled.join(' → ');
-  snap({ caption: `完成！最短距离：${DIJ_NODES.map((n) => `${n.id}=${dist[n.id]}`).join('，')}；定格顺序：${orderStr}` });
-  return out;
-}
-
-function DijkstraDemo() {
-  const frames = useMemo(() => dijkstraFrames(), []);
-  const [idx, setIdx] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    if (timer.current) clearInterval(timer.current);
-    if (playing) {
-      timer.current = setInterval(() => {
-        setIdx((i) => {
-          if (i + 1 >= frames.length) { setPlaying(false); return i; }
-          return i + 1;
-        });
-      }, 1400);
-    }
-    return () => { if (timer.current) clearInterval(timer.current); };
-  }, [playing, frames.length]);
-
-  const f = (frames[Math.min(idx, frames.length - 1)] as { kind: 'dijkstra'; f: DijFrame }).f;
-
-  return (
-    <div>
-      <div className="flex items-center gap-2 px-1 pb-1.5">
-        <button onClick={() => setPlaying((p) => !p)} className="rounded-md border border-night-600 px-2 py-0.5 text-[10px] font-bold text-slate-300 hover:text-white">
-          {playing ? '⏸ 暂停' : '▶ 播放'}
-        </button>
-        <span className="text-[10px] text-slate-600">{idx + 1}/{frames.length} 帧</span>
-        <span className="ml-auto text-[10px] text-slate-500">节点圆圈颜色：灰=未达 · 紫=候选 · 绿=已定格</span>
-      </div>
-      <svg viewBox="0 0 100 100" className="mx-auto h-44 w-full max-w-md">
-        {DIJ_EDGES.map(([u, v, w]) => {
-          const a = DIJ_NODES.find((n) => n.id === u)!;
-          const b = DIJ_NODES.find((n) => n.id === v)!;
-          return (
-            <g key={u + v}>
-              <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#2b3a5c" strokeWidth="0.8" />
-              <text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 1.5} textAnchor="middle" fontSize="3.4" fill="#7dd3fc">{w}</text>
-            </g>
-          );
-        })}
-        {DIJ_NODES.map((n) => {
-          const d = f.dist[n.id];
-          const isSettled = f.settled.includes(n.id);
-          const isCurrent = f.current === n.id;
-          const isRelaxed = f.relaxed === n.id;
-          return (
-            <g key={n.id}>
-              <circle cx={n.x} cy={n.y} r={isCurrent ? 6 : 5}
-                fill={isCurrent ? '#fbbf24' : isSettled ? '#34d399' : isRelaxed && f.updated ? '#a78bfa' : '#1e2942'}
-                stroke={isSettled ? '#6ee7b7' : '#3b4d78'} strokeWidth="0.7" />
-              <text x={n.x} y={n.y + 1.5} textAnchor="middle" fontSize="4" fontWeight="bold"
-                fill={isSettled || isCurrent ? '#0b1020' : '#94a3b8'}>{n.id}</text>
-              <text x={n.x} y={n.y + 10} textAnchor="middle" fontSize="3.6"
-                fill={d === '∞' ? '#475569' : '#6ee7b7'} fontWeight="bold">{d}</text>
-            </g>
-          );
-        })}
-      </svg>
-      <div className="mt-1 rounded-lg bg-night-900 px-3 py-2 text-xs leading-relaxed text-slate-300">{f.caption}</div>
-      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-night-800">
-        <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-quest-500 transition-all" style={{ width: `${((idx + 1) / frames.length) * 100}%` }} />
-      </div>
-    </div>
-  );
-}

@@ -255,6 +255,7 @@ int main() {
     order: 2,
     title: '队列：约瑟夫环',
     difficulty: 3,
+    visualizer: { kind: 'josephus' },
     xp: 30,
     goals: [
       '掌握用队列（数组切片）模拟循环报数',
@@ -1847,6 +1848,7 @@ int main() {
     order: 8,
     title: '拓扑排序',
     difficulty: 4,
+    visualizer: { kind: 'topo-sort' },
     xp: 35,
     goals: [
       '理解依赖关系建模成有向图与拓扑序的含义',

@@ -88,7 +88,11 @@ export type AlgoVizKind =
   | 'tree-traversal'  // 二叉树遍历
   | 'grid'            // param: bfs | dfs 网格搜索
   | 'dp-table'        // 动态规划填表
-  | 'dijkstra';       // Dijkstra 最短路（权重图）
+  | 'dijkstra'        // Dijkstra 最短路（权重图）
+  | 'josephus'        // 约瑟夫环（循环计数消除）
+  | 'topo-sort'       // 拓扑排序（入度递减）
+  | 'lru'             // LRU 缓存（最近使用 + 淘汰）
+  | 'merge-interval'; // 合并区间（扫描合并）
 
 export interface Level {
   /** 全局唯一，如 go-basic-3 / algo-basic-1 */

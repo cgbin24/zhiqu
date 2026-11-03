@@ -20,12 +20,19 @@ interface ListF extends BaseFrame { nodes: { val: number; state: 'untouched' | '
 interface TreeF extends BaseFrame { visited: number[]; current: number }
 interface GridF extends BaseFrame { visited: Set<string>; frontier: Set<string>; path?: Set<string>; cur?: string }
 interface DpF extends BaseFrame { table: number[][]; hi?: [number, number] }
+interface DijF extends BaseFrame { dist: Record<string, number | '∞'>; settled: string[]; current?: string; relaxed?: string; updated?: boolean }
+interface JosephusF extends BaseFrame { alive: number[]; countingIdx?: number; removedOrder: number[]; n: number; m: number }
+interface TopoF extends BaseFrame { inDeg: Record<string, number>; removed: string[]; order: string[]; current?: string }
+interface LruF extends BaseFrame { list: { k: string; v: string }[]; hit?: boolean; evicted?: string; cap: number }
+interface MergeIntF extends BaseFrame { sorted: [number, number][]; merged: [number, number][]; curIdx: number | null; max: number }
 
 type Frame =
   | { kind: 'sort'; f: SortF } | { kind: 'search'; f: SearchF } | { kind: 'two-pointer'; f: TwoPtrF }
   | { kind: 'sliding-window'; f: WindowF } | { kind: 'prefix-sum'; f: PrefixF } | { kind: 'recursion-tree'; f: RecF }
   | { kind: 'hash-table'; f: HashF } | { kind: 'stack'; f: StackF } | { kind: 'linked-list'; f: ListF }
-  | { kind: 'tree-traversal'; f: TreeF } | { kind: 'grid'; f: GridF } | { kind: 'dp-table'; f: DpF };
+  | { kind: 'tree-traversal'; f: TreeF } | { kind: 'grid'; f: GridF } | { kind: 'dp-table'; f: DpF } | { kind: 'dijkstra'; f: DijF }
+  | { kind: 'josephus'; f: JosephusF } | { kind: 'topo-sort'; f: TopoF }
+  | { kind: 'lru'; f: LruF } | { kind: 'merge-interval'; f: MergeIntF };
 
 /* ================= 帧生成 ================= */
 
@@ -55,6 +62,18 @@ function framesFor(kind: AlgoVizKind, param?: string): Frame[] {
       return gridFrames(param ?? 'bfs');
     case 'dp-table':
       return dpFrames();
+    case 'dijkstra':
+      return dijkstraFrames();
+    case 'josephus':
+      return josephusFrames();
+    case 'topo-sort':
+      return topoFrames();
+    case 'lru':
+      return lruFrames();
+    case 'merge-interval':
+      return mergeIntervalFrames();
+    case 'dijkstra':
+      return dijkstraFrames();
     default:
       return [{ kind: 'sort', f: { caption: '', arr: [], sorted: [] } }];
   }
@@ -716,6 +735,16 @@ function renderFrame(frame: Frame) {
         </div>
       );
     }
+    case 'dijkstra':
+      return renderDijkstra(frame.f);
+    case 'josephus':
+      return renderJosephus(frame.f);
+    case 'topo-sort':
+      return renderTopo(frame.f);
+    case 'lru':
+      return renderLru(frame.f);
+    case 'merge-interval':
+      return renderMergeInterval(frame.f);
     case 'dp-table': {
       const X = 'ABCB', Y = 'BDCB';
       const { table, hi } = frame.f;
@@ -741,4 +770,426 @@ function renderFrame(frame: Frame) {
     default:
       return null;
   }
+}
+
+
+/* ================= Dijkstra 最短路 ================= */
+
+const DIJ_NODES = [
+  { id: 'A', x: 8, y: 50 },
+  { id: 'B', x: 32, y: 16 }, { id: 'C', x: 32, y: 84 },
+  { id: 'D', x: 58, y: 50 },
+  { id: 'E', x: 84, y: 18 }, { id: 'F', x: 84, y: 82 },
+];
+const DIJ_EDGES: [string, string, number][] = [
+  ['A', 'B', 4], ['A', 'C', 2], ['B', 'C', 1], ['B', 'D', 5],
+  ['C', 'D', 8], ['C', 'E', 10], ['D', 'E', 2], ['D', 'F', 6], ['E', 'F', 3],
+];
+
+interface DijFrame {
+  caption: string;
+  dist: Record<string, number | '∞'>;
+  settled: string[];
+  current?: string;
+  relaxed?: string;
+  updated?: boolean;
+}
+
+function dijkstraFrames() {
+  const out: { kind: 'dijkstra'; f: DijFrame }[] = [];
+  const dist: Record<string, number | '∞'> = { A: 0, B: '∞', C: '∞', D: '∞', E: '∞', F: '∞' };
+  const settled: string[] = [];
+  const adj: Record<string, [string, number][]> = {};
+  for (const [u, v, w] of DIJ_EDGES) {
+    (adj[u] ??= []).push([v, w]);
+    (adj[v] ??= []).push([u, w]);
+  }
+  const snap = (f: { caption: string; current?: string; relaxed?: string; updated?: boolean }) =>
+    out.push({ kind: 'dijkstra', f: { ...f, dist: { ...dist }, settled: [...settled] } });
+
+  snap({ caption: 'Dijkstra：从起点 A 出发，dist 记录"当前已知最短距离"，初始只有 A 是 0' });
+  while (settled.length < DIJ_NODES.length) {
+    // 选未定格中 dist 最小者
+    let best: string | null = null;
+    let bestVal = Infinity;
+    for (const n of DIJ_NODES) {
+      if (settled.includes(n.id)) continue;
+      const d = dist[n.id];
+      if (typeof d === 'number' && d < bestVal) { bestVal = d; best = n.id; }
+    }
+    if (best === null) break;
+    settled.push(best);
+    snap({ caption: `选出未定格中 dist 最小的节点 ${best}（=${bestVal}），定格：它以后不会再变更短`, current: best });
+    for (const [v, w] of adj[best] ?? []) {
+      if (settled.includes(v)) continue;
+      const old = dist[v];
+      const nd = bestVal + w;
+      if (typeof old === 'number' && old <= nd) {
+        snap({ caption: `尝试松弛 ${best}→${v}：${bestVal}+${w}=${nd} 不优于现有 ${old}，跳过`, current: best, relaxed: v, updated: false });
+      } else {
+        dist[v] = nd;
+        snap({ caption: `松弛 ${best}→${v}：${bestVal}+${w}=${nd} ${typeof old === 'number' ? `< 旧值 ${old}` : '（首次可达）'} → 更新 dist[${v}]=${nd}`, current: best, relaxed: v, updated: true });
+      }
+    }
+  }
+  const orderStr = settled.join(' → ');
+  snap({ caption: `完成！最短距离：${DIJ_NODES.map((n) => `${n.id}=${dist[n.id]}`).join('，')}；定格顺序：${orderStr}` });
+  return out;
+}
+
+function renderDijkstra(f: DijF) {
+  return (
+    <div>
+      <svg viewBox="0 0 100 100" className="mx-auto h-40 w-full max-w-md">
+        {DIJ_EDGES.map(([u, v, w]) => {
+          const a = DIJ_NODES.find((n) => n.id === u)!;
+          const b = DIJ_NODES.find((n) => n.id === v)!;
+          return (
+            <g key={u + v}>
+              <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#2b3a5c" strokeWidth="0.8" />
+              <text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 1.5} textAnchor="middle" fontSize="3.4" fill="#7dd3fc">{w}</text>
+            </g>
+          );
+        })}
+        {DIJ_NODES.map((n) => {
+          const d = f.dist[n.id];
+          const isSettled = f.settled.includes(n.id);
+          const isCurrent = f.current === n.id;
+          const isRelaxed = f.relaxed === n.id;
+          return (
+            <g key={n.id}>
+              <circle cx={n.x} cy={n.y} r={isCurrent ? 6 : 5}
+                fill={isCurrent ? '#fbbf24' : isSettled ? '#34d399' : isRelaxed && f.updated ? '#a78bfa' : '#1e2942'}
+                stroke={isSettled ? '#6ee7b7' : '#3b4d78'} strokeWidth="0.7" />
+              <text x={n.x} y={n.y + 1.5} textAnchor="middle" fontSize="4" fontWeight="bold"
+                fill={isSettled || isCurrent ? '#0b1020' : '#94a3b8'}>{n.id}</text>
+              <text x={n.x} y={n.y + 10} textAnchor="middle" fontSize="3.6"
+                fill={d === '∞' ? '#475569' : '#6ee7b7'} fontWeight="bold">{d}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+
+/* ================= 约瑟夫环 / 拓扑排序 / LRU / 合并区间 ================= */
+
+/* ================= 约瑟夫环 ================= */
+
+function josephusFrames(): Frame[] {
+  const n = 7, m = 3;
+  const out: Frame[] = [];
+  let alive = Array.from({ length: n }, (_, i) => i + 1);
+  let startIdx = 0; // 从 index 0 开始数
+  const removedOrder: number[] = [];
+  const push = (caption: string, countingIdx?: number) =>
+    out.push({
+      kind: 'josephus',
+      f: { alive: [...alive], countingIdx, removedOrder: [...removedOrder], caption, n, m },
+    });
+
+  push(`约瑟夫环：${n} 人围圈，从 1 号开始报数，每数到第 ${m} 个出圈（n=${n}, m=${m}）`);
+  while (alive.length > 1) {
+    const removeIdx = (startIdx + m - 1) % alive.length;
+    for (let k = 1; k < m; k++) {
+      const countingIdx = (startIdx + k) % alive.length;
+      push(`报数 ${k + 1}/${m} → 数到 ${alive[countingIdx]} 号`, countingIdx);
+    }
+    const outPerson = alive[removeIdx];
+    removedOrder.push(outPerson);
+    push(`${outPerson} 号出列！（已出列：${removedOrder.join(' → ')}）`, undefined);
+    alive = alive.filter((_, i) => i !== removeIdx);
+    startIdx = removeIdx % alive.length;
+    push(`从 ${alive[startIdx]} 号重新开始报数`, startIdx);
+  }
+  push(`最终幸存者：${alive[0]} 号（这就是约瑟夫问题的答案）`, 0);
+  return out;
+}
+
+interface JosephusF extends BaseFrame { alive: number[]; countingIdx?: number; removedOrder: number[]; n: number; m: number }
+
+function renderJosephus(f: JosephusF) {
+  const R = 36, CX = 50, CY = 52;
+  const posOf = (idx: number, total: number) => {
+    const angle = (idx / total) * Math.PI * 2 - Math.PI / 2;
+    return { x: CX + R * Math.cos(angle), y: CY + R * Math.sin(angle) };
+  };
+  return (
+    <div className="flex items-center gap-3">
+      <svg viewBox="0 0 100 100" className="h-40 w-40 shrink-0">
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke="#1e2942" strokeWidth="0.6" />
+        {f.alive.map((person, i) => {
+          const p = posOf(i, f.alive.length);
+          const isCounting = f.countingIdx === i;
+          return (
+            <g key={person}>
+              <circle cx={p.x} cy={p.y} r={isCounting ? 6 : 4.6}
+                fill={isCounting ? '#fbbf24' : '#1e2942'} stroke={isCounting ? '#fde68a' : '#3b4d78'} strokeWidth="0.7" />
+              <text x={p.x} y={p.y + 1.4} textAnchor="middle" fontSize="3.6" fontWeight="bold"
+                fill={isCounting ? '#0b1020' : '#94a3b8'}>{person}</text>
+            </g>
+          );
+        })}
+      </svg>
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] font-bold text-rose-300">出列序列</div>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {f.removedOrder.length === 0 && <span className="text-[10px] text-slate-600">（还没有人出列）</span>}
+          {f.removedOrder.map((p) => (
+            <span key={p} className="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-300 line-through">{p}</span>
+          ))}
+        </div>
+        {f.alive.length === 1 && (
+          <div className="mt-2 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-300">
+            幸存者：{f.alive[0]} 号
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ================= 拓扑排序 ================= */
+
+const TOPO_NODES = ['A', 'B', 'C', 'D', 'E', 'F'];
+const TOPO_EDGES: [string, string][] = [['A', 'C'], ['A', 'D'], ['B', 'D'], ['B', 'E'], ['C', 'E'], ['D', 'F'], ['E', 'F']];
+const TOPO_POS: Record<string, { x: number; y: number }> = {
+  A: { x: 10, y: 22 }, B: { x: 10, y: 78 },
+  C: { x: 38, y: 22 }, D: { x: 38, y: 78 }, E: { x: 66, y: 50 },
+  F: { x: 92, y: 50 },
+};
+
+function topoFrames(): Frame[] {
+  const out: Frame[] = [];
+  const inDeg: Record<string, number> = {};
+  for (const n of TOPO_NODES) inDeg[n] = 0;
+  for (const [, v] of TOPO_EDGES) inDeg[v]++;
+  const adj: Record<string, string[]> = {};
+  for (const [u, v] of TOPO_EDGES) (adj[u] ??= []).push(v);
+
+  const snap = (f: Omit<TopoF, 'inDeg' | 'removed' | 'order'>) =>
+    out.push({ kind: 'topo-sort', f: { ...f, inDeg: { ...inDeg }, removed: [...removed], order: [...order] } });
+
+  const removed: string[] = [];
+  const order: string[] = [];
+  snap({ caption: '拓扑排序（Kahn）：先算每个节点的入度，入度 = 0 的节点可以立刻输出' });
+  while (order.length < TOPO_NODES.length) {
+    const ready = TOPO_NODES.filter((n) => !removed.includes(n) && inDeg[n] === 0).sort()[0];
+    if (!ready) {
+      snap({ caption: '没有入度为 0 的节点且仍有剩余 → 图中有环！', current: undefined });
+      break;
+    }
+    snap({ caption: `节点 ${ready} 入度为 0 → 取出，加入结果序列`, current: ready });
+    removed.push(ready);
+    order.push(ready);
+    for (const v of adj[ready] ?? []) {
+      const before = inDeg[v];
+      inDeg[v]--;
+      snap({ caption: `移除 ${ready} 的出边：${v} 的入度 ${before} → ${inDeg[v]}${inDeg[v] === 0 ? '（解锁！）' : ''}`, current: v });
+    }
+  }
+  snap({ caption: `完成！合法拓扑序：${order.join(' → ')}（满足所有先后依赖）` });
+  return out;
+}
+
+interface TopoF extends BaseFrame { inDeg: Record<string, number>; removed: string[]; order: string[]; current?: string }
+
+function renderTopo(f: TopoF) {
+  return (
+    <div className="flex items-center gap-3">
+      <svg viewBox="0 0 100 100" className="h-40 w-56 shrink-0">
+        {TOPO_EDGES.map(([u, v]) => {
+          const a = TOPO_POS[u], b = TOPO_POS[v];
+          const gone = f.removed.includes(u) || f.removed.includes(v);
+          return <line key={u + v} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={gone ? '#1e2942' : '#2b3a5c'} strokeWidth="0.9" />;
+        })}
+        {TOPO_NODES.map((n) => {
+          const p = TOPO_POS[n];
+          const gone = f.removed.includes(n);
+          const isCurrent = f.current === n;
+          return (
+            <g key={n}>
+              <circle cx={p.x} cy={p.y} r={isCurrent ? 6 : 5}
+                fill={gone ? '#34d399' : isCurrent ? '#fbbf24' : '#1e2942'}
+                stroke={gone ? '#6ee7b7' : '#3b4d78'} strokeWidth="0.7" />
+              <text x={p.x} y={p.y + 1.5} textAnchor="middle" fontSize="4" fontWeight="bold"
+                fill={gone ? '#0b1020' : '#94a3b8'}>{n}</text>
+              {!gone && (
+                <text x={p.x + 7} y={p.y - 5} textAnchor="middle" fontSize="3.4" fill="#fbbf24">入度{f.inDeg[n]}</text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] font-bold text-emerald-300">结果序列</div>
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {f.order.length === 0 && <span className="text-[10px] text-slate-600">（等待入度为 0 的节点）</span>}
+          {f.order.map((n, i) => (
+            <span key={n} className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">
+              {i + 1}. {n}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================= LRU 缓存 ================= */
+
+function lruFrames(): Frame[] {
+  const CAP = 3;
+  const ops: { op: 'put' | 'get'; k: string; v?: string }[] = [
+    { op: 'put', k: 'A', v: '1' }, { op: 'put', k: 'B', v: '2' }, { op: 'put', k: 'C', v: '3' },
+    { op: 'get', k: 'A' }, { op: 'put', k: 'D', v: '4' }, { op: 'get', k: 'B' },
+    { op: 'put', k: 'C', v: '5' }, { op: 'get', k: 'A' },
+  ];
+  const out: Frame[] = [];
+  let list: { k: string; v: string }[] = []; // index 0 = 最近使用
+  const snap = (caption: string, hit?: boolean, evicted?: string) =>
+    out.push({ kind: 'lru', f: { list: list.map((x) => ({ ...x })), caption, hit, evicted, cap: CAP } });
+
+  snap(`LRU 缓存（容量 ${CAP}）：最近使用的放最前面，超容量淘汰"最久未使用"的尾部`);
+  for (const { op, k, v } of ops) {
+    if (op === 'put') {
+      const exist = list.find((x) => x.k === k);
+      list = list.filter((x) => x.k !== k);
+      list.unshift({ k, v: v! });
+      let ev: string | undefined;
+      if (list.length > CAP) {
+        ev = list[list.length - 1].k;
+        list = list.slice(0, CAP);
+      }
+      snap(exist ? `put ${k}=${v}：已存在 → 更新值并移到最前` : `put ${k}=${v}：新增到最前${ev ? `，容量已满 → 淘汰最久未用的 ${ev}` : ''}`, undefined, ev);
+    } else {
+      const found = list.find((x) => x.k === k);
+      if (found) {
+        list = [found, ...list.filter((x) => x.k !== k)];
+        snap(`get ${k}：命中！值 = ${found.v}，同时把它移到最前（刚被用过）`, true);
+      } else {
+        snap(`get ${k}：未命中 ✗（缓存里没有）`, false);
+      }
+    }
+  }
+  snap('观察：每次 put/get 都会把键移到最前 —— "最近使用"就是这样维护的');
+  return out;
+}
+
+interface LruF extends BaseFrame { list: { k: string; v: string }[]; hit?: boolean; evicted?: string; cap: number }
+
+function renderLru(f: LruF) {
+  return (
+    <div className="p-3">
+      <div className="flex items-center gap-2">
+        {Array.from({ length: f.cap }, (_, i) => {
+          const item = f.list[i];
+          return (
+            <motion.div
+              key={i}
+              layout
+              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+              className={`grid h-14 flex-1 place-items-center rounded-xl border-2 ${
+                item ? 'border-quest-500/50 bg-quest-500/15' : 'border-dashed border-night-700 bg-night-900/60'
+              }`}
+            >
+              {item ? (
+                <div className="text-center">
+                  <div className="text-sm font-black text-slate-100">{item.k}</div>
+                  <div className="text-[10px] text-slate-400">= {item.v}</div>
+                </div>
+              ) : (
+                <span className="text-[10px] text-slate-700">空位</span>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+      <div className="mt-1.5 flex justify-between px-1 text-[9px] text-slate-500">
+        <span>◀ 最近使用（头部）</span>
+        <span>最久未用（尾部，先淘汰）▶</span>
+      </div>
+      {f.evicted && (
+        <div className="mt-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-center text-xs font-bold text-rose-300">
+          💥 淘汰 {f.evicted}（最久未使用）
+        </div>
+      )}
+      {f.hit !== undefined && (
+        <div className={`mt-2 rounded-lg px-3 py-1.5 text-center text-xs font-bold ${f.hit ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>
+          {f.hit ? '✓ 命中' : '✗ 未命中'}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================= 合并区间 ================= */
+
+function mergeIntervalFrames(): Frame[] {
+  const intervals: [number, number][] = [[5, 7], [1, 3], [8, 9], [2, 6], [12, 14]];
+  const sorted = [...intervals].sort((a, b) => a[0] - b[0]);
+  const out: Frame[] = [];
+  const MAX = 15;
+  const push = (merged: [number, number][], curIdx: number | null, caption: string) =>
+    out.push({ kind: 'merge-interval', f: { sorted, merged: merged.map((m) => [...m] as [number, number]), curIdx, caption, max: MAX } });
+
+  const merged: [number, number][] = [];
+  push(sorted.map(([l, r]) => [l, r] as [number, number]), null, `先按左端点排序：${sorted.map(([l, r]) => `[${l},${r}]`).join(' ')}`);
+
+  let cur: [number, number] | null = null;
+  for (let i = 0; i < sorted.length; i++) {
+    const [l, r] = sorted[i];
+    if (!cur) {
+      cur = [l, r];
+      push([...merged, cur], i, `取出区间 [${l},${r}] 作为当前合并组`);
+    } else if (l <= cur[1]) {
+      const oldEnd = cur[1];
+      cur[1] = Math.max(cur[1], r);
+      push([...merged, cur], i, `[${l},${r}] 与当前组 [${cur[0]},${oldEnd}] 相交 → 合并为 [${cur[0]},${cur[1]}]`);
+    } else {
+      merged.push(cur);
+      push([...merged], i, `[${l},${r}] 不相交 → 当前组 [${cur[0]},${cur[1]}] 定格，开启新组`);
+      cur = [l, r];
+      push([...merged, cur], i, `取出区间 [${l},${r}] 作为新的合并组`);
+    }
+  }
+  if (cur) merged.push(cur);
+  push([...merged], null, `完成！共合并为 ${merged.length} 个区间：${merged.map(([l, r]) => `[${l},${r}]`).join(' ')}`);
+  return out;
+}
+
+interface MergeIntF extends BaseFrame { sorted: [number, number][]; merged: [number, number][]; curIdx: number | null; max: number }
+
+function renderMergeInterval(f: MergeIntF) {
+  return (
+    <div className="space-y-1.5 p-2">
+      {f.sorted.map(([l, r], i) => {
+        const inMerged = f.merged.find(([ml, mr]) => l >= ml && r <= mr);
+        const mergedGroup = inMerged ? f.merged.indexOf(inMerged) : -1;
+        const isCur = f.curIdx === i;
+        const tone = inMerged !== undefined
+          ? ['bg-emerald-500/70', 'bg-sky-500/70', 'bg-violet-500/70'][mergedGroup % 3]
+          : 'bg-night-800';
+        return (
+          <div key={i} className="relative h-6">
+            <motion.div
+              layout
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              className={`absolute grid h-6 place-items-center rounded-md text-[10px] font-bold text-white ${isCur ? 'ring-2 ring-amber-300' : ''} ${tone}`}
+              style={{ left: `${(l / f.max) * 100}%`, width: `${((r - l) / f.max) * 100}%` }}
+            >
+              [{l},{r}]
+            </motion.div>
+          </div>
+        );
+      })}
+      <div className="relative mt-1 h-3">
+        {Array.from({ length: f.max + 1 }, (_, i) => (
+          <span key={i} className="absolute -translate-x-1/2 text-[8px] text-slate-600" style={{ left: `${(i / f.max) * 100}%` }}>{i}</span>
+        ))}
+      </div>
+    </div>
+  );
 }
