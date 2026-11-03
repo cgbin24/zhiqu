@@ -43,16 +43,22 @@ npm run build
 npm run preview
 ```
 
-## ☁️ 在线访问（GitHub Pages）
+## ☁️ 在线访问
 
-推送到 `main` 分支后，GitHub Actions（[.github/workflows/deploy.yml](.github/workflows/deploy.yml)）会自动：
+- **Cloudflare Pages（主站）**：https://zhiqu-1h0.pages.dev/
+- GitHub Pages（备用）：https://ux58.github.io/zhiqu/
 
-1. `npm ci` 安装依赖
-2. `tsc -b` 类型检查
-3. `vite build --base=/zhiqu/` 构建
-4. 发布到 GitHub Pages → **https://cgbin24.github.io/zhiqu/**
+### Cloudflare 部署（直接上传，无需 Git）
 
-首次部署需在仓库 **Settings → Pages** 中把 Source 设为 **GitHub Actions**。
+```bash
+npm run build
+# 设置 CLOUDFLARE_API_TOKEN（需 Account | Cloudflare Pages | Edit 权限）后：
+npx wrangler pages deploy dist --project-name=zhiqu --branch=main
+```
+
+### GitHub Pages（Git 推送触发）
+
+推送 `main` 后，GitHub Actions（[.github/workflows/deploy.yml](.github/workflows/deploy.yml)）自动：`npm ci` → `tsc -b` → `vite build --base=/zhiqu/` → 发布到 GitHub Pages。首次需在仓库 Settings → Pages 把 Source 设为 GitHub Actions。
 
 ## 🔧 内容验证（维护者）
 
