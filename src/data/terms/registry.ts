@@ -113,6 +113,25 @@ export const TERM_CATEGORIES: TermCategoryDef[] = [
 > 💡 学习建议：工具类知识"用进废退"——每条术语都给了可直接敲的命令示例，开个终端跟着敲一遍胜过读十遍。`,
   },
   {
+    id: 'english',
+    name: '编程英语',
+    en: 'Programming English',
+    icon: '🔤',
+    color: '#c4b5fd',
+    gradient: 'from-indigo-400 to-violet-400',
+    intro: `## 编程英语（计算机英语）全景
+
+读文档、看报错、写注释、刷 Stack Overflow——**英语是程序员的第二母语**。本领域收录编程开发中最常用的英文术语：给出**全称展开**、**中文对照**、**使用语境**与**相关词辨析**。
+
+## 三类高频词
+
+- **核心概念词**：\`Encapsulation\`（封装）、\`Polymorphism\`（多态）、\`Immutability\`（不可变性）、\`Idempotent\`（幂等）——读文档和面试的双语关键词
+- **工程行话**：\`Boilerplate\`（样板代码）、\`Deprecated\`（已弃用）、\`Legacy\`（遗留系统）、\`Refactoring\`（重构）、\`Verbose\`（啰嗦的）——日常沟通与 Code Review 高频
+- **高频缩写**：\`API\` = Application Programming Interface、\`DRY\` = Don't Repeat Yourself、\`KISS\` = Keep It Simple, Stupid、\`SOLID\` 五大设计原则——每个字母背后都是一个原则
+
+> 💡 记忆技巧：别死背单词表——每个词条都给了"在哪会见到它"的真实语境（报错信息/文档/命名），在场景里记最快。`,
+  },
+  {
     id: 'frontend',
     name: '前端开发',
     en: 'Frontend',

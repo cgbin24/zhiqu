@@ -1,6 +1,6 @@
 /** 术语百科类型定义 */
 
-export type TermCatId = 'lifecycle' | 'frontend' | 'effects' | 'backend' | 'embedded' | 'devops' | 'network' | 'security' | 'dsa' | 'tools' | 'agent' | 'ai';
+export type TermCatId = 'lifecycle' | 'frontend' | 'effects' | 'backend' | 'embedded' | 'devops' | 'network' | 'security' | 'dsa' | 'tools' | 'english' | 'agent' | 'ai';
 
 /** 页面效果实时演示种类（组件：EffectDemo） */
 export type EffectDemoKind =
