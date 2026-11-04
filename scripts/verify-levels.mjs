@@ -162,7 +162,7 @@ let passedLevels = 0;
 
 // 本地验证器：返回 null 表示该测试不适用本地路径
 function execJsPreamble(src, stdin, runtimeJson) {
-  return execJsLocally(src, stdin, runtimeJson ? agentPreamble(runtimeJson) : undefined);
+  return executeJsLocally(src, stdin, runtimeJson ? agentPreamble(runtimeJson) : undefined);
 }
 
 function verifyCaseLocal(level, t) {
@@ -223,15 +223,17 @@ for (const { lang, mod, level } of targets) {
     for (const t of level.tests) {
       if (!ok3) break;
       const r = execJsPreamble(src, t.stdin, level.runtime);
-      if (r.exitCode !== 0 && r.stderr) { ok3 = false; details3.push('  ✗ [' + t.name + '] 执行报错: ' + r.stderr.split('
-').slice(0,3).join(' | ')); break; }
-      const got = (r.stdout || '').replace(/
-+$/, '');
-      const want = (t.expected || '').replace(/
-+$/, '');
-      if (got !== want) { ok3 = false; details3.push('  ✗ [' + t.name + '] 输出不匹配
-    期望: ' + JSON.stringify(t.expected) + '
-    实际: ' + JSON.stringify(r.stdout)); }
+      if (r.exitCode !== 0 && r.stderr) {
+        ok3 = false;
+        details3.push('  ✗ [' + t.name + '] 执行报错: ' + r.stderr.split('\n').slice(0, 3).join(' | '));
+        break;
+      }
+      const got = (r.stdout || '').replace(/\n+$/, '');
+      const want = (t.expected || '').replace(/\n+$/, '');
+      if (got !== want) {
+        ok3 = false;
+        details3.push('  ✗ [' + t.name + '] 输出不匹配\n    期望: ' + JSON.stringify(t.expected) + '\n    实际: ' + JSON.stringify(r.stdout));
+      }
     }
     if (ok3) { passedLevels++; console.log('✓ Mock LLM ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of details3) console.log(d); }
     continue;
