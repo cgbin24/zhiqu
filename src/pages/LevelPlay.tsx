@@ -4,8 +4,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
   BookOpen, ChevronLeft, ChevronRight, Eye, Lightbulb, Loader2, Lock, Play, RotateCcw,
-  Send, Terminal, Trophy,
 } from 'lucide-react';
+import { Send, Terminal, Trophy } from 'lucide-react';
+import { agentPreamble } from '@/data/agent-runtime';
 import { CodeEditor } from '@/components/CodeEditor';
 import { Markdown } from '@/components/Markdown';
 import { DiffView } from '@/components/DiffView';
@@ -180,7 +181,7 @@ export function LevelPlay() {
     setRunResult(null);
     recordRun(false);
     try {
-      const res = await executeCode({ lang: (isAlgo ? execLang : level.lang) as LanguageId, source: code, stdin, fs: level.fs, runtime: level.runtime });
+      const res = await executeCode({ lang: (isAlgo ? execLang : level.lang) as LanguageId, source: code, stdin, fs: level.fs, runtime: level.runtime ? agentPreamble(level.runtime) : undefined });
       setRunResult(res);
     } catch (err) {
       setRunResult({
@@ -207,7 +208,7 @@ export function LevelPlay() {
           cases.push(r);
           return { verdict: 'wrong-answer', passed: cases.filter((c) => c.verdict === 'accepted').length, total, cases };
         });
-      }, level.fs, level.runtime);
+      }, level.fs, level.runtime ? agentPreamble(level.runtime) : undefined);
       setJudge(result);
       const accepted = result.verdict === 'accepted';
       recordSubmission(level.id, accepted);
