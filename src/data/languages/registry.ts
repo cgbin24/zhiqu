@@ -110,6 +110,8 @@ export interface CourseDef {
   gradient: string;
   /** 关卡作答使用的执行语言集合 */
   execLangs: LanguageId[];
+  /** 品牌 logo（内联 SVG 渲染） */
+  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo';
   /** 课程级模块名覆盖（如 Linux 课的"文件与目录"） */
   moduleNames?: Partial<Record<string, string>>;
   /** 课程级模块副标题覆盖 */
@@ -126,6 +128,7 @@ export const LINUX_TRACK: CourseDef = {
   color: '#a3e635',
   gradient: 'from-lime-500 to-green-500',
   execLangs: ['bash'],
+  logo: 'linux',
   moduleNames: {
     basic: '文件与目录',
     paradigm: '文本处理与管道',
@@ -152,6 +155,7 @@ export const ALGO_TRACK: CourseDef = {
   color: '#c084fc',
   gradient: 'from-purple-500 to-indigo-400',
   execLangs: ['javascript', 'go', 'rust', 'cpp'],
+  logo: 'algo',
 };
 
 export const LEARNABLE_LANGS = LANGUAGES.filter((l) => l.learnable !== false);
@@ -166,6 +170,7 @@ export const COURSES: CourseDef[] = [
     color: l.color,
     gradient: l.gradient,
     execLangs: [l.id],
+    logo: (l.id === 'go' || l.id === 'rust' || l.id === 'cpp') ? l.id : undefined,
   })),
   ALGO_TRACK,
   LINUX_TRACK,

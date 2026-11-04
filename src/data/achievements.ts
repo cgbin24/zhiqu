@@ -96,8 +96,16 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (c) => c.quizRushBest >= 15, progress: (c) => [Math.min(c.quizRushBest, 15), 15] },
   { id: 'active-30', name: '三十日足迹', desc: '累计 30 天有学习活动', icon: '👣', rarity: 'rare',
     check: (c) => c.activeDays >= 30, progress: (c) => [Math.min(c.activeDays, 30), 30] },
-  { id: 'easter-egg', name: '彩蛋猎人', desc: '发现隐藏在页面里的彩蛋', icon: '🥚', rarity: 'epic',
+  { id: 'easter-egg', name: '彩蛋猎人', desc: '发现隐藏在页面里的彩蛋（试试键入 zhiqu）', icon: '🥚', rarity: 'epic',
     check: (c) => c.easterEggFound, progress: (c) => [c.easterEggFound ? 1 : 0, 1] },
+  { id: 'egg-konami', name: '上上下下', desc: '输入传说中的秘技指令', icon: '🕹️', rarity: 'epic',
+    check: (c) => Boolean(c.easterEggsFound?.konami), progress: (c) => [c.easterEggsFound?.konami ? 1 : 0, 1] },
+  { id: 'egg-night-owl', name: '夜猫子', desc: '在凌晨时分前来学习', icon: '🌙', rarity: 'rare',
+    check: (c) => Boolean(c.easterEggsFound?.['night-owl']), progress: (c) => [c.easterEggsFound?.['night-owl'] ? 1 : 0, 1] },
+  { id: 'egg-logo-clicker', name: '点点点…', desc: '对着 Logo 连点五下', icon: '🖱️', rarity: 'rare',
+    check: (c) => Boolean(c.easterEggsFound?.['logo-clicker']), progress: (c) => [c.easterEggsFound?.['logo-clicker'] ? 1 : 0, 1] },
+  { id: 'egg-master', name: '彩蛋收藏家', desc: '发现全部 5 个隐藏彩蛋', icon: '🧩', rarity: 'legendary',
+    check: (c) => c.easterEggsCount >= 5, progress: (c) => [Math.min(c.easterEggsCount, 5), 5] },
 ];
 
 export const ACHIEVEMENT_MAP: Record<string, AchievementDef> = Object.fromEntries(

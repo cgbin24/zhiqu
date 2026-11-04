@@ -204,6 +204,8 @@ export type AchievementCheckCtx = {
   quizPerfectRounds: number;
   quizRushBest: number;
   easterEggFound: boolean;
+  easterEggsCount: number;
+  easterEggsFound?: Record<string, boolean>;
   activeDays: number;
 };
 

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
 import { MODULES } from '@/data/modules';
 import { COURSES, getCourse, getModuleName, getModuleSubtitle } from '@/data/languages/registry';
+import { BrandLogo } from '@/components/BrandLogo';
 import { isLevelUnlocked, levelsOfChapter, testCaseSummary } from '@/data/languages';
 import { DIFFICULTY_COLOR } from '@/game/xp';
 import { useProgress } from '@/store/progress';
@@ -40,7 +41,7 @@ export function LearnPath() {
             >
               <div className={`absolute inset-0 bg-gradient-to-br opacity-10 ${c.gradient}`} />
               <div className="relative flex items-center gap-2.5">
-                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${c.gradient} text-lg`}>{c.icon}</span>
+                <BrandLogo brand={c.logo ?? "algo"} size={36} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-base font-black" style={{ color: c.color }}>{c.name}</div>
                   <div className="truncate text-[10px] text-slate-400">{c.tagline}</div>

@@ -5,6 +5,7 @@ import { CalendarDays, ChevronRight, Flame, Play, Zap } from 'lucide-react';
 import { ACHIEVEMENTS } from '@/data/achievements';
 import { dailyLevel, levelsOfChapter, totalLevels } from '@/data/languages';
 import { COURSES, LANGUAGES } from '@/data/languages/registry';
+import { BrandLogo } from '@/components/BrandLogo';
 import { MODULES } from '@/data/modules';
 import { getRank } from '@/data/ranks';
 import { useProgress } from '@/store/progress';
@@ -144,7 +145,7 @@ export function Dashboard() {
               <ProgressRing ratio={ratio} color={c.color} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 font-black" style={{ color: c.color }}>
-                  <span>{c.icon}</span> {c.name}
+                  <BrandLogo brand={c.logo ?? 'algo'} size={18} /> {c.name}
                 </div>
                 <div className="text-xs text-slate-500">{d}/{all.length} 关 · ★ {stars}</div>
                 <div className="mt-1.5 text-[11px] text-slate-600">{nextChapterLabel(c.id, completedIds)}</div>

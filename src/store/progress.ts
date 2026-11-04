@@ -59,6 +59,7 @@ export interface ProgressState {
     quizPerfectRounds: number;
     quizRushBest: number;
     easterEggFound: boolean;
+    easterEggs: Record<string, boolean>;
   };
   /** 术语百科：已浏览术语 id -> true */
   viewedTerms: Record<string, true>;
@@ -87,7 +88,7 @@ export interface ProgressState {
   saveDraft: (levelId: string, code: string) => void;
   savePlayground: (lang: string, code: string) => void;
   saveNote: (levelId: string, text: string) => void;
-  foundEasterEgg: () => AchievementDef[];
+  foundEasterEgg: (id: string) => AchievementDef[];
   markTermViewed: (termId: string) => void;
   /** 术语测验结算：答对数计入 XP（每题 +2，满分一轮 +10），返回新解锁成就 */
   recordQuiz: (
@@ -170,6 +171,8 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
     quizPerfectRounds: s.counters.quizPerfectRounds,
     quizRushBest: s.counters.quizRushBest,
     easterEggFound: s.counters.easterEggFound,
+    easterEggsCount: Object.keys(s.counters.easterEggs ?? {}).length,
+    easterEggsFound: { ...s.counters.easterEggs },
     activeDays: Object.keys(s.activityLog).length,
   };
 }
@@ -246,6 +249,7 @@ const initial = {
     quizPerfectRounds: 0,
     quizRushBest: 0,
     easterEggFound: false,
+    easterEggs: {},
   },
   dailyLog: {} as Record<string, string>,
   lastLevelId: null as string | null,
@@ -356,10 +360,16 @@ export const useProgress = create<ProgressState>()(
       savePlayground: (lang, code) =>
         set((s) => ({ playground: { ...s.playground, [lang]: code } })),
 
-      foundEasterEgg: () => {
+      foundEasterEgg: (id) => {
         const s = get();
-        if (s.counters.easterEggFound) return [];
-        set({ counters: { ...s.counters, easterEggFound: true } });
+        if (s.counters.easterEggs[id]) return [];
+        set({
+          counters: {
+            ...s.counters,
+            easterEggFound: true,
+            easterEggs: { ...s.counters.easterEggs, [id]: true },
+          },
+        });
         return evaluateAchievements(set, get);
       },
 
