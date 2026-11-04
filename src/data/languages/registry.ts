@@ -112,6 +112,8 @@ export interface CourseDef {
   execLangs: LanguageId[];
   /** 课程级模块名覆盖（如 Linux 课的"文件与目录"） */
   moduleNames?: Partial<Record<string, string>>;
+  /** 课程级模块副标题覆盖 */
+  moduleSubtitles?: Partial<Record<string, string>>;
 }
 
 /** 算法课：语言无关，作答语言可切换（JS 本地执行，其余云端） */
@@ -131,6 +133,14 @@ export const LINUX_TRACK: CourseDef = {
     tips: 'Shell 脚本入门',
     best: '系统管理',
     integration: '综合实战',
+  },
+  moduleSubtitles: {
+    basic: '目录、文件与路径，命令行第一步',
+    paradigm: 'grep / sort / uniq / wc 管道组合',
+    advanced: '权限位、查找与身份',
+    tips: '从命令到可执行脚本',
+    best: '系统管理常用操作',
+    integration: '真实日志分析场景',
   },
 };
 
@@ -172,6 +182,10 @@ export function getCourse(id: string | undefined): CourseDef | undefined {
 /** 关卡执行配置（语言课直接取语言；算法课由作答语言决定） */
 export function getModuleName(course: CourseDef, moduleId: string): string {
   return course.moduleNames?.[moduleId] ?? '';
+}
+
+export function getModuleSubtitle(course: CourseDef, moduleId: string, fallback: string): string {
+  return course.moduleSubtitles?.[moduleId] ?? fallback;
 }
 
 export function executorOf(course: CourseId, execLang?: LanguageId): ExecutorConfig {
