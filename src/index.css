@@ -139,6 +139,67 @@ html, body {
   height: 100%;
 }
 
+/* 页面级滚动由 OverlayScrollbars 接管（悬浮不占位） */
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-overlayscrollbars-viewport='scroll'] {
+  /* OSB 悬浮滚动条由下面的主题样式控制 */
+}
+
+/* OverlayScrollbars 主题：小圆条、自动隐藏、悬浮加宽 */
+.os-scrollbar {
+  --os-handle-bg: rgba(124, 92, 240, 0.45);
+  --os-handle-bg-hover: rgba(124, 92, 240, 0.65);
+  --os-handle-bg-active: rgba(124, 92, 240, 0.8);
+  --os-size: 10px;
+  --os-padding-perpendicular: 4px;
+  --os-padding-axis: 4px;
+  --os-scrollbar-width: 8px;
+}
+.os-scrollbar .os-scrollbar-handle {
+  border-radius: 8px;
+}
+.os-scrollbar-auto-hide.os-scrollbar-auto-leave {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+html[data-theme='light'] .os-scrollbar {
+  --os-handle-bg: rgba(124, 92, 240, 0.35);
+  --os-handle-bg-hover: rgba(124, 92, 240, 0.55);
+  --os-handle-bg-active: rgba(124, 92, 240, 0.75);
+}
+
+/* 内部小容器（代码块/表格）保留细窄自绘滚动条 */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(43, 58, 92, 0.9);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 77, 120, 1);
+}
+html[data-theme='light'] *::-webkit-scrollbar-thumb {
+  background: rgba(200, 210, 234, 0.9);
+}
+html[data-theme='light'] *::-webkit-scrollbar-thumb:hover {
+  background: rgba(176, 189, 224, 1);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 92, 240, 0.45) transparent;
+}
+
 body {
   margin: 0;
   background:
@@ -157,13 +218,6 @@ html[data-theme='light'] body {
     var(--color-night-950);
   color: #233252;
 }
-
-::-webkit-scrollbar { width: 9px; height: 9px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2b3a5c; border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #3b4d78; }
-html[data-theme='light'] ::-webkit-scrollbar-thumb { background: #c8d2ea; }
-html[data-theme='light'] ::-webkit-scrollbar-thumb:hover { background: #b0bde0; }
 
 /* Markdown 排版（关卡讲解） */
 .md-body { line-height: 1.75; font-size: 0.925rem; }

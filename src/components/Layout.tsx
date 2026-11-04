@@ -15,7 +15,7 @@ import { Toasts } from './Toasts';
 
 const NAV = [
   { to: '/', label: '仪表盘', icon: Home, end: true },
-  { to: '/learn', label: '闯关', icon: Compass, end: false },
+  { to: '/learn/go', label: '闯关', icon: Compass, end: false },
   { to: '/terms', label: '术语', icon: BookOpenText, end: false },
   { to: '/playground', label: '练习场', icon: Gamepad2, end: false },
   { to: '/achievements', label: '成就', icon: Medal, end: false },
@@ -23,6 +23,11 @@ const NAV = [
 ];
 
 const GITHUB_URL = 'https://github.com/cgbin24';
+
+function isNavActive(pathname: string, to: string): boolean {
+  if (to === '/learn/go' || to === '/learn') return pathname.startsWith('/learn');
+  return pathname === to || pathname.startsWith(to + '/');
+}
 
 export function Layout() {
   const xp = useProgress((s) => s.xp);
@@ -107,13 +112,11 @@ export function Layout() {
                 key={to}
                 to={to}
                 end={end}
-                className={({ isActive }) =>
-                  `flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors lg:px-3 ${
-                    isActive
-                      ? 'bg-quest-500/15 font-semibold text-quest-400'
-                      : 'text-slate-400 hover:bg-night-800 hover:text-slate-200'
-                  }`
-                }
+                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors lg:px-3 ${
+                  isNavActive(location.pathname, to)
+                    ? 'bg-quest-500/15 font-semibold text-quest-400'
+                    : 'text-slate-400 hover:bg-night-800 hover:text-slate-200'
+                }`}
               >
                 <Icon size={16} />
                 <span className="hidden lg:inline">{label}</span>
@@ -170,9 +173,9 @@ export function Layout() {
         {/* 页面切换动效 */}
         <motion.div
           key={location.pathname}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.18 }}
         >
           <Outlet />
         </motion.div>
