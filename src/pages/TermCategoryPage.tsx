@@ -7,6 +7,7 @@ import type { TermCatId } from '@/data/terms';
 import { Markdown } from '@/components/Markdown';
 import { LifecycleFlow } from '@/components/LifecycleFlow';
 import { EffectDemo } from '@/components/EffectDemo';
+import { SpeakButton } from '@/components/SpeakButton';
 import { useProgress } from '@/store/progress';
 
 export function TermCategoryPage() {
@@ -164,7 +165,18 @@ export function TermDetailPage() {
           <div>
             <h1 className="text-2xl font-black text-slate-100">{term.name}</h1>
             <p className="text-sm text-slate-500">{term.en}</p>
+            {term.phonetic && (
+              <div className="mt-1 flex items-center gap-2">
+                <span className="font-mono text-xs text-sky-400">/{term.phonetic}/</span>
+                <SpeakButton text={term.name} size="sm" />
+              </div>
+            )}
           </div>
+          {term.cat === 'english' && (
+            <span className="ml-auto shrink-0">
+              <SpeakButton text={term.name} />
+            </span>
+          )}
         </div>
         <p className="mt-4 rounded-xl border border-quest-500/25 bg-quest-500/8 p-3.5 text-sm leading-relaxed text-slate-300">
           {term.summary}

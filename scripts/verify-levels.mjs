@@ -34,11 +34,14 @@ import { LINUX_BASIC } from '../src/data/linux/basic.ts';
 import { LINUX_TEXT } from '../src/data/linux/text.ts';
 import { LINUX_PERM } from '../src/data/linux/perm.ts';
 import { LINUX_SCRIPT } from '../src/data/linux/script.ts';
+import { LINUX_BEST } from '../src/data/linux/best.ts';
+import { LINUX_INTEGRATION } from '../src/data/linux/integration.ts';
 import { AGENTDEV_BASIC } from '../src/data/agentdev/basic.ts';
 import { AGENTDEV_PARADIGM } from '../src/data/agentdev/paradigm.ts';
 import { AGENTDEV_ADVANCED } from '../src/data/agentdev/advanced.ts';
 import { AGENTDEV_TIPS } from '../src/data/agentdev/tips.ts';
 import { AGENTDEV_BEST } from '../src/data/agentdev/best.ts';
+import { AGENTDEV_INTEGRATION } from '../src/data/agentdev/integration.ts';
 
 import { ALGO_BASIC } from '../src/data/algo/basic.ts';
 import { ALGO_PARADIGM } from '../src/data/algo/paradigm.ts';
@@ -65,8 +68,8 @@ const CHAPTERS = [
   ['cpp', 'tips', CPP_TIPS], ['cpp', 'best', CPP_BEST], ['cpp', 'integration', CPP_INTEGRATION],
   ['algo', 'basic', ALGO_BASIC], ['algo', 'paradigm', ALGO_PARADIGM], ['algo', 'advanced', ALGO_ADVANCED],
   ['algo', 'tips', ALGO_TIPS], ['algo', 'best', ALGO_BEST], ['algo', 'integration', ALGO_INTEGRATION],
-  ['linux', 'basic', LINUX_BASIC], ['linux', 'text', LINUX_TEXT], ['linux', 'perm', LINUX_PERM], ['linux', 'script', LINUX_SCRIPT],
-  ['agentdev', 'basic', AGENTDEV_BASIC], ['agentdev', 'paradigm', AGENTDEV_PARADIGM], ['agentdev', 'advanced', AGENTDEV_ADVANCED], ['agentdev', 'tips', AGENTDEV_TIPS], ['agentdev', 'best', AGENTDEV_BEST],
+  ['linux', 'basic', LINUX_BASIC], ['linux', 'text', LINUX_TEXT], ['linux', 'perm', LINUX_PERM], ['linux', 'script', LINUX_SCRIPT], ['linux', 'best', LINUX_BEST], ['linux', 'integration', LINUX_INTEGRATION],
+  ['agentdev', 'basic', AGENTDEV_BASIC], ['agentdev', 'paradigm', AGENTDEV_PARADIGM], ['agentdev', 'advanced', AGENTDEV_ADVANCED], ['agentdev', 'tips', AGENTDEV_TIPS], ['agentdev', 'best', AGENTDEV_BEST], ['agentdev', 'integration', AGENTDEV_INTEGRATION],
 ];
 
 /** 算法关的作答语言集（JS 本地验证，其余云端） */

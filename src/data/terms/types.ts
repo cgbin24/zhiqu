@@ -41,6 +41,8 @@ export interface Term {
   exampleLang?: string;
   /** 页面效果实时演示（effects 领域使用，组件：EffectDemo） */
   demo?: { kind: EffectDemoKind; param?: string };
+  /** 英文音标（编程英语领域使用） */
+  phonetic?: string;
   /** 可选面试/实践要点 */
   interview?: string;
 }
