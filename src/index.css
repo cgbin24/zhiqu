@@ -139,39 +139,27 @@ html, body {
   height: 100%;
 }
 
-/* 页面级滚动由 OverlayScrollbars 接管（悬浮不占位） */
+/* 页面级滚动条：细窄半透明，不喧宾夺主 */
 html {
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 92, 240, 0.5) transparent;
+  scrollbar-gutter: stable;
 }
 html::-webkit-scrollbar {
-  display: none;
+  width: 8px;
 }
-
-body[data-overlayscrollbars-viewport='scroll'] {
-  /* OSB 悬浮滚动条由下面的主题样式控制 */
+html::-webkit-scrollbar-track {
+  background: transparent;
 }
-
-/* OverlayScrollbars 主题：小圆条、自动隐藏、悬浮加宽 */
-.os-scrollbar {
-  --os-handle-bg: rgba(124, 92, 240, 0.45);
-  --os-handle-bg-hover: rgba(124, 92, 240, 0.65);
-  --os-handle-bg-active: rgba(124, 92, 240, 0.8);
-  --os-size: 10px;
-  --os-padding-perpendicular: 4px;
-  --os-padding-axis: 4px;
-  --os-scrollbar-width: 8px;
-}
-.os-scrollbar .os-scrollbar-handle {
+html::-webkit-scrollbar-thumb {
+  background: rgba(124, 92, 240, 0.4);
   border-radius: 8px;
 }
-.os-scrollbar-auto-hide.os-scrollbar-auto-leave {
-  opacity: 0;
-  transition: opacity 0.5s;
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 92, 240, 0.65);
 }
-html[data-theme='light'] .os-scrollbar {
-  --os-handle-bg: rgba(124, 92, 240, 0.35);
-  --os-handle-bg-hover: rgba(124, 92, 240, 0.55);
-  --os-handle-bg-active: rgba(124, 92, 240, 0.75);
+html[data-theme='light']::-webkit-scrollbar-thumb {
+  background: rgba(124, 92, 240, 0.35);
 }
 
 /* 内部小容器（代码块/表格）保留细窄自绘滚动条 */
