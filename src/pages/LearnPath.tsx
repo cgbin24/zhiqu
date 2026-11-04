@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
 import { MODULES } from '@/data/modules';
-import { COURSES, getCourse } from '@/data/languages/registry';
+import { COURSES, getCourse, getModuleName } from '@/data/languages/registry';
 import { isLevelUnlocked, levelsOfChapter, testCaseSummary } from '@/data/languages';
 import { DIFFICULTY_COLOR } from '@/game/xp';
 import { useProgress } from '@/store/progress';
@@ -75,7 +75,7 @@ export function LearnPath() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-bold text-slate-100">
-                    第 {MODULES.indexOf(mod) + 1} 章 · {mod.name}
+                    第 {MODULES.indexOf(mod) + 1} 章 · {getModuleName(course, mod.id) || mod.name}
                   </h2>
                   <p className="truncate text-xs text-slate-400">{mod.subtitle}</p>
                 </div>

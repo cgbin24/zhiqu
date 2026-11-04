@@ -172,6 +172,32 @@ for c in s.chars() { }         // 按字符遍历`,
 if let Some(v) = opt { }       // 只关心一种情况`,
     },
   ],
+  bash: [
+    {
+      title: '我在哪 / 有什么',
+      code: 'pwd        # 当前目录\nls -la     # 详细列表（含隐藏文件）',
+    },
+    {
+      title: '看文件',
+      code: 'cat file.txt        # 全部输出\nhead -n 5 file.txt  # 前 5 行\ntail -n 5 file.txt  # 后 5 行',
+    },
+    {
+      title: '查找内容 grep',
+      code: 'grep "关键词" file.txt   # 过滤行\ngrep -n "关键词" file.txt # 带行号\ngrep -i "abc" data.txt   # 忽略大小写',
+    },
+    {
+      title: '统计 wc',
+      code: 'wc -l file.txt   # 行数\nwc -w file.txt   # 单词数',
+    },
+    {
+      title: '管道组合',
+      code: 'cat data.txt | sort | uniq -c    # 排序后计数去重\ncat log.txt | grep ERROR | wc -l # 组合拳',
+    },
+    {
+      title: '输出重定向',
+      code: 'echo "hello" > out.txt   # 覆盖写入\necho "more" >> out.txt   # 追加',
+    },
+  ],
   cpp: [
     {
       title: 'IO 加速三件套（大输入必加）',

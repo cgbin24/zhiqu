@@ -30,6 +30,10 @@ import { CPP_ADVANCED } from '../src/data/languages/cpp/advanced.ts';
 import { CPP_TIPS } from '../src/data/languages/cpp/tips.ts';
 import { CPP_BEST } from '../src/data/languages/cpp/best.ts';
 import { CPP_INTEGRATION } from '../src/data/languages/cpp/integration.ts';
+import { LINUX_BASIC } from '../src/data/linux/basic.ts';
+import { LINUX_TEXT } from '../src/data/linux/text.ts';
+import { LINUX_PERM } from '../src/data/linux/perm.ts';
+import { LINUX_SCRIPT } from '../src/data/linux/script.ts';
 
 import { ALGO_BASIC } from '../src/data/algo/basic.ts';
 import { ALGO_PARADIGM } from '../src/data/algo/paradigm.ts';
@@ -38,6 +42,7 @@ import { ALGO_TIPS } from '../src/data/algo/tips.ts';
 import { ALGO_BEST } from '../src/data/algo/best.ts';
 import { ALGO_INTEGRATION } from '../src/data/algo/integration.ts';
 import { executeJsLocally } from '../src/judge/local-js.ts';
+import { execShell } from '../src/judge/linux-sim.ts';
 
 const LANG_EXEC = {
   go: { id: 'gl1260', args: '', file: 'main.go' },
@@ -54,6 +59,7 @@ const CHAPTERS = [
   ['cpp', 'tips', CPP_TIPS], ['cpp', 'best', CPP_BEST], ['cpp', 'integration', CPP_INTEGRATION],
   ['algo', 'basic', ALGO_BASIC], ['algo', 'paradigm', ALGO_PARADIGM], ['algo', 'advanced', ALGO_ADVANCED],
   ['algo', 'tips', ALGO_TIPS], ['algo', 'best', ALGO_BEST], ['algo', 'integration', ALGO_INTEGRATION],
+  ['linux', 'basic', LINUX_BASIC], ['linux', 'text', LINUX_TEXT], ['linux', 'perm', LINUX_PERM], ['linux', 'script', LINUX_SCRIPT],
 ];
 
 /** 算法关的作答语言集（JS 本地验证，其余云端） */
@@ -161,6 +167,41 @@ for (const { lang, mod, level } of targets) {
 
   let ok = true;
   const details = [];
+
+  // Linux 关：本地模拟器判题
+  if (level.lang === 'linux') {
+    let ok2 = true;
+    const details2 = [];
+    const src = level.algo?.solutions?.bash;
+    if (!src) {
+      ok2 = false;
+      details2.push('  ✗ 缺少 bash 参考答案');
+    }
+    for (const t of level.tests) {
+      if (!ok2) break;
+      const res = execShell(src ?? '', t.fs ?? level.fs ?? '{}');
+      const got = (res.stdout || '').replace(/\n+$/, '');
+      const want = (t.expected || '').replace(/\n+$/, '');
+      if (res.exitCode !== 0 && res.stderr) {
+        ok2 = false;
+        details2.push('  ✗ [' + t.name + '] 执行报错: ' + res.stderr.split('\n').slice(0, 3).join(' | '));
+        break;
+      }
+      if (got !== want) {
+        ok2 = false;
+        details2.push('  ✗ [' + t.name + '] 输出不匹配\n    期望: ' + JSON.stringify(t.expected) + '\n    实际: ' + JSON.stringify(res.stdout));
+      }
+    }
+    if (ok2) {
+      passedLevels++;
+      console.log('✓ 模拟终端 ' + level.tests.length + ' 用例');
+    } else {
+      failures.push(label);
+      console.log('✗');
+      for (const d of details2) console.log(d);
+    }
+    continue;
+  }
 
   // 算法关：逐语言验证
   if (level.lang === 'algo') {

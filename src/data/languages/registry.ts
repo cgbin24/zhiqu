@@ -57,6 +57,21 @@ int main() {
 `,
   },
   {
+    id: 'bash',
+    name: 'Bash',
+    tagline: 'Linux 命令行（本地模拟执行）',
+    color: '#89e051',
+    gradient: 'from-lime-500 to-green-400',
+    monaco: 'shell',
+    fileName: 'commands.sh',
+    executor: { provider: 'local' },
+    learnable: false,
+    template: `# Linux 命令在本地模拟器中执行
+pwd
+ls
+`,
+  },
+  {
     id: 'javascript',
     name: 'JavaScript',
     tagline: '浏览器原生语言，本地瞬时执行',
@@ -95,9 +110,30 @@ export interface CourseDef {
   gradient: string;
   /** 关卡作答使用的执行语言集合 */
   execLangs: LanguageId[];
+  /** 课程级模块名覆盖（如 Linux 课的"文件与目录"） */
+  moduleNames?: Partial<Record<string, string>>;
 }
 
 /** 算法课：语言无关，作答语言可切换（JS 本地执行，其余云端） */
+/** Linux 课程：模拟终端判题 */
+export const LINUX_TRACK: CourseDef = {
+  id: 'linux',
+  name: 'Linux',
+  tagline: '命令行实战，虚拟终端真实判题',
+  icon: '🐧',
+  color: '#a3e635',
+  gradient: 'from-lime-500 to-green-500',
+  execLangs: ['bash'],
+  moduleNames: {
+    basic: '文件与目录',
+    paradigm: '文本处理与管道',
+    advanced: '权限与进程',
+    tips: 'Shell 脚本入门',
+    best: '系统管理',
+    integration: '综合实战',
+  },
+};
+
 export const ALGO_TRACK: CourseDef = {
   id: 'algo',
   name: '算法',
@@ -122,6 +158,7 @@ export const COURSES: CourseDef[] = [
     execLangs: [l.id],
   })),
   ALGO_TRACK,
+  LINUX_TRACK,
 ];
 
 export const COURSE_MAP: Record<CourseId, CourseDef> = Object.fromEntries(
@@ -133,7 +170,14 @@ export function getCourse(id: string | undefined): CourseDef | undefined {
 }
 
 /** 关卡执行配置（语言课直接取语言；算法课由作答语言决定） */
+export function getModuleName(course: CourseDef, moduleId: string): string {
+  return course.moduleNames?.[moduleId] ?? '';
+}
+
 export function executorOf(course: CourseId, execLang?: LanguageId): ExecutorConfig {
+  if (course === 'linux') {
+    return LANG_MAP['bash'].executor;
+  }
   if (course === 'algo') {
     const lang = execLang ?? 'javascript';
     return LANG_MAP[lang].executor;

@@ -2,13 +2,13 @@
 
 /* ---------- 语言 ---------- */
 
-export type LanguageId = 'go' | 'rust' | 'cpp' | 'javascript';
+export type LanguageId = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash';
 
 /** 课程轨道：三门语言课 + 算法课 */
-export type CourseId = 'go' | 'rust' | 'cpp' | 'javascript' | 'algo';
+export type CourseId = 'go' | 'rust' | 'cpp' | 'javascript' | 'algo' | 'linux';
 
 /** 算法关可选择的作答语言 */
-export type AlgoLang = 'go' | 'rust' | 'cpp' | 'javascript';
+export type AlgoLang = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash';
 
 /** 执行器配置：godbolt（云端最新版本）/ local（浏览器本地执行，仅 JS） */
 export interface ExecutorConfig {
@@ -118,6 +118,8 @@ export interface Level {
   solution?: string;
   /** 算法课：多语言起始代码与参考答案（存在时 LevelPlay 出现语言切换） */
   algo?: AlgoCodeSet;
+  /** Linux 关卡的初始文件系统场景（JSON：{cwd, tree}） */
+  fs?: string;
   /** 算法可视化配置 */
   visualizer?: { kind: AlgoVizKind; param?: string };
   /** 渐进提示（3 级） */
@@ -131,6 +133,8 @@ export interface ExecRequest {
   lang: LanguageId;
   source: string;
   stdin: string;
+  /** Linux 关卡的虚拟文件系统场景 */
+  fs?: string;
   args?: string[];
 }
 

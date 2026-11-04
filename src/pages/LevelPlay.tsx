@@ -13,7 +13,7 @@ import { Stars } from '@/components/Stars';
 import { AlgoVisualizer } from '@/components/AlgoVisualizer';
 import { SnippetDrawer } from '@/components/SnippetDrawer';
 import { BookMarked, StickyNote } from 'lucide-react';
-import { COURSE_MAP, LANG_MAP } from '@/data/languages/registry';
+import { COURSE_MAP, LANG_MAP, getModuleName } from '@/data/languages/registry';
 import { dailyLevel, getLevel, nextLevel, isLevelUnlocked } from '@/data/languages';
 import { MODULE_MAP } from '@/data/modules';
 import { getRank } from '@/data/ranks';
@@ -87,9 +87,10 @@ export function LevelPlay() {
 
   useEffect(() => {
     if (!level) return;
-    setExecLang('javascript');
-    const initDraft = level.algo ? drafts[`${level.id}:javascript`] : drafts[level.id];
-    setCode(initDraft ?? level.algo?.starters['javascript'] ?? level.starter ?? '');
+    const defaultLang = level.lang === 'linux' ? 'bash' : 'javascript';
+    setExecLang(defaultLang);
+    const initDraft = level.algo ? drafts[`${level.id}:${defaultLang}`] : drafts[level.id];
+    setCode(initDraft ?? level.algo?.starters[defaultLang] ?? level.starter ?? '');
     setRunResult(null);
     setJudge(null);
     setVictory(null);
@@ -179,7 +180,7 @@ export function LevelPlay() {
     setRunResult(null);
     recordRun(false);
     try {
-      const res = await executeCode({ lang: (isAlgo ? execLang : level.lang) as LanguageId, source: code, stdin });
+      const res = await executeCode({ lang: (isAlgo ? execLang : level.lang) as LanguageId, source: code, stdin, fs: level.fs });
       setRunResult(res);
     } catch (err) {
       setRunResult({
@@ -206,7 +207,7 @@ export function LevelPlay() {
           cases.push(r);
           return { verdict: 'wrong-answer', passed: cases.filter((c) => c.verdict === 'accepted').length, total, cases };
         });
-      });
+      }, level.fs);
       setJudge(result);
       const accepted = result.verdict === 'accepted';
       recordSubmission(level.id, accepted);
@@ -270,7 +271,7 @@ export function LevelPlay() {
           to={`/learn/${level.lang}`}
           className="flex items-center gap-1 rounded-lg border border-night-700 bg-night-850 px-2.5 py-1.5 text-xs text-slate-400 transition-colors hover:text-slate-200"
         >
-          <ChevronLeft size={14} /> {course?.name} · {mod.name}
+          <ChevronLeft size={14} /> {course?.name} · {getModuleName(course, level.module) || mod.name}
         </Link>
         <h1 className="text-lg font-bold text-slate-100">
           <span className="mr-2 text-slate-500">#{level.order}</span>
@@ -447,7 +448,7 @@ export function LevelPlay() {
             </span>
             {isAlgo && (
               <div className="flex gap-1 rounded-lg border border-night-700 bg-night-900 p-0.5">
-                {(['javascript', 'go', 'rust', 'cpp'] as LanguageId[]).map((l) => (
+                {(COURSE_MAP[level.lang]?.execLangs ?? ['javascript'] as LanguageId[]).map((l) => (
                   <button
                     key={l}
                     onClick={() => switchExecLang(l)}

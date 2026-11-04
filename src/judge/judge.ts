@@ -3,6 +3,7 @@ import { LANG_MAP } from '@/data/languages/registry';
 import { godboltProvider } from './godbolt';
 import { wandboxProvider } from './wandbox';
 import { localJsProvider } from './local-js';
+import { execShell } from './linux-sim';
 
 /* ---------------- 节流队列：公共 API 礼貌限速 ---------------- */
 
@@ -25,6 +26,19 @@ function schedule<T>(fn: () => Promise<T>): Promise<T> {
 /* ---------------- Provider 链：godbolt -> wandbox ---------------- */
 
 async function executeWithFallback(req: ExecRequest): Promise<ExecResult> {
+  // Bash 走本地 Linux 模拟器（Linux 课程判题）
+  if (req.lang === 'bash') {
+    const t0 = performance.now();
+    const r = execShell(req.source, req.fs ?? '{"cwd":"/home/student"}');
+    return {
+      executed: true,
+      stdout: r.stdout,
+      stderr: r.stderr,
+      exitCode: r.exitCode,
+      timeMs: Math.max(1, Math.round(performance.now() - t0)),
+      provider: 'godbolt',
+    };
+  }
   // JS 走浏览器本地执行：零延迟、无配额
   if (LANG_MAP[req.lang]?.executor.provider === 'local') {
     return localJsProvider.execute(req);
@@ -79,6 +93,7 @@ export async function judgeLevel(
   source: string,
   tests: TestCase[],
   onProgress?: (result: JudgeCaseResult, done: number, total: number) => void,
+  fs?: string,
 ): Promise<JudgeResult> {
   const results: JudgeCaseResult[] = [];
   let compileError: string | undefined;
@@ -99,7 +114,7 @@ export async function judgeLevel(
       continue;
     }
     try {
-      const res = await executeWithFallback({ lang, source, stdin: test.stdin, args: test.args });
+      const res = await executeWithFallback({ lang, source, stdin: test.stdin, args: test.args, fs });
       const verdict = toVerdict(res, test);
       if (verdict === 'accepted') passed++;
       if (verdict === 'compile-error') compileError = res.compileError;

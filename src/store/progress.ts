@@ -2,11 +2,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ACHIEVEMENTS } from '@/data/achievements';
 import { MODULES } from '@/data/modules';
-import { LANGUAGES } from '@/data/languages/registry';
+import { LEARNABLE_LANGS } from '@/data/languages/registry';
 import { LEVELS, levelsOfChapter } from '@/data/languages';
 import { xpForFirstClear, xpForStarUpgrade } from '@/game/xp';
 import type {
   AchievementCheckCtx,
+  CourseId,
   AchievementDef,
   LanguageId,
   Level,
@@ -120,7 +121,7 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
     if (st.stars === 3) threeStarCount++;
     const level = ALL_LEVEL_MAP[id];
     if (!level) continue;
-    if (level.lang === 'algo') {
+    if (level.lang === 'algo' || level.lang === 'linux') {
       algoCompleted++;
     } else if (level.lang === 'go' || level.lang === 'rust' || level.lang === 'cpp') {
       langCompleted[level.lang]++;
@@ -130,9 +131,9 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
 
   let chapterCleared = 0;
   let perfectChapters = 0;
-  for (const lang of LANGUAGES) {
+  for (const lang of LEARNABLE_LANGS) {
     for (const m of MODULES) {
-      const lv = levelsOfChapter(lang.id, m.id);
+      const lv = levelsOfChapter(lang.id as CourseId, m.id);
       if (lv.length === 0) continue;
       if (lv.every((l) => (s.levelStats[l.id]?.stars ?? 0) > 0)) {
         chapterCleared++;
