@@ -3,7 +3,7 @@
  * 无远程加载 → 无空窗、无闪烁、无网络依赖。
  */
 
-export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo';
+export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev';
 
 /** Go：官方青色 "GO" 字标 + 速度线 */
 export function GoLogo({ size = 32 }: { size?: number }) {
@@ -107,6 +107,22 @@ export function AlgoLogo({ size = 32 }: { size?: number }) {
   );
 }
 
+export function AgentLogo({ size = 32 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="14" fill="#0c4a6e" />
+      <rect x="14" y="20" width="36" height="26" rx="6" fill="#38bdf8" />
+      <circle cx="24" cy="32" r="4" fill="#0c4a6e" />
+      <circle cx="40" cy="32" r="4" fill="#0c4a6e" />
+      <rect x="28" y="27" width="8" height="2.5" rx="1" fill="#0c4a6e" />
+      <line x1="32" y1="12" x2="32" y2="20" stroke="#38bdf8" strokeWidth="2.5" />
+      <circle cx="32" cy="10" r="3" fill="#fbbf24" />
+      <line x1="14" y1="46" x2="14" y2="52" stroke="#38bdf8" strokeWidth="3" />
+      <line x1="50" y1="46" x2="50" y2="52" stroke="#38bdf8" strokeWidth="3" />
+    </svg>
+  );
+}
+
 export function BrandLogo({ brand, size = 32 }: { brand: BrandId; size?: number }) {
   switch (brand) {
     case 'go': return <GoLogo size={size} />;
@@ -114,5 +130,6 @@ export function BrandLogo({ brand, size = 32 }: { brand: BrandId; size?: number 
     case 'cpp': return <CppLogo size={size} />;
     case 'linux': return <LinuxLogo size={size} />;
     case 'algo': return <AlgoLogo size={size} />;
+    case 'agentdev': return <AgentLogo size={size} />;
   }
 }

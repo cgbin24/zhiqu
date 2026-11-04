@@ -180,7 +180,7 @@ export function LevelPlay() {
     setRunResult(null);
     recordRun(false);
     try {
-      const res = await executeCode({ lang: (isAlgo ? execLang : level.lang) as LanguageId, source: code, stdin, fs: level.fs });
+      const res = await executeCode({ lang: (isAlgo ? execLang : level.lang) as LanguageId, source: code, stdin, fs: level.fs, runtime: level.runtime });
       setRunResult(res);
     } catch (err) {
       setRunResult({
@@ -207,7 +207,7 @@ export function LevelPlay() {
           cases.push(r);
           return { verdict: 'wrong-answer', passed: cases.filter((c) => c.verdict === 'accepted').length, total, cases };
         });
-      }, level.fs);
+      }, level.fs, level.runtime);
       setJudge(result);
       const accepted = result.verdict === 'accepted';
       recordSubmission(level.id, accepted);

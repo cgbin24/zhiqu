@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
@@ -181,35 +181,33 @@ export function Layout() {
         </motion.div>
       </main>
 
-      {/* 移动端悬浮毛玻璃导航 */}
+      {/* 移动端悬浮毛玻璃导航（横条滑块指示器） */}
       <nav className="fixed inset-x-0 bottom-3 z-40 md:hidden">
         <div className="mx-auto flex w-[min(94vw,430px)] items-center justify-around rounded-[22px] border border-night-600/50 bg-night-900/55 p-1.5 shadow-[0_8px_32px_rgba(7,11,20,0.45)] backdrop-blur-xl">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `relative flex flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-[10px] transition-colors ${
-                  isActive ? 'font-bold text-quest-300' : 'text-slate-500'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-float-pill"
-                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                      className="absolute inset-0 rounded-2xl bg-quest-500/25 ring-1 ring-quest-400/40"
-                    />
-                  )}
-                  <Icon size={19} className="relative z-10" />
-                  <span className="relative z-10">{label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
+          {NAV.map(({ to, label, icon: Icon }) => {
+            const active = isNavActive(location.pathname, to);
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`relative flex flex-col items-center gap-0.5 rounded-2xl px-2 pb-1 pt-1.5 text-[10px] transition-colors ${
+                  active ? 'font-bold text-quest-300' : 'text-slate-500'
+                }`}
+              >
+                <Icon size={19} className="relative z-10" />
+                <span className="relative z-10">{label}</span>
+                {active && (
+                  <motion.span
+                    layoutId="nav-indicator-bar"
+                    transition={{ type: 'spring', stiffness: 480, damping: 38 }}
+                    className="absolute bottom-0 left-0 right-0 flex justify-center"
+                  >
+                    <span className="h-[3px] w-7 rounded-full bg-quest-400 shadow-[0_0_8px_rgba(124,92,240,0.8)]" />
+                  </motion.span>
+                )}
+              </Link>
+            );
+          })}
         </div>
       </nav>
 

@@ -34,6 +34,11 @@ import { LINUX_BASIC } from '../src/data/linux/basic.ts';
 import { LINUX_TEXT } from '../src/data/linux/text.ts';
 import { LINUX_PERM } from '../src/data/linux/perm.ts';
 import { LINUX_SCRIPT } from '../src/data/linux/script.ts';
+import { AGENTDEV_BASIC } from '../src/data/agentdev/basic.ts';
+import { AGENTDEV_PARADIGM } from '../src/data/agentdev/paradigm.ts';
+import { AGENTDEV_ADVANCED } from '../src/data/agentdev/advanced.ts';
+import { AGENTDEV_TIPS } from '../src/data/agentdev/tips.ts';
+import { AGENTDEV_BEST } from '../src/data/agentdev/best.ts';
 
 import { ALGO_BASIC } from '../src/data/algo/basic.ts';
 import { ALGO_PARADIGM } from '../src/data/algo/paradigm.ts';
@@ -42,6 +47,7 @@ import { ALGO_TIPS } from '../src/data/algo/tips.ts';
 import { ALGO_BEST } from '../src/data/algo/best.ts';
 import { ALGO_INTEGRATION } from '../src/data/algo/integration.ts';
 import { executeJsLocally } from '../src/judge/local-js.ts';
+import { agentPreamble } from '../src/data/agent-runtime.ts';
 import { execShell } from '../src/judge/linux-sim.ts';
 
 const LANG_EXEC = {
@@ -60,6 +66,7 @@ const CHAPTERS = [
   ['algo', 'basic', ALGO_BASIC], ['algo', 'paradigm', ALGO_PARADIGM], ['algo', 'advanced', ALGO_ADVANCED],
   ['algo', 'tips', ALGO_TIPS], ['algo', 'best', ALGO_BEST], ['algo', 'integration', ALGO_INTEGRATION],
   ['linux', 'basic', LINUX_BASIC], ['linux', 'text', LINUX_TEXT], ['linux', 'perm', LINUX_PERM], ['linux', 'script', LINUX_SCRIPT],
+  ['agentdev', 'basic', AGENTDEV_BASIC], ['agentdev', 'paradigm', AGENTDEV_PARADIGM], ['agentdev', 'advanced', AGENTDEV_ADVANCED], ['agentdev', 'tips', AGENTDEV_TIPS], ['agentdev', 'best', AGENTDEV_BEST],
 ];
 
 /** 算法关的作答语言集（JS 本地验证，其余云端） */
@@ -154,6 +161,10 @@ const failures = [];
 let passedLevels = 0;
 
 // 本地验证器：返回 null 表示该测试不适用本地路径
+function execJsPreamble(src, stdin, runtimeJson) {
+  return execJsLocally(src, stdin, runtimeJson ? agentPreamble(runtimeJson) : undefined);
+}
+
 function verifyCaseLocal(level, t) {
   if (level.lang !== 'algo') return null;
   const js = level.algo?.solutions?.javascript;
@@ -200,6 +211,29 @@ for (const { lang, mod, level } of targets) {
       console.log('✗');
       for (const d of details2) console.log(d);
     }
+    continue;
+  }
+
+  // Agent 关：本地 JS + Mock LLM runtime 注入
+  if (level.lang === 'agentdev') {
+    let ok3 = true;
+    const details3 = [];
+    const src = level.algo?.solutions?.javascript;
+    if (!src) { ok3 = false; details3.push('  ✗ 缺少 javascript 参考答案'); }
+    for (const t of level.tests) {
+      if (!ok3) break;
+      const r = execJsPreamble(src, t.stdin, level.runtime);
+      if (r.exitCode !== 0 && r.stderr) { ok3 = false; details3.push('  ✗ [' + t.name + '] 执行报错: ' + r.stderr.split('
+').slice(0,3).join(' | ')); break; }
+      const got = (r.stdout || '').replace(/
++$/, '');
+      const want = (t.expected || '').replace(/
++$/, '');
+      if (got !== want) { ok3 = false; details3.push('  ✗ [' + t.name + '] 输出不匹配
+    期望: ' + JSON.stringify(t.expected) + '
+    实际: ' + JSON.stringify(r.stdout)); }
+    }
+    if (ok3) { passedLevels++; console.log('✓ Mock LLM ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of details3) console.log(d); }
     continue;
   }
 

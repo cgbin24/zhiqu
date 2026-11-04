@@ -28,6 +28,11 @@ import { LINUX_BASIC } from '../linux/basic';
 import { LINUX_TEXT } from '../linux/text';
 import { LINUX_PERM } from '../linux/perm';
 import { LINUX_SCRIPT } from '../linux/script';
+import { AGENTDEV_BASIC } from '../agentdev/basic';
+import { AGENTDEV_PARADIGM } from '../agentdev/paradigm';
+import { AGENTDEV_ADVANCED } from '../agentdev/advanced';
+import { AGENTDEV_TIPS } from '../agentdev/tips';
+import { AGENTDEV_BEST } from '../agentdev/best';
 
 /** 章节文件注册表：新增语言/章节在这里追加一行即可 */
 const CHAPTER_FILES: Level[][] = [
@@ -36,6 +41,7 @@ const CHAPTER_FILES: Level[][] = [
   CPP_BASIC, CPP_PARADIGM, CPP_ADVANCED, CPP_TIPS, CPP_BEST, CPP_INTEGRATION,
   ALGO_BASIC, ALGO_PARADIGM, ALGO_ADVANCED, ALGO_TIPS, ALGO_BEST, ALGO_INTEGRATION,
   LINUX_BASIC, LINUX_TEXT, LINUX_PERM, LINUX_SCRIPT,
+  AGENTDEV_BASIC, AGENTDEV_PARADIGM, AGENTDEV_ADVANCED, AGENTDEV_TIPS, AGENTDEV_BEST,
 ];
 
 /** 全部关卡（扁平，含课程内全局顺序） */
@@ -51,8 +57,9 @@ const COURSE_ORDER: Record<CourseId, Level[]> = {
   javascript: [],
   algo: [],
   linux: [],
+  agentdev: [],
 };
-for (const course of ['go', 'rust', 'cpp', 'javascript', 'algo', 'linux'] as CourseId[]) {
+for (const course of ['go', 'rust', 'cpp', 'javascript', 'algo', 'linux', 'agentdev'] as CourseId[]) {
   for (const m of MODULES) {
     for (const l of LEVELS) {
       if (l.lang === course && l.module === m.id) COURSE_ORDER[course].push(l);

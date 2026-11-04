@@ -17,12 +17,12 @@ function readline() { return __stdinLines[__stdinPtr++] ?? ''; }
 function readInts() { return readline().trim().split(/\\s+/).filter(s => s !== '').map(Number); }
 `;
 
-function run(source: string, stdin: string, t0: number): { stdout: string; stderr: string; exitCode: number | null } {
+function run(source: string, stdin: string, t0: number, extraPreamble?: string): { stdout: string; stderr: string; exitCode: number | null } {
   const logs: string[] = [];
   const errors: string[] = [];
   let exitCode: number | null = 0;
 
-  const sandbox = `${PREAMBLE(stdin)}\n${source}`;
+  const sandbox = `${PREAMBLE(stdin)}${extraPreamble ? '\n' + extraPreamble + '\n' : '\n'}${source}`;
   try {
     const fn = new Function(
       'console',
@@ -65,7 +65,7 @@ export const localJsProvider: ExecutionProvider = {
 
   async execute(req: ExecRequest): Promise<ExecResult> {
     const t0 = performance.now();
-    const r = run(req.source, req.stdin, t0);
+    const r = run(req.source, req.stdin, t0, (req as ExecRequest & { runtime?: string }).runtime);
     return {
       executed: true,
       stdout: r.stdout,
@@ -78,11 +78,11 @@ export const localJsProvider: ExecutionProvider = {
 };
 
 /** 供 Node 校验脚本复用的同构执行逻辑（performance 不存在时用 Date） */
-export function executeJsLocally(source: string, stdin: string): { stdout: string; stderr: string; exitCode: number | null } {
+export function executeJsLocally(source: string, stdin: string, extraPreamble?: string): { stdout: string; stderr: string; exitCode: number | null } {
   const logs: string[] = [];
   const errors: string[] = [];
   let exitCode: number | null = 0;
-  const sandbox = `${PREAMBLE(stdin)}\n${source}`;
+  const sandbox = `${PREAMBLE(stdin)}${extraPreamble ? '\n' + extraPreamble + '\n' : '\n'}${source}`;
   try {
     const fn = new Function('console', 'process', `"use strict";\n${sandbox}`);
     fn(

@@ -111,7 +111,7 @@ export interface CourseDef {
   /** 关卡作答使用的执行语言集合 */
   execLangs: LanguageId[];
   /** 品牌 logo（内联 SVG 渲染） */
-  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo';
+  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev';
   /** 课程级模块名覆盖（如 Linux 课的"文件与目录"） */
   moduleNames?: Partial<Record<string, string>>;
   /** 课程级模块副标题覆盖 */
@@ -158,6 +158,34 @@ export const ALGO_TRACK: CourseDef = {
   logo: 'algo',
 };
 
+/** Agent 开发实战课：Mock LLM 本地判题 */
+export const AGENTDEV_TRACK: CourseDef = {
+  id: 'agentdev',
+  name: 'Agent 实战',
+  tagline: '从提示词到多智能体，真实模式离线跑',
+  icon: '🤖',
+  color: '#38bdf8',
+  gradient: 'from-sky-500 to-cyan-400',
+  execLangs: ['javascript'],
+  logo: 'agentdev',
+  moduleNames: {
+    basic: 'LLM 基础调用',
+    paradigm: 'Prompt 工程',
+    advanced: '工具调用与循环',
+    tips: '记忆与 RAG',
+    best: '多智能体与评估',
+    integration: '综合实战',
+  },
+  moduleSubtitles: {
+    basic: '消息、Token 与采样',
+    paradigm: 'Few-shot / CoT / 结构化输出',
+    advanced: 'Function Calling 与 Agent Loop',
+    tips: '会话记忆与检索增强',
+    best: '多智能体、护栏与评测',
+    integration: '真实场景综合',
+  },
+};
+
 export const LEARNABLE_LANGS = LANGUAGES.filter((l) => l.learnable !== false);
 
 /** 闯关地图顶部的课程卡片列表（语言课 + 算法课） */
@@ -174,6 +202,7 @@ export const COURSES: CourseDef[] = [
   })),
   ALGO_TRACK,
   LINUX_TRACK,
+  AGENTDEV_TRACK,
 ];
 
 export const COURSE_MAP: Record<CourseId, CourseDef> = Object.fromEntries(
@@ -196,6 +225,9 @@ export function getModuleSubtitle(course: CourseDef, moduleId: string, fallback:
 export function executorOf(course: CourseId, execLang?: LanguageId): ExecutorConfig {
   if (course === 'linux') {
     return LANG_MAP['bash'].executor;
+  }
+  if (course === 'agentdev') {
+    return LANG_MAP['javascript'].executor;
   }
   if (course === 'algo') {
     const lang = execLang ?? 'javascript';

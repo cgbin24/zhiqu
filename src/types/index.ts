@@ -5,7 +5,7 @@
 export type LanguageId = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash';
 
 /** 课程轨道：三门语言课 + 算法课 */
-export type CourseId = 'go' | 'rust' | 'cpp' | 'javascript' | 'algo' | 'linux';
+export type CourseId = 'go' | 'rust' | 'cpp' | 'javascript' | 'algo' | 'linux' | 'agentdev';
 
 /** 算法关可选择的作答语言 */
 export type AlgoLang = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash';
@@ -120,6 +120,8 @@ export interface Level {
   algo?: AlgoCodeSet;
   /** Linux 关卡的初始文件系统场景（JSON：{cwd, tree}） */
   fs?: string;
+  /** Agent 关卡的 Mock LLM 配置（JSON：{turns:[...]}），判题时注入为 __LLM_CONFIG__ */
+  runtime?: string;
   /** 算法可视化配置 */
   visualizer?: { kind: AlgoVizKind; param?: string };
   /** 渐进提示（3 级） */
@@ -135,6 +137,8 @@ export interface ExecRequest {
   stdin: string;
   /** Linux 关卡的虚拟文件系统场景 */
   fs?: string;
+  /** Agent 关卡的 Mock LLM 配置 JSON */
+  runtime?: string;
   args?: string[];
 }
 

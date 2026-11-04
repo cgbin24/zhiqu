@@ -94,6 +94,7 @@ export async function judgeLevel(
   tests: TestCase[],
   onProgress?: (result: JudgeCaseResult, done: number, total: number) => void,
   fs?: string,
+  runtime?: string,
 ): Promise<JudgeResult> {
   const results: JudgeCaseResult[] = [];
   let compileError: string | undefined;
@@ -114,7 +115,7 @@ export async function judgeLevel(
       continue;
     }
     try {
-      const res = await executeWithFallback({ lang, source, stdin: test.stdin, args: test.args, fs });
+      const res = await executeWithFallback({ lang, source, stdin: test.stdin, args: test.args, fs, runtime });
       const verdict = toVerdict(res, test);
       if (verdict === 'accepted') passed++;
       if (verdict === 'compile-error') compileError = res.compileError;
