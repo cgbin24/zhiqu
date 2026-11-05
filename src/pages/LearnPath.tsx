@@ -72,20 +72,20 @@ export function LearnPath() {
           return (
             <section key={mod.id} className="overflow-hidden rounded-2xl border border-night-700 bg-night-900">
               <header className="relative flex flex-wrap items-center gap-3 overflow-hidden border-b border-night-700 bg-night-850 px-4 py-3">
-                {/* 柔和洗色层：模块色低透明度铺底（替代失效的 bg-opacity-10），正文压在面板底色上保证对比度 */}
-                <div className={`pointer-events-none absolute inset-0 bg-gradient-to-r ${mod.gradient} opacity-[0.08]`} aria-hidden />
+                {/* 柔和洗色层：模块色低透明度铺底（替代失效的 bg-opacity-10），文字全部用高对比档位 */}
+                <div className={`pointer-events-none absolute inset-0 bg-gradient-to-r ${mod.gradient} opacity-[0.06]`} aria-hidden />
                 <span className={`relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br ${mod.gradient} text-white shadow`}>
                   <ModuleIcon name={mod.icon} />
                 </span>
                 <div className="relative min-w-0 flex-1">
-                  <h2 className="font-bold text-slate-100">
+                  <h2 className="text-[15px] font-black text-slate-100">
                     第 {MODULES.indexOf(mod) + 1} 章 · {getModuleName(course, mod.id) || mod.name}
                   </h2>
-                  <p className="relative truncate text-xs text-slate-400">{getModuleSubtitle(course, mod.id, mod.subtitle)}</p>
+                  <p className="relative mt-0.5 truncate text-xs font-medium text-slate-300">{getModuleSubtitle(course, mod.id, mod.subtitle)}</p>
                 </div>
                 <div className="relative text-right text-xs">
-                  <div className="font-bold text-slate-200">{done}/{lv.length} 关</div>
-                  <div className="text-gold-300">★ {stars}/{maxStars}</div>
+                  <div className="font-black text-slate-100">{done}/{lv.length} 关</div>
+                  <div className="font-bold text-slate-300"><span className="text-gold-300">★</span> {stars}/{maxStars}</div>
                 </div>
               </header>
               <div className="grid gap-2.5 p-4 sm:grid-cols-2 xl:grid-cols-3">
