@@ -42,6 +42,12 @@ import { AGENTDEV_ADVANCED } from '../src/data/agentdev/advanced.ts';
 import { AGENTDEV_TIPS } from '../src/data/agentdev/tips.ts';
 import { AGENTDEV_BEST } from '../src/data/agentdev/best.ts';
 import { AGENTDEV_INTEGRATION } from '../src/data/agentdev/integration.ts';
+import { COLLAB_BASIC } from '../src/data/collab/basic.ts';
+import { COLLAB_PARADIGM } from '../src/data/collab/paradigm.ts';
+import { COLLAB_ADVANCED } from '../src/data/collab/advanced.ts';
+import { COLLAB_TIPS } from '../src/data/collab/tips.ts';
+import { COLLAB_BEST } from '../src/data/collab/best.ts';
+import { COLLAB_INTEGRATION } from '../src/data/collab/integration.ts';
 
 import { ALGO_BASIC } from '../src/data/algo/basic.ts';
 import { ALGO_PARADIGM } from '../src/data/algo/paradigm.ts';
@@ -52,6 +58,7 @@ import { ALGO_INTEGRATION } from '../src/data/algo/integration.ts';
 import { executeJsLocally } from '../src/judge/local-js.ts';
 import { agentPreamble } from '../src/data/agent-runtime.ts';
 import { execShell } from '../src/judge/linux-sim.ts';
+import { checkPromptSubmission } from '../src/judge/prompt-judge.ts';
 
 const LANG_EXEC = {
   go: { id: 'gl1260', args: '', file: 'main.go' },
@@ -70,6 +77,7 @@ const CHAPTERS = [
   ['algo', 'tips', ALGO_TIPS], ['algo', 'best', ALGO_BEST], ['algo', 'integration', ALGO_INTEGRATION],
   ['linux', 'basic', LINUX_BASIC], ['linux', 'text', LINUX_TEXT], ['linux', 'perm', LINUX_PERM], ['linux', 'script', LINUX_SCRIPT], ['linux', 'best', LINUX_BEST], ['linux', 'integration', LINUX_INTEGRATION],
   ['agentdev', 'basic', AGENTDEV_BASIC], ['agentdev', 'paradigm', AGENTDEV_PARADIGM], ['agentdev', 'advanced', AGENTDEV_ADVANCED], ['agentdev', 'tips', AGENTDEV_TIPS], ['agentdev', 'best', AGENTDEV_BEST], ['agentdev', 'integration', AGENTDEV_INTEGRATION],
+  ['collab', 'basic', COLLAB_BASIC], ['collab', 'paradigm', COLLAB_PARADIGM], ['collab', 'advanced', COLLAB_ADVANCED], ['collab', 'tips', COLLAB_TIPS], ['collab', 'best', COLLAB_BEST], ['collab', 'integration', COLLAB_INTEGRATION],
 ];
 
 /** 算法关的作答语言集（JS 本地验证，其余云端） */
@@ -239,6 +247,33 @@ for (const { lang, mod, level } of targets) {
       }
     }
     if (ok3) { passedLevels++; console.log('✓ Mock LLM ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of details3) console.log(d); }
+    continue;
+  }
+
+  // AI 协作关：提示词要素检查（solution 全过 / starter 首用例拒绝）
+  if (level.lang === 'collab') {
+    let ok4 = true;
+    const details4 = [];
+    const src = level.algo?.solutions?.prompt;
+    if (!src) { ok4 = false; details4.push('  ✗ 缺少 prompt 参考答案'); }
+    for (const t of level.tests) {
+      if (!ok4) break;
+      const r = checkPromptSubmission(src ?? '', t.stdin);
+      if (!r.pass) {
+        ok4 = false;
+        details4.push('  ✗ [' + t.name + '] solution 未过: ' + r.actual);
+        break;
+      }
+    }
+    if (ok4) {
+      const vis = level.tests.find((t) => !t.hidden);
+      const starterSrc = level.algo?.starters?.prompt ?? level.starter;
+      if (vis && starterSrc && checkPromptSubmission(starterSrc, vis.stdin).pass) {
+        ok4 = false;
+        details4.push('  ✗ starter 在用例「' + vis.name + '」就通过了 —— 起始文档过于完整');
+      }
+    }
+    if (ok4) { passedLevels++; console.log('✓ 要素检查 ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of details4) console.log(d); }
     continue;
   }
 

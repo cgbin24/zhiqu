@@ -88,7 +88,7 @@ export function LevelPlay() {
 
   useEffect(() => {
     if (!level) return;
-    const defaultLang = level.lang === 'linux' ? 'bash' : 'javascript';
+    const defaultLang = level.lang === 'linux' ? 'bash' : level.lang === 'collab' ? 'prompt' : 'javascript';
     setExecLang(defaultLang);
     const initDraft = level.algo ? drafts[`${level.id}:${defaultLang}`] : drafts[level.id];
     setCode(initDraft ?? level.algo?.starters[defaultLang] ?? level.starter ?? '');
@@ -181,7 +181,14 @@ export function LevelPlay() {
     setRunResult(null);
     recordRun(false);
     try {
-      const res = await executeCode({ lang: (isAlgo ? execLang : level.lang) as LanguageId, source: code, stdin, fs: level.fs, runtime: level.runtime ? agentPreamble(level.runtime) : undefined });
+      const res = await executeCode({
+        lang: (isAlgo ? execLang : level.lang) as LanguageId,
+        source: code,
+        stdin,
+        fs: level.fs,
+        // agentdev 需要 JS 沙箱包装；collab 直接透传检查项 JSON
+        runtime: level.runtime ? (level.lang === 'agentdev' ? agentPreamble(level.runtime) : level.runtime) : undefined,
+      });
       setRunResult(res);
     } catch (err) {
       setRunResult({
@@ -208,7 +215,7 @@ export function LevelPlay() {
           cases.push(r);
           return { verdict: 'wrong-answer', passed: cases.filter((c) => c.verdict === 'accepted').length, total, cases };
         });
-      }, level.fs, level.runtime ? agentPreamble(level.runtime) : undefined);
+      }, level.fs, level.runtime ? (level.lang === 'agentdev' ? agentPreamble(level.runtime) : level.runtime) : undefined);
       setJudge(result);
       const accepted = result.verdict === 'accepted';
       recordSubmission(level.id, accepted);
@@ -349,13 +356,13 @@ export function LevelPlay() {
                     {visibleTests.map((t, i) => (
                       <div key={i} className="rounded-lg border border-night-700 bg-night-850 p-2.5">
                         <div className="mb-1.5 text-xs font-semibold text-slate-300">{t.name}</div>
-                        {t.stdin && (
+                        {level.lang !== 'collab' && t.stdin && (
                           <div className="mb-1 text-[11px] text-slate-500">
                             输入：<code className="rounded bg-night-800 px-1 py-0.5 font-mono text-slate-400">{t.stdin.replace(/\n/g, '⏎')}</code>
                           </div>
                         )}
                         <pre className="whitespace-pre-wrap rounded bg-night-950 p-1.5 font-mono text-[11px] leading-relaxed text-slate-400">
-                          期望：{t.expected.replace(/\n/g, '⏎')}
+                          {level.lang === 'collab' ? '要求' : '期望'}：{t.expected.replace(/\n/g, '⏎')}
                         </pre>
                       </div>
                     ))}
@@ -499,8 +506,8 @@ export function LevelPlay() {
             <CodeEditor value={code} language={execMonaco} onChange={onCodeChange} />
           </div>
 
-          <div className="mt-3">
-            <details className="rounded-xl border border-night-700 bg-night-900" open>
+          {level.lang !== 'collab' && (
+            <details className="mt-3 rounded-xl border border-night-700 bg-night-900" open>
               <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold text-slate-400">
                 标准输入 stdin（点「运行」时喂给程序）
               </summary>
@@ -513,7 +520,7 @@ export function LevelPlay() {
                 className="w-full resize-y rounded-b-xl bg-night-950 px-3 pb-2 pt-1 font-mono text-xs text-slate-300 outline-none"
               />
             </details>
-          </div>
+          )}
 
           <div className="mt-3 rounded-xl border border-night-700 bg-night-900 p-3">
             <RunPanel result={runResult} running={running} />

@@ -4,6 +4,7 @@ import { godboltProvider } from './godbolt';
 import { wandboxProvider } from './wandbox';
 import { localJsProvider } from './local-js';
 import { execShell } from './linux-sim';
+import { checkPromptSubmission, promptCheckReport } from './prompt-judge';
 
 /* ---------------- 节流队列：公共 API 礼貌限速 ---------------- */
 
@@ -26,6 +27,18 @@ function schedule<T>(fn: () => Promise<T>): Promise<T> {
 /* ---------------- Provider 链：godbolt -> wandbox ---------------- */
 
 async function executeWithFallback(req: ExecRequest): Promise<ExecResult> {
+  // 提示词规格（AI 协作课程）：本地要素体检报告
+  if (req.lang === 'prompt') {
+    const t0 = performance.now();
+    return {
+      executed: true,
+      stdout: promptCheckReport(req.source, req.runtime),
+      stderr: '',
+      exitCode: 0,
+      timeMs: Math.max(1, Math.round(performance.now() - t0)),
+      provider: 'godbolt',
+    };
+  }
   // Bash 走本地 Linux 模拟器（Linux 课程判题）
   if (req.lang === 'bash') {
     const t0 = performance.now();
@@ -102,6 +115,23 @@ export async function judgeLevel(
 
   for (let i = 0; i < tests.length; i++) {
     const test = tests[i];
+    // 提示词关卡：每个测试点是一条要素检查规则（stdin 存放规则 JSON）
+    if (lang === 'prompt') {
+      const r = checkPromptSubmission(source, test.stdin);
+      const verdict: Verdict = r.pass ? 'accepted' : 'wrong-answer';
+      if (r.pass) passed++;
+      const cr: JudgeCaseResult = {
+        name: test.name,
+        hidden: Boolean(test.hidden),
+        verdict,
+        actual: test.hidden ? '' : r.actual,
+        expected: test.hidden ? '' : test.expected,
+        timeMs: 1,
+      };
+      results.push(cr);
+      onProgress?.(cr, i + 1, tests.length);
+      continue;
+    }
     if (compileError) {
       const r: JudgeCaseResult = {
         name: test.name,

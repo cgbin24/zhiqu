@@ -48,7 +48,7 @@ export function Playground() {
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h1 className="mr-2 text-lg font-bold text-slate-100">自由练习场</h1>
-        {LANGUAGES.map((l) => (
+        {LANGUAGES.filter((l) => l.id !== 'prompt').map((l) => (
           <button
             key={l.id}
             onClick={() => switchLang(l.id)}

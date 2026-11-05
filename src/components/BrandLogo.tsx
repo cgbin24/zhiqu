@@ -3,7 +3,7 @@
  * 无远程加载 → 无空窗、无闪烁、无网络依赖。
  */
 
-export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev';
+export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab';
 
 /** Go：官方青色 "GO" 字标 + 速度线 */
 export function GoLogo({ size = 32 }: { size?: number }) {
@@ -123,6 +123,34 @@ export function AgentLogo({ size = 32 }: { size?: number }) {
   );
 }
 
+/** AI 协作：人机双气泡对话 + 共创火花 */
+export function CollabLogo({ size = 32 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="collab-g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ec4899" />
+          <stop offset="1" stopColor="#fb7185" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="14" fill="#500724" />
+      {/* 人的气泡（左上，实心） */}
+      <path d="M12 16 a6 6 0 0 1 6 -6 h16 a6 6 0 0 1 6 6 v10 a6 6 0 0 1 -6 6 h-12 l-6 6 v-6 h-2 a6 6 0 0 1 -6 -6 Z" fill="url(#collab-g)" />
+      <circle cx="22" cy="21" r="2" fill="#500724" />
+      <circle cx="29" cy="21" r="2" fill="#500724" />
+      <circle cx="36" cy="21" r="2" fill="#500724" />
+      {/* AI 的气泡（右下，描边） */}
+      <path d="M52 48 a6 6 0 0 1 -6 6 h-16 a6 6 0 0 1 -6 -6 v-10 a6 6 0 0 1 6 -6 h12 l6 -6 v6 h2 a6 6 0 0 1 6 6 Z" fill="#134e4a" stroke="#2dd4bf" strokeWidth="2" />
+      <rect x="30" y="36" width="14" height="2.4" rx="1.2" fill="#2dd4bf" />
+      <rect x="30" y="41" width="9" height="2.4" rx="1.2" fill="#2dd4bf" opacity="0.7" />
+      {/* 共创火花 */}
+      <circle cx="46" cy="14" r="3" fill="#fbbf24" />
+      <circle cx="52" cy="21" r="2" fill="#fbbf24" opacity="0.75" />
+      <circle cx="42" cy="8" r="1.6" fill="#fbbf24" opacity="0.5" />
+    </svg>
+  );
+}
+
 export function BrandLogo({ brand, size = 32 }: { brand: BrandId; size?: number }) {
   switch (brand) {
     case 'go': return <GoLogo size={size} />;
@@ -131,5 +159,6 @@ export function BrandLogo({ brand, size = 32 }: { brand: BrandId; size?: number 
     case 'linux': return <LinuxLogo size={size} />;
     case 'algo': return <AlgoLogo size={size} />;
     case 'agentdev': return <AgentLogo size={size} />;
+    case 'collab': return <CollabLogo size={size} />;
   }
 }

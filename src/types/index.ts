@@ -2,13 +2,13 @@
 
 /* ---------- 语言 ---------- */
 
-export type LanguageId = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash';
+export type LanguageId = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash' | 'prompt';
 
-/** 课程轨道：三门语言课 + 算法课 */
-export type CourseId = 'go' | 'rust' | 'cpp' | 'javascript' | 'algo' | 'linux' | 'agentdev';
+/** 课程轨道：三门语言课 + 算法课 + AI 协作课 */
+export type CourseId = 'go' | 'rust' | 'cpp' | 'javascript' | 'algo' | 'linux' | 'agentdev' | 'collab';
 
-/** 算法关可选择的作答语言 */
-export type AlgoLang = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash';
+/** 算法/协作关可选择的作答语言 */
+export type AlgoLang = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash' | 'prompt';
 
 /** 执行器配置：godbolt（云端最新版本）/ local（浏览器本地执行，仅 JS） */
 export interface ExecutorConfig {
@@ -74,6 +74,35 @@ export interface TestCase {
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
+/* ---------- AI 协作关卡：提示词要素检查 ---------- */
+
+/** 提示词检查规则（JSON 序列化后存放于 TestCase.stdin，判题时解析执行） */
+export interface PromptRule {
+  type:
+    | 'containsAny'     // 至少包含 options 之一
+    | 'containsAll'     // 全部包含 all
+    | 'notContains'     // 不允许出现 banned 中任何一个
+    | 'regex'           // 匹配正则 pattern
+    | 'minLength'       // 文档长度 ≥ n
+    | 'maxLength'       // 文档长度 ≤ n
+    | 'maxLines'        // 行数 ≤ n
+    | 'bulletList'      // 列表项（- * • 1. 1、）数量 ≥ n
+    | 'sectionHeaders'; // Markdown 小节标题（#）数量 ≥ n
+  options?: string[];
+  all?: string[];
+  banned?: string[];
+  pattern?: string;
+  flags?: string;
+  n?: number;
+}
+
+/** 单条检查结果 */
+export interface PromptCheckResult {
+  pass: boolean;
+  /** 人类可读的判定说明（找到的证据 / 缺失的要素） */
+  actual: string;
+}
+
 /** 算法可视化种类（component: AlgoVisualizer） */
 export type AlgoVizKind =
   | 'sort'            // param: bubble | insertion | merge | quick | selection
@@ -120,7 +149,8 @@ export interface Level {
   algo?: AlgoCodeSet;
   /** Linux 关卡的初始文件系统场景（JSON：{cwd, tree}） */
   fs?: string;
-  /** Agent 关卡的 Mock LLM 配置（JSON：{turns:[...]}），判题时注入为 __LLM_CONFIG__ */
+  /** Agent 关卡的 Mock LLM 配置（JSON：{turns:[...]}），判题时注入为 __LLM_CONFIG__；
+   *  AI 协作关卡的「运行体检」可见检查项（JSON：{checks:[{hint,rule}]}） */
   runtime?: string;
   /** 算法可视化配置 */
   visualizer?: { kind: AlgoVizKind; param?: string };

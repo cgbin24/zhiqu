@@ -88,6 +88,26 @@ console.log("Hello, JS Quest! n =", n);
 console.log("平方：", n * n);
 `,
   },
+  {
+    id: 'prompt',
+    name: 'Prompt 规格',
+    tagline: 'AI 协作文档（要素体检判题）',
+    color: '#f472b6',
+    gradient: 'from-pink-500 to-rose-400',
+    monaco: 'markdown',
+    fileName: 'prompt.md',
+    executor: { provider: 'local' },
+    learnable: false,
+    template: `<!-- AI 协作课程：以 Markdown 文档作答，判题引擎检查关键要素 -->
+# 任务
+
+<!-- 你要 AI 做什么，一句话说清 -->
+
+## 约束
+
+<!-- 技术栈 / 边界 / 不要做的事 -->
+`,
+  },
 ];
 
 export const LANG_MAP: Record<LanguageId, LanguageDef> = Object.fromEntries(
@@ -111,7 +131,7 @@ export interface CourseDef {
   /** 关卡作答使用的执行语言集合 */
   execLangs: LanguageId[];
   /** 品牌 logo（内联 SVG 渲染） */
-  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev';
+  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab';
   /** 课程级模块名覆盖（如 Linux 课的"文件与目录"） */
   moduleNames?: Partial<Record<string, string>>;
   /** 课程级模块副标题覆盖 */
@@ -188,6 +208,34 @@ export const AGENTDEV_TRACK: CourseDef = {
 
 export const LEARNABLE_LANGS = LANGUAGES.filter((l) => l.learnable !== false);
 
+/** AI 协作开发课：以真实项目为主线，提交「给 AI 的文档」做要素判题 */
+export const COLLAB_TRACK: CourseDef = {
+  id: 'collab',
+  name: 'AI 协作开发',
+  tagline: '与 AI 结对，从需求到落地的系统方法',
+  icon: '🤝',
+  color: '#f472b6',
+  gradient: 'from-pink-500 to-rose-400',
+  execLangs: ['prompt'],
+  logo: 'collab',
+  moduleNames: {
+    basic: '协作心智',
+    paradigm: '精确提问',
+    advanced: '计划与拆解',
+    tips: '迭代与反馈',
+    best: '工具与流程',
+    integration: '综合实战',
+  },
+  moduleSubtitles: {
+    basic: '认清 AI 的能力边界与分诊方法',
+    paradigm: '把模糊需求写成精确规格',
+    advanced: '方案、里程碑与 Phase 规约',
+    tips: '有效反馈、报错打包与渐进修复',
+    best: '工具选型、工作流与审核点',
+    integration: '从 0 到 1 的完整项目演练',
+  },
+};
+
 /** 闯关地图顶部的课程卡片列表（语言课 + 算法课） */
 export const COURSES: CourseDef[] = [
   ...LEARNABLE_LANGS.map((l) => ({
@@ -203,6 +251,7 @@ export const COURSES: CourseDef[] = [
   ALGO_TRACK,
   LINUX_TRACK,
   AGENTDEV_TRACK,
+  COLLAB_TRACK,
 ];
 
 export const COURSE_MAP: Record<CourseId, CourseDef> = Object.fromEntries(
@@ -228,6 +277,9 @@ export function executorOf(course: CourseId, execLang?: LanguageId): ExecutorCon
   }
   if (course === 'agentdev') {
     return LANG_MAP['javascript'].executor;
+  }
+  if (course === 'collab') {
+    return LANG_MAP['prompt'].executor;
   }
   if (course === 'algo') {
     const lang = execLang ?? 'javascript';

@@ -1,6 +1,6 @@
 # 智码 CodeQuest 🗡️
 
-游戏化编程闯关学习平台 —— 在浏览器里系统掌握 **Go / Rust / C++**，全程无需本地配置任何开发环境。
+游戏化编程闯关学习平台 —— 在浏览器里系统掌握 **Go / Rust / C++**、**算法**、**Linux**、**Agent 开发**与**AI 协作开发**，全程无需本地配置任何开发环境。
 
 ![tech](https://img.shields.io/badge/React%2018-Vite%206-7c5cf0) ![judge](https://img.shields.io/badge/云端判题-Godbolt%20%7C%20Wandbox-00add8)
 
@@ -18,11 +18,15 @@
 
 ## ✨ 特性
 
-- **四大课程 168 关**：Go / Rust / C++ 各 42 关（六大模块：基础语法 → 编程思想 → 进阶 → 技巧 → 最佳实践 → 综合实战）+ **算法课 42 关**（复杂度、双指针、二分、排序、递归/分治/贪心、栈队列哈希链表树、BFS/DFS/拓扑、DP、Dijkstra 等，配 **15 个交互式算法可视化动画**——可播放/单步/调速）
-- **算法课可切换作答语言**：JavaScript（浏览器内本地执行，零延迟）/ Go / Rust / C++（云端最新编译器），四语言参考答案均经真实执行验证
+- **七门课程 248 关**：
+  - **Go / Rust / C++ 各 42 关**（六大模块：基础语法 → 编程思想 → 进阶 → 技巧 → 最佳实践 → 综合实战）
+  - **算法课 42 关**（复杂度、双指针、二分、排序、递归/分治/贪心、栈队列哈希链表树、BFS/DFS/拓扑、DP、Dijkstra 等，配 **15 个交互式算法可视化动画**——可播放/单步/调速），可切换 JS / Go / Rust / C++ 作答
+  - **Linux 课 30 关**：文件与目录、文本管道、权限与进程、Shell 脚本、系统管理 —— 内置**虚拟文件系统模拟终端**，`grep / sort / find / chmod` 等真实判题，全程离线可用
+  - **Agent 开发实战 28 关**：消息与 Token、Prompt 工程、工具调用与 Agent Loop、记忆与 RAG、多智能体与护栏 —— 内置 **Mock LLM 运行时**（思维链 / Function Calling / 检索增强全可离线跑）
+  - **AI 协作开发 22 关**：与 AI 结对从需求到落地的系统方法 —— 任务分诊、精确提问五要素、"不要做"边界、Phase 规约、有效反馈、工具选型与审核点设计；提交"给 AI 的文档"由**要素检查引擎**确定性判题
 - **术语百科**：537 个核心开发术语覆盖十三大领域（**全链路开发** 43 / **页面效果** 76 / **网络安全** 56 / **数据结构与算法** 50 / **编程英语** 52 / **开发工具链** 36 / 前端 41 / 后端 41 / 运维 32 / 嵌入式 28 / AI 28 / 网络工程 27 / Agent 开发 24）——编程英语领域给每个高频英文词的**全称展开、中文对照、易混词辨析与真实例句**，含 **49 种可交互实时演示**（页面效果 + 算法可视化）。全链路提供**需求→上线流程视图**；安全领域覆盖 OWASP 攻防与渗透红蓝对抗；每条术语含精讲、关联关系、代码示例与面试要点 + **术语测验三模式（经典/60 秒速答/错题复习，得 XP）**
-- **真实编译执行**：Go 1.26 · Rust 1.99 · GCC 16.2 (`-std=c++20`) 云端运行（Godbolt 主引擎 + Wandbox 自动降级），JavaScript 浏览器本地执行
-- **自动判题系统**：逐测试点执行、期望/实际输出 diff、隐藏测试点、编译错误定位
+- **真实编译执行**：Go 1.26 · Rust 1.99 · GCC 16.2 (`-std=c++20`) 云端运行（Godbolt 主引擎 + Wandbox 自动降级）；JavaScript / Linux 模拟器 / Mock LLM / 提示词要素检查全部**浏览器本地执行**，离线可用
+- **自动判题系统**：逐测试点执行、期望/实际输出 diff、隐藏测试点、编译错误定位、Linux 虚拟终端、提示词要素体检
 - **游戏化系统**：XP 与七大段位（青铜→宗师）、三星评价、章节解锁、每日挑战（×1.5 XP）、连续学习天数、36 个成就
 - **明暗主题**：暗色 / 亮色一键切换，全局平滑过渡不闪烁，Monaco 编辑器主题联动，刷新恢复
 - **零配置练习**：Monaco 编辑器（本地打包，不依赖 CDN）、自定义 stdin 的自由练习场
@@ -66,7 +70,7 @@ npx wrangler pages deploy dist --project-name=zhiqu --branch=main
 
 ```bash
 node scripts/verify-levels.mjs go/basic        # 只验证某一章
-node scripts/verify-levels.mjs --full          # 全部 126 关 + starter 防误过检查
+node scripts/verify-levels.mjs --full          # 全部 248 关 + starter 防误过检查（云端/本地/模拟器/要素检查按课程分流）
 node scripts/verify-terms.mjs                  # 术语数据完整性（关系引用/字段/唯一性）
 ```
 
@@ -81,10 +85,13 @@ src/
 │   ├── achievements.ts
 │   ├── terms/        # ⭐ 术语百科：十三领域数据（含编程英语）+ 注册表 + 全库搜索
 │   ├── algo/         # ⭐ 算法课：6 章节文件（多语言 starter/solution + 可视化配置）
+│   ├── linux/        # ⭐ Linux 课：6 章节文件（fs 虚拟文件系统场景）
+│   ├── agentdev/     # ⭐ Agent 课：6 章节文件（runtime = Mock LLM 配置）
+│   ├── collab/       # ⭐ AI 协作课：6 章节文件（tests = 要素检查规则）
 │   └── languages/
 │       ├── registry.ts       # ⭐ 语言注册表 + 课程轨道（接入新语言的唯一入口之一）
 │       └── go|rust|cpp/      # 每语言 6 个章节文件（关卡内容）
-├── judge/            # provider 抽象 + Godbolt/Wandbox + JS 本地执行 + 节流队列 + 判题比对
+├── judge/            # provider 抽象 + Godbolt/Wandbox + JS 本地执行 + Linux 模拟器 + Mock LLM 注入 + 提示词要素检查 + 节流队列
 ├── game/             # XP / 星级 / 段位 / 术语测验出题引擎
 ├── store/progress.ts # zustand + localStorage 持久化
 ├── components/       # 编辑器 / AlgoVisualizer 算法动画 / Toast / Diff / 布局 …
