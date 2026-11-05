@@ -176,14 +176,11 @@ export function Layout() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-6 md:pb-16 min-h-[calc(100vh-3.5rem-4rem)]">
-        {/* 页面切换动效（纯淡入 0.12s，卸载间隙不可感知） */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.12 }}
-        >
+        {/* 页面容器不做透明度入场动画：启动加载器（index.html）已承担加载过渡，
+            残留淡入会在加载器移除瞬间造成"内容二次加载"的闪烁感 */}
+        <div>
           <Outlet />
-        </motion.div>
+        </div>
       </main>
 
       {/* 移动端悬浮毛玻璃导航（横条滑块指示器） */}
