@@ -19,3 +19,4 @@ tsocnfig.tsbuildinfo
 tsconfig.tsbuildinfo
 .zcode/
 .cf-token
+*.webm
