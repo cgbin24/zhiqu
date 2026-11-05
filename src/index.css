@@ -199,25 +199,34 @@ html[data-theme='light'] *::-webkit-scrollbar-thumb:hover {
 
 body {
   margin: 0;
-  /* 背景三要素：渐变固定到视口 + 最小高度覆盖全屏 → 滚动到任何位置都不会"断层" */
-  background:
-    radial-gradient(1200px 500px at 85% -10%, rgb(100 64 224 / 0.16), transparent 60%),
-    radial-gradient(900px 420px at -10% 110%, rgb(0 173 216 / 0.10), transparent 55%),
-    var(--color-night-950);
-  background-attachment: fixed;
-  min-height: 100vh;
+  /* 渐变背景放在 body::before 的 fixed 定位层：
+     position:fixed 图层只合成一次，滚动零重绘（background-attachment:fixed 会每帧强制全页重绘，造成滚动闪烁掉帧） */
+  background-color: var(--color-night-950);
   color: #e2e8f0;
   font-family: ui-sans-serif, system-ui, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgb(100 64 224 / 0.16), transparent 60%),
+    radial-gradient(900px 420px at -10% 110%, rgb(0 173 216 / 0.10), transparent 55%);
+}
+
 html[data-theme='light'] body {
+  background-color: var(--color-night-950);
+  color: #233252;
+}
+
+html[data-theme='light'] body::before {
   background:
     radial-gradient(1200px 500px at 85% -10%, rgb(124 92 240 / 0.10), transparent 60%),
-    radial-gradient(900px 420px at -10% 110%, rgb(0 173 216 / 0.08), transparent 55%),
-    var(--color-night-950);
-  background-attachment: fixed;
-  color: #233252;
+    radial-gradient(900px 420px at -10% 110%, rgb(0 173 216 / 0.08), transparent 55%);
 }
 
 /* Markdown 排版（关卡讲解） */

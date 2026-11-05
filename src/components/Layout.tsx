@@ -35,6 +35,11 @@ export function Layout() {
   const location = useLocation();
   const { rank } = getRank(xp);
 
+  /* 路由切换回到页首：避免从长页面中部跳转时视口被钳制产生"跳动" */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   /* ---------- 彩蛋系统 ---------- */
   const logoClicks = useRef(0);
   const keyBuffer = useRef('');

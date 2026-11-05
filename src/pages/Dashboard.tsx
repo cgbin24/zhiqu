@@ -1,6 +1,6 @@
-import { useMemo, type CSSProperties } from 'react';
+import { useMemo } from 'react';
+import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { CalendarDays, ChevronRight, Flame, Play, Zap } from 'lucide-react';
 import { ACHIEVEMENTS } from '@/data/achievements';
 import { dailyLevel, levelsOfChapter, totalLevels } from '@/data/languages';
@@ -70,11 +70,9 @@ export function Dashboard() {
                 {next && <span className="ml-auto text-xs text-slate-500">距 {next.name} 还需 {next.minXp - xp} XP</span>}
               </div>
               <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-night-800">
-                <motion.div
+                <div
                   className="h-full rounded-full bg-gradient-to-r from-quest-500 via-fuchsia-500 to-gold-400"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                  style={{ width: `${pct}%` }}
                 />
               </div>
             </div>
