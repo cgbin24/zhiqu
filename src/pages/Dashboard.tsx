@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CalendarDays, ChevronRight, Flame, Play, Zap } from 'lucide-react';
@@ -65,7 +65,7 @@ export function Dashboard() {
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline gap-2">
-                <span className="font-bold" style={{ color: rank.color }}>{rank.name}</span>
+                <span className="brand-text font-bold" style={{ '--brand': rank.color } as CSSProperties}>{rank.name}</span>
                 <span className="text-xs text-slate-500">⚡ {xp} XP</span>
                 {next && <span className="ml-auto text-xs text-slate-500">距 {next.name} 还需 {next.minXp - xp} XP</span>}
               </div>
@@ -144,7 +144,7 @@ export function Dashboard() {
             >
               <ProgressRing ratio={ratio} color={c.color} />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 font-black" style={{ color: c.color }}>
+                <div className="flex items-center gap-1.5 font-black brand-text" style={{ '--brand': c.color } as CSSProperties}>
                   <BrandLogo brand={c.logo ?? 'algo'} size={18} /> {c.name}
                 </div>
                 <div className="text-xs text-slate-500">{d}/{all.length} 关 · ★ {stars}</div>

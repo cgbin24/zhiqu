@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Download, RotateCcw, Upload, User } from 'lucide-react';
 import { ACHIEVEMENTS } from '@/data/achievements';
 import { totalLevels } from '@/data/languages';
@@ -82,7 +82,7 @@ export function Profile() {
                 className="w-40 rounded-lg border border-transparent bg-transparent px-1 py-0.5 text-lg font-bold text-slate-100 outline-none hover:border-night-600 focus:border-quest-500/60"
               />
             </div>
-            <div className="mt-1 text-sm" style={{ color: rank.color }}>
+            <div className="brand-text mt-1 text-sm" style={{ '--brand': rank.color } as CSSProperties}>
               {rank.icon} {rank.name} · ⚡ {xp} XP
             </div>
           </div>

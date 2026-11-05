@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpenText, ChevronRight, Search } from 'lucide-react';
@@ -59,7 +59,7 @@ export function TermsHome() {
                   <div className="text-[11px] uppercase tracking-wide text-slate-500">{c.en}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-black" style={{ color: c.color }}>{counts[c.id] ?? 0}</div>
+                  <div className="brand-text text-lg font-black" style={{ '--brand': c.color } as CSSProperties}>{counts[c.id] ?? 0}</div>
                   <div className="text-[10px] text-slate-500">术语</div>
                 </div>
                 <ChevronRight size={15} className="text-slate-600 transition-transform group-hover:translate-x-1" />

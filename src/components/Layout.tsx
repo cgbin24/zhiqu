@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -145,8 +145,8 @@ export function Layout() {
             {/* 桌面完整状态条 */}
             <div className="hidden items-center gap-2 sm:flex">
               <span
-                className="hidden items-center gap-1 rounded-lg border border-night-700 bg-night-850 px-2.5 py-1.5 text-xs font-semibold lg:flex"
-                style={{ color: rank.color }}
+                className="hidden items-center gap-1 rounded-lg border border-night-700 bg-night-850 px-2.5 py-1.5 text-xs font-semibold brand-text lg:flex"
+                style={{ '--brand': rank.color } as CSSProperties}
                 title={`当前段位：${rank.name}`}
               >
                 <span>{rank.icon}</span> {rank.name}

@@ -123,6 +123,15 @@ html[data-theme='light'] {
   --t-table-head: #101729;
 }
 
+/* ---------------- 品牌色文字（课程/术语域/段位的主题色） ----------------
+   配合 style={{ '--brand': color }} 使用：
+   暗色主题用原色；亮色主题在 OKLab 空间统一混入深蓝灰加深，
+   浅底上的 lime/sky/淡紫等高明度色不再"看不清"，色相保持一致。 */
+.brand-text { color: var(--brand); }
+html[data-theme='light'] .brand-text {
+  color: color-mix(in oklab, var(--brand) 55%, #22304f);
+}
+
 /* 主题切换瞬间开启全局颜色过渡（450ms 后由 JS 移除，避免常驻 transition 影响性能） */
 html.theme-transition *,
 html.theme-transition *::before,

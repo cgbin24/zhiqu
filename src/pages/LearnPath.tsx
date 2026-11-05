@@ -8,6 +8,7 @@ import { COURSES, getCourse, getModuleName, getModuleSubtitle } from '@/data/lan
 import { BrandLogo } from '@/components/BrandLogo';
 import { isLevelUnlocked, levelsOfChapter, testCaseSummary } from '@/data/languages';
 import { DIFFICULTY_COLOR } from '@/game/xp';
+import { textOn } from '@/lib/color';
 import { useProgress } from '@/store/progress';
 import type { CourseId, Level } from '@/types';
 
@@ -43,7 +44,7 @@ export function LearnPath() {
               <div className="relative flex items-center gap-2.5">
                 <BrandLogo brand={c.logo ?? "algo"} size={36} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-base font-black" style={{ color: c.color }}>{c.name}</div>
+                  <div className="truncate text-base font-black brand-text" style={{ '--brand': c.color } as CSSProperties}>{c.name}</div>
                   <div className="truncate text-[10px] text-slate-400">{c.tagline}</div>
                 </div>
                 <div className="text-right">
@@ -70,17 +71,19 @@ export function LearnPath() {
           const maxStars = lv.length * 3;
           return (
             <section key={mod.id} className="overflow-hidden rounded-2xl border border-night-700 bg-night-900">
-              <header className={`flex flex-wrap items-center gap-3 border-b border-night-700 bg-gradient-to-r ${mod.gradient} bg-opacity-10 px-4 py-3`}>
-                <span className={`grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br ${mod.gradient} text-white shadow`}>
+              <header className="relative flex flex-wrap items-center gap-3 overflow-hidden border-b border-night-700 bg-night-850 px-4 py-3">
+                {/* 柔和洗色层：模块色低透明度铺底（替代失效的 bg-opacity-10），正文压在面板底色上保证对比度 */}
+                <div className={`pointer-events-none absolute inset-0 bg-gradient-to-r ${mod.gradient} opacity-[0.08]`} aria-hidden />
+                <span className={`relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br ${mod.gradient} text-white shadow`}>
                   <ModuleIcon name={mod.icon} />
                 </span>
-                <div className="min-w-0 flex-1">
+                <div className="relative min-w-0 flex-1">
                   <h2 className="font-bold text-slate-100">
                     第 {MODULES.indexOf(mod) + 1} 章 · {getModuleName(course, mod.id) || mod.name}
                   </h2>
-                  <p className="truncate text-xs text-slate-400">{getModuleSubtitle(course, mod.id, mod.subtitle)}</p>
+                  <p className="relative truncate text-xs text-slate-400">{getModuleSubtitle(course, mod.id, mod.subtitle)}</p>
                 </div>
-                <div className="text-right text-xs">
+                <div className="relative text-right text-xs">
                   <div className="font-bold text-slate-200">{done}/{lv.length} 关</div>
                   <div className="text-gold-300">★ {stars}/{maxStars}</div>
                 </div>
@@ -148,9 +151,9 @@ function LevelNode({
             ? 'bg-night-800 text-slate-600'
             : completed
               ? 'bg-emerald-500/15 text-emerald-300'
-              : 'text-white'
+              : ''
         }`}
-        style={!locked && !completed ? { background: `linear-gradient(135deg, ${langColor}cc, ${langColor}66)` } : undefined}
+        style={!locked && !completed ? { background: `linear-gradient(135deg, ${langColor}cc, ${langColor}66)`, color: textOn(langColor) } : undefined}
       >
         {locked ? <Lock size={15} /> : index + 1}
       </span>
