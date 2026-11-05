@@ -198,6 +198,27 @@ if let Some(v) = opt { }       // 只关心一种情况`,
       code: 'echo "hello" > out.txt   # 覆盖写入\necho "more" >> out.txt   # 追加',
     },
   ],
+  git: [
+    {
+      title: '核心工作流（每天最常用）',
+      code: 'git status              # 查看当前状态\ngit add .               # 暂存所有改动\ngit commit -m "修复登录报错"  # 提交（说清为什么改）',
+      note: 'status → add → commit 三步循环',
+    },
+    {
+      title: '分支操作',
+      code: 'git switch -c feat/login   # 新建并切换分支\ngit switch main            # 切回主分支\ngit merge feat/login       # 合并分支',
+      note: '一条分支一个功能，写完就合并',
+    },
+    {
+      title: '远程协作',
+      code: 'git remote add origin <url>  # 关联远程仓库\ngit push -u origin main      # 首次推送并建立跟踪\ngit pull                     # 拉取同事的更新',
+      note: 'push 前先 pull，减少冲突',
+    },
+    {
+      title: '查看历史与差异',
+      code: 'git log --oneline      # 一行一条看历史\ngit diff               # 看未暂存的改动\ngit diff --staged      # 看已暂存的改动',
+    },
+  ],
   prompt: [
     {
       title: '结构化提问五要素骨架',

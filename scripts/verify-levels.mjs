@@ -48,6 +48,12 @@ import { COLLAB_ADVANCED } from '../src/data/collab/advanced.ts';
 import { COLLAB_TIPS } from '../src/data/collab/tips.ts';
 import { COLLAB_BEST } from '../src/data/collab/best.ts';
 import { COLLAB_INTEGRATION } from '../src/data/collab/integration.ts';
+import { GIT_BASIC } from '../src/data/git/basic.ts';
+import { GIT_PARADIGM } from '../src/data/git/paradigm.ts';
+import { GIT_ADVANCED } from '../src/data/git/advanced.ts';
+import { GIT_TIPS } from '../src/data/git/tips.ts';
+import { GIT_BEST } from '../src/data/git/best.ts';
+import { GIT_INTEGRATION } from '../src/data/git/integration.ts';
 
 import { ALGO_BASIC } from '../src/data/algo/basic.ts';
 import { ALGO_PARADIGM } from '../src/data/algo/paradigm.ts';
@@ -59,6 +65,7 @@ import { executeJsLocally } from '../src/judge/local-js.ts';
 import { agentPreamble } from '../src/data/agent-runtime.ts';
 import { execShell } from '../src/judge/linux-sim.ts';
 import { checkPromptSubmission } from '../src/judge/prompt-judge.ts';
+import { runGitScript } from '../src/judge/git-sim.ts';
 
 const LANG_EXEC = {
   go: { id: 'gl1260', args: '', file: 'main.go' },
@@ -78,6 +85,7 @@ const CHAPTERS = [
   ['linux', 'basic', LINUX_BASIC], ['linux', 'text', LINUX_TEXT], ['linux', 'perm', LINUX_PERM], ['linux', 'script', LINUX_SCRIPT], ['linux', 'best', LINUX_BEST], ['linux', 'integration', LINUX_INTEGRATION],
   ['agentdev', 'basic', AGENTDEV_BASIC], ['agentdev', 'paradigm', AGENTDEV_PARADIGM], ['agentdev', 'advanced', AGENTDEV_ADVANCED], ['agentdev', 'tips', AGENTDEV_TIPS], ['agentdev', 'best', AGENTDEV_BEST], ['agentdev', 'integration', AGENTDEV_INTEGRATION],
   ['collab', 'basic', COLLAB_BASIC], ['collab', 'paradigm', COLLAB_PARADIGM], ['collab', 'advanced', COLLAB_ADVANCED], ['collab', 'tips', COLLAB_TIPS], ['collab', 'best', COLLAB_BEST], ['collab', 'integration', COLLAB_INTEGRATION],
+  ['git', 'basic', GIT_BASIC], ['git', 'paradigm', GIT_PARADIGM], ['git', 'advanced', GIT_ADVANCED], ['git', 'tips', GIT_TIPS], ['git', 'best', GIT_BEST], ['git', 'integration', GIT_INTEGRATION],
 ];
 
 /** 算法关的作答语言集（JS 本地验证，其余云端） */
@@ -274,6 +282,34 @@ for (const { lang, mod, level } of targets) {
       }
     }
     if (ok4) { passedLevels++; console.log('✓ 要素检查 ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of details4) console.log(d); }
+    continue;
+  }
+
+  // Git 关：本地仓库模拟器判题（solution 输出比对 + starter 防误过）
+  if (level.lang === 'git') {
+    let ok5 = true;
+    const details5 = [];
+    const src = level.solution ?? level.algo?.solutions?.git;
+    if (!src) { ok5 = false; details5.push('  ✗ 缺少 solution 脚本'); }
+    for (const t of level.tests) {
+      if (!ok5) break;
+      const got = runGitScript(src ?? '', level.runtime).replace(/\r/g, '');
+      const want = (t.expected || '').replace(/\r/g, '');
+      if (got !== want) {
+        ok5 = false;
+        details5.push('  ✗ [' + t.name + '] 输出不匹配\n    期望: ' + JSON.stringify(t.expected) + '\n    实际: ' + JSON.stringify(got));
+        break;
+      }
+    }
+    if (ok5) {
+      const vis = level.tests.find((t) => !t.hidden);
+      const starterSrc = level.starter ?? level.algo?.starters?.git;
+      if (vis && starterSrc && runGitScript(starterSrc, level.runtime).replace(/\r/g, '') === (vis.expected || '').replace(/\r/g, '')) {
+        ok5 = false;
+        details5.push('  ✗ starter 在用例「' + vis.name + '」就通过了 —— 起始脚本过于完整');
+      }
+    }
+    if (ok5) { passedLevels++; console.log('✓ Git 模拟器 ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of details5) console.log(d); }
     continue;
   }
 

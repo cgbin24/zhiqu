@@ -108,6 +108,21 @@ console.log("平方：", n * n);
 <!-- 技术栈 / 边界 / 不要做的事 -->
 `,
   },
+  {
+    id: 'git',
+    name: 'Git',
+    tagline: '版本控制命令（本地仓库模拟器）',
+    color: '#f05133',
+    gradient: 'from-orange-600 to-rose-500',
+    monaco: 'shell',
+    fileName: 'git.sh',
+    executor: { provider: 'local' },
+    learnable: false,
+    template: `# Git 命令在本地仓库模拟器中执行
+git init
+git status
+`,
+  },
 ];
 
 export const LANG_MAP: Record<LanguageId, LanguageDef> = Object.fromEntries(
@@ -131,7 +146,7 @@ export interface CourseDef {
   /** 关卡作答使用的执行语言集合 */
   execLangs: LanguageId[];
   /** 品牌 logo（内联 SVG 渲染） */
-  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab';
+  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git';
   /** 课程级模块名覆盖（如 Linux 课的"文件与目录"） */
   moduleNames?: Partial<Record<string, string>>;
   /** 课程级模块副标题覆盖 */
@@ -208,9 +223,36 @@ export const AGENTDEV_TRACK: CourseDef = {
 
 export const LEARNABLE_LANGS = LANGUAGES.filter((l) => l.learnable !== false);
 
+/** Git 实战课：本地仓库模拟器真实判题 */
+export const GIT_TRACK: CourseDef = {
+  id: 'git',
+  name: 'Git 实战',
+  tagline: '版本控制从入门到团队协作，本地模拟器真实判题',
+  icon: '🌿',
+  color: '#f05133',
+  gradient: 'from-orange-600 to-rose-500',
+  execLangs: ['git'],
+  logo: 'git',
+  moduleNames: {
+    basic: '仓库与提交',
+    paradigm: '分支与切换',
+    advanced: '合并与历史',
+    tips: '差异与暂存',
+    best: '团队协作规范',
+    integration: '综合实战',
+  },
+  moduleSubtitles: {
+    basic: 'init / add / commit 核心工作流',
+    paradigm: 'branch / switch 并行开发',
+    advanced: 'merge / log / tag 历史管理',
+    tips: 'diff / stash / .gitignore 日常技巧',
+    best: '提交规范与远程协作',
+    integration: '完整 feature 工作流演练',
+  },
+};
+
 /** AI 协作开发课：以真实项目为主线，提交「给 AI 的文档」做要素判题 */
-export const COLLAB_TRACK: CourseDef = {
-  id: 'collab',
+export const COLLAB_TRACK: CourseDef = {  id: 'collab',
   name: 'AI 协作开发',
   tagline: '与 AI 结对，从需求到落地的系统方法',
   icon: '🤝',
@@ -252,6 +294,7 @@ export const COURSES: CourseDef[] = [
   LINUX_TRACK,
   AGENTDEV_TRACK,
   COLLAB_TRACK,
+  GIT_TRACK,
 ];
 
 export const COURSE_MAP: Record<CourseId, CourseDef> = Object.fromEntries(
@@ -280,6 +323,9 @@ export function executorOf(course: CourseId, execLang?: LanguageId): ExecutorCon
   }
   if (course === 'collab') {
     return LANG_MAP['prompt'].executor;
+  }
+  if (course === 'git') {
+    return LANG_MAP['git'].executor;
   }
   if (course === 'algo') {
     const lang = execLang ?? 'javascript';

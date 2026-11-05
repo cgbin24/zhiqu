@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -88,19 +88,22 @@ export function LearnPath() {
                   <div className="font-bold text-slate-300"><span className="text-gold-300">★</span> {stars}/{maxStars}</div>
                 </div>
               </header>
-              <div className="grid gap-2.5 p-4 sm:grid-cols-2 xl:grid-cols-3">
-                {lv.map((level, i) => (
-                  <LevelNode
-                    key={level.id}
-                    level={level}
-                    index={i}
-                    langColor={course.color}
-                    locked={!isLevelUnlocked(level, completedIds)}
-                    stars={levelStats[level.id]?.stars ?? 0}
-                    completed={completedIds.has(level.id)}
-                    onClick={() => navigate(`/level/${level.id}`)}
-                  />
-                ))}
+              <div className="relative p-4">
+                <ChapterPath ids={lv.map((l) => l.id)} completedIds={completedIds} />
+                <div className="relative z-10 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+                  {lv.map((level, i) => (
+                    <LevelNode
+                      key={level.id}
+                      level={level}
+                      index={i}
+                      langColor={course.color}
+                      locked={!isLevelUnlocked(level, completedIds)}
+                      stars={levelStats[level.id]?.stars ?? 0}
+                      completed={completedIds.has(level.id)}
+                      onClick={() => navigate(`/level/${level.id}`)}
+                    />
+                  ))}
+                </div>
               </div>
             </section>
           );
@@ -124,6 +127,80 @@ function ModuleIcon({ name }: { name: string }) {
   void size;
 }
 
+/* ---------- 章节路径连线：游戏地图式串联 ---------- */
+
+/**
+ * 测量章节内各关卡卡片的中心点，绘制游戏地图式连接线。
+ * 同行直线相连；跨行用平滑贝塞尔曲线。已完成段绿色、当前可打段紫色、未解锁段灰色虚线。
+ * 线绘制在卡片层之下（z-0），从卡片间隙中透出。
+ */
+function ChapterPath({ ids, completedIds }: { ids: string[]; completedIds: Set<string> }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [segs, setSegs] = useState<{ d: string; color: string; dash: boolean }[]>([]);
+
+  useEffect(() => {
+    const measure = () => {
+      const wrap = wrapRef.current;
+      if (!wrap) return;
+      const wRect = wrap.getBoundingClientRect();
+      const pts = Array.from(wrap.querySelectorAll<HTMLElement>('[data-node]')).map((el) => {
+        const r = el.getBoundingClientRect();
+        return { x: r.left - wRect.left + r.width / 2, y: r.top - wRect.top + r.height / 2 };
+      });
+      if (pts.length !== ids.length || pts.length < 2) {
+        setSegs([]);
+        return;
+      }
+      const next: { d: string; color: string; dash: boolean }[] = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i];
+        const b = pts[i + 1];
+        const doneA = completedIds.has(ids[i]);
+        const doneB = completedIds.has(ids[i + 1]);
+        const color = doneA && doneB ? '#34d399' : doneA ? '#a78bfa' : '#2b3a5c';
+        const dash = !doneA;
+        let d: string;
+        if (Math.abs(a.y - b.y) < 4) {
+          d = `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
+        } else {
+          // 跨行：平滑 S 曲线
+          const bend = Math.abs(b.y - a.y) * 0.55;
+          const dirA = b.x > a.x ? 1 : -1;
+          const dirB = b.x > a.x ? -1 : 1;
+          d = `M ${a.x} ${a.y} C ${a.x + dirA * bend} ${a.y + bend * 0.35}, ${b.x + dirB * bend} ${b.y - bend * 0.35}, ${b.x} ${b.y}`;
+        }
+        next.push({ d, color, dash });
+      }
+      setSegs(next);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [ids, completedIds]);
+
+  return (
+    <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full" aria-hidden="true">
+      {segs.map((s, i) => (
+        <path
+          key={i}
+          d={s.d}
+          fill="none"
+          stroke={s.color}
+          strokeWidth={3.5}
+          strokeLinecap="round"
+          strokeDasharray={s.dash ? '2 10' : undefined}
+          opacity={0.75}
+        />
+      ))}
+    </svg>
+  );
+}
+
 function LevelNode({
   level, index, langColor, locked, stars, completed, onClick,
 }: {
@@ -132,6 +209,7 @@ function LevelNode({
   const stat = useProgress.getState().levelStats[level.id];
   return (
     <motion.button
+      data-node={level.id}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}

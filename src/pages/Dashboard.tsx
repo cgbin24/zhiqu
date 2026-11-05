@@ -6,6 +6,7 @@ import { ACHIEVEMENTS } from '@/data/achievements';
 import { dailyLevel, levelsOfChapter, totalLevels } from '@/data/languages';
 import { COURSES, LANGUAGES } from '@/data/languages/registry';
 import { BrandLogo } from '@/components/BrandLogo';
+import { ActivityHeatmap } from '@/components/ActivityHeatmap';
 import { MODULES } from '@/data/modules';
 import { getRank } from '@/data/ranks';
 import { useProgress } from '@/store/progress';
@@ -17,6 +18,7 @@ export function Dashboard() {
   const levelStats = useProgress((s) => s.levelStats);
   const lastLevelId = useProgress((s) => s.lastLevelId);
   const achievements = useProgress((s) => s.achievements);
+  const activityLog = useProgress((s) => s.activityLog);
 
   const completedIds = useMemo(
     () => new Set(Object.keys(levelStats).filter((k) => levelStats[k].stars > 0)),
@@ -152,6 +154,11 @@ export function Dashboard() {
             </Link>
           );
         })}
+      </div>
+
+      {/* 学习热力图 */}
+      <div className="rounded-2xl border border-night-700 bg-night-900 p-4">
+        <ActivityHeatmap log={activityLog} />
       </div>
 
       {/* 最近成就 */}

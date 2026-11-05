@@ -4,6 +4,7 @@ import { godboltProvider } from './godbolt';
 import { wandboxProvider } from './wandbox';
 import { localJsProvider } from './local-js';
 import { execShell } from './linux-sim';
+import { runGitScript } from './git-sim';
 import { checkPromptSubmission, promptCheckReport } from './prompt-judge';
 
 /* ---------------- 节流队列：公共 API 礼貌限速 ---------------- */
@@ -33,6 +34,19 @@ async function executeWithFallback(req: ExecRequest): Promise<ExecResult> {
     return {
       executed: true,
       stdout: promptCheckReport(req.source, req.runtime),
+      stderr: '',
+      exitCode: 0,
+      timeMs: Math.max(1, Math.round(performance.now() - t0)),
+      provider: 'godbolt',
+    };
+  }
+  // Git 实战课：本地模拟器（runtime 携带初始仓库状态 JSON）
+  if (req.lang === 'git') {
+    const t0 = performance.now();
+    const out = runGitScript(req.source, req.runtime);
+    return {
+      executed: true,
+      stdout: out,
       stderr: '',
       exitCode: 0,
       timeMs: Math.max(1, Math.round(performance.now() - t0)),

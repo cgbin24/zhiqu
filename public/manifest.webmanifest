@@ -1,0 +1,17 @@
+{
+  "name": "智码 CodeQuest · 编程闯关",
+  "short_name": "智码",
+  "description": "游戏化编程闯关学习平台 —— Go/Rust/C++、算法、Linux、Agent 开发与 AI 协作，浏览器内真实判题",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

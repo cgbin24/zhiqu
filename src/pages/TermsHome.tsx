@@ -39,6 +39,12 @@ export function TermsHome() {
           >
             🎯 开始术语测验（答对每题 +2 XP）
           </Link>
+          <Link
+            to="/terms/graph"
+            className="rounded-lg border border-quest-500/40 bg-quest-500/10 px-4 py-2 text-sm font-bold text-quest-300 transition-colors hover:bg-quest-500/20"
+          >
+            🕸️ 关系图谱
+          </Link>
         </div>
       </div>
 

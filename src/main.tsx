@@ -16,3 +16,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 requestAnimationFrame(() =>
   requestAnimationFrame(() => document.getElementById('boot-loader')?.remove()),
 );
+
+// PWA：生产环境注册 Service Worker（离线可刷已加载页面 + 可安装到桌面）
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* 注册失败不影响使用 */
+    });
+  });
+}
