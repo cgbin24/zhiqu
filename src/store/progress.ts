@@ -362,12 +362,13 @@ export const useProgress = create<ProgressState>()(
 
       foundEasterEgg: (id) => {
         const s = get();
-        if (s.counters.easterEggs[id]) return [];
+        // counters.easterEggs 可能因旧版持久化状态缺失（见 persist merge 兜底）
+        if (s.counters.easterEggs?.[id]) return [];
         set({
           counters: {
             ...s.counters,
             easterEggFound: true,
-            easterEggs: { ...s.counters.easterEggs, [id]: true },
+            easterEggs: { ...(s.counters.easterEggs ?? {}), [id]: true },
           },
         });
         return evaluateAchievements(set, get);
@@ -439,6 +440,20 @@ export const useProgress = create<ProgressState>()(
     {
       name: 'zhiqu-codequest',
       version: 1,
+      /**
+       * 旧版本持久化状态兜底：zustand persist 默认浅合并，
+       * 旧 counters/streak（缺少后来新增的字段如 easterEggs）会整体覆盖新默认值，
+       * 导致 undefined 索引崩溃。这里把嵌套结构与初始默认值逐层合并。
+       */
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<ProgressState>;
+        return {
+          ...current,
+          ...p,
+          counters: { ...current.counters, ...(p.counters ?? {}) },
+          streak: { ...current.streak, ...(p.streak ?? {}) },
+        } as ProgressState;
+      },
     },
   ),
 );
