@@ -11,3 +11,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>,
 );
+
+// 应用完成首次绘制后再移除启动加载器（双 rAF 确保真实内容已上屏）
+requestAnimationFrame(() =>
+  requestAnimationFrame(() => document.getElementById('boot-loader')?.remove()),
+);

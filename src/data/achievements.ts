@@ -1,7 +1,8 @@
 import type { AchievementDef } from '@/types';
-import { totalTerms } from '@/data/terms';
+// 只需要术语总数这个数字 —— 直接 import 术语库会把 534 条数据拖进首屏 bundle
+import { TERMS_TOTAL } from './terms/total';
 
-const TOTAL_TERMS = totalTerms();
+const TOTAL_TERMS = TERMS_TOTAL;
 
 /** 成就定义（check 均为纯函数，配合 store 计数评估） */
 export const ACHIEVEMENTS: AchievementDef[] = [

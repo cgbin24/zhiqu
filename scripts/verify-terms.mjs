@@ -5,6 +5,7 @@
  *  - relations 指向存在的术语 id，且不自指
  *  - cat 与所在文件一致
  */
+import { readFileSync } from 'node:fs';
 import { LC_LIFECYCLE } from '../src/data/terms/lifecycle.ts';
 import { EFF_EFFECTS } from '../src/data/terms/effects.ts';
 import { DSA_DSA } from '../src/data/terms/dsa.ts';
@@ -79,6 +80,16 @@ for (const t of all) {
 }
 
 console.log(`共 ${all.length} 个术语`);
+
+// 生成文件 total.ts 的总数必须与实际数据一致（achievements.ts 只引用该数字以避免术语库进入首屏 bundle）
+const totalFile = readFileSync(new URL('../src/data/terms/total.ts', import.meta.url), 'utf8');
+const m = totalFile.match(/TERMS_TOTAL = (\d+)/);
+if (!m) {
+  errors.push('src/data/terms/total.ts 缺失或格式错误 —— 运行 node scripts/gen-terms-total.mjs 重新生成');
+} else if (Number(m[1]) !== all.length) {
+  errors.push(`TERMS_TOTAL=${m[1]} 与实际 ${all.length} 不一致 —— 运行 node scripts/gen-terms-total.mjs 重新生成`);
+}
+
 if (errors.length > 0) {
   console.log(`发现 ${errors.length} 个问题:`);
   for (const e of errors) console.log('  - ' + e);
