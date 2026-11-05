@@ -190,10 +190,13 @@ html[data-theme='light'] *::-webkit-scrollbar-thumb:hover {
 
 body {
   margin: 0;
+  /* 背景三要素：渐变固定到视口 + 最小高度覆盖全屏 → 滚动到任何位置都不会"断层" */
   background:
     radial-gradient(1200px 500px at 85% -10%, rgb(100 64 224 / 0.16), transparent 60%),
     radial-gradient(900px 420px at -10% 110%, rgb(0 173 216 / 0.10), transparent 55%),
     var(--color-night-950);
+  background-attachment: fixed;
+  min-height: 100vh;
   color: #e2e8f0;
   font-family: ui-sans-serif, system-ui, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -204,6 +207,7 @@ html[data-theme='light'] body {
     radial-gradient(1200px 500px at 85% -10%, rgb(124 92 240 / 0.10), transparent 60%),
     radial-gradient(900px 420px at -10% 110%, rgb(0 173 216 / 0.08), transparent 55%),
     var(--color-night-950);
+  background-attachment: fixed;
   color: #233252;
 }
 

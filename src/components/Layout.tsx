@@ -169,13 +169,12 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-6 md:pb-16">
-        {/* 页面切换动效 */}
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-6 md:pb-16 min-h-[calc(100vh-3.5rem-4rem)]">
+        {/* 页面切换动效（纯淡入 0.12s，卸载间隙不可感知） */}
         <motion.div
-          key={location.pathname}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.18 }}
+          transition={{ duration: 0.12 }}
         >
           <Outlet />
         </motion.div>
