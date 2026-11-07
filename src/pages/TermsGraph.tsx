@@ -154,6 +154,11 @@ export function TermsGraph() {
     const card = cardRef.current!;
     const ctx = canvas.getContext('2d')!;
     let alpha = 1;
+    const themeRef = { current: document.documentElement.dataset.theme === 'light' ? 'light' : 'dark' };
+    const themeObs = new MutationObserver(() => {
+      themeRef.current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+    });
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     let suppressClickUntil = 0;
     let raf = 0;
     let W = 0;
@@ -384,7 +389,7 @@ export function TermsGraph() {
           if (e.b === hoverIdx) neighborIds.add(e.a);
         }
       }
-      const edgeAlpha = 0.15 + Math.min(0.14, v.k * 0.035);
+      const dark = themeRef.current === 'dark';
       for (const e of edges) {
         const a = nodes[e.a];
         const b = nodes[e.b];
@@ -392,13 +397,15 @@ export function TermsGraph() {
         const dimB = active.size > 0 && !active.has(b.cat);
         const hi = hovered && (e.a === hoverIdx || e.b === hoverIdx);
         ctx.strokeStyle = hi
-          ? 'rgba(251,191,36,0.9)'
+          ? 'rgba(251,191,36,0.95)'
           : dimA || dimB
-            ? 'rgba(100,116,139,0.05)'
+            ? dark ? 'rgba(148,163,184,0.10)' : 'rgba(100,116,139,0.05)'
             : hovered
-              ? 'rgba(100,116,139,0.08)'
-              : `rgba(124,92,240,${edgeAlpha})`;
-        ctx.lineWidth = (hi ? 2.2 : 1.1) / Math.max(1, v.k);
+              ? dark ? 'rgba(148,163,184,0.16)' : 'rgba(100,116,139,0.08)'
+              : dark
+                ? `rgba(167,139,250,${0.32 + Math.min(0.18, v.k * 0.05)})`
+                : `rgba(124,92,240,${0.15 + Math.min(0.14, v.k * 0.035)})`;
+        ctx.lineWidth = (hi ? 2.2 : dark ? 1.3 : 1.1) / Math.max(1, v.k);
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
@@ -451,7 +458,8 @@ export function TermsGraph() {
       const chipR = Math.min(24, 44 / fv.k);
       const centerR = Math.min(40, 52 / fv.k);
       // 同心圆背景
-      ctx.strokeStyle = 'rgba(124,92,240,0.08)';
+      const fDark = themeRef.current === 'dark';
+      ctx.strokeStyle = fDark ? 'rgba(148,163,184,0.14)' : 'rgba(124,92,240,0.08)';
       for (const rr of [f.rx * 0.55, f.rx, f.rx * 1.3]) {
         ctx.lineWidth = 1 / fv.k;
         ctx.beginPath();
@@ -462,7 +470,7 @@ export function TermsGraph() {
       for (const p of f.pos) {
         const ang = Math.atan2(p.y, p.x);
         const hi = hovered && (p.node === hovered || f.center === hovered);
-        ctx.strokeStyle = hi ? 'rgba(251,191,36,0.9)' : p.node.color + 'aa';
+        ctx.strokeStyle = hi ? 'rgba(251,191,36,0.95)' : p.node.color + (themeRef.current === 'dark' ? 'e6' : 'aa');
         ctx.lineWidth = (hi ? 3 : 2) / fv.k;
         ctx.beginPath();
         ctx.moveTo(Math.cos(ang) * centerR, Math.sin(ang) * centerR);
@@ -709,6 +717,7 @@ export function TermsGraph() {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      themeObs.disconnect();
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerup', onUp);
