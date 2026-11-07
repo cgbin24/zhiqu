@@ -341,7 +341,7 @@ export function TermsGraph() {
       focusRef.current = { center, pos, ringR };
     };
 
-    const enterFocus = (node: GNode) => {
+    const enterFocus = (node: GNode, opts?: { replace?: boolean }) => {
       if (modeRef.current === 'global') savedViewRef.current = { ...viewRef.current };
       modeRef.current = 'focus';
       alpha = 0;
@@ -349,15 +349,25 @@ export function TermsGraph() {
       setFocusName(node.name);
       setHoverInfo(null);
       hoverRef.current = null;
-    };
+      // 焦点状态写入 URL：从详情页返回/刷新/分享都能恢复原状态
+      navigate('/terms/graph?focus=' + node.id, { replace: Boolean(opts?.replace) });
+    }
 
     const exitFocus = () => {
+      navigate('/terms/graph', { replace: true });
       modeRef.current = 'global';
       focusRef.current = null;
       setFocusName(null);
       if (savedViewRef.current) viewRef.current = { ...savedViewRef.current };
     };
     exitFocusRef.current = exitFocus;
+
+    /* —— 从 URL 恢复焦点状态（详情页返回 / 刷新 / 分享链接） —— */
+    const fm = window.location.hash.match(/[?&]focus=([\w-]+)/);
+    if (fm) {
+      const focusNode = graph.nodes.find((n) => n.id === fm[1]);
+      if (focusNode) enterFocus(focusNode, { replace: true });
+    }
 
     /* —— 绘制：全局模式 —— */
     const drawGlobal = () => {
@@ -617,9 +627,9 @@ export function TermsGraph() {
       if (!best) return;
       if (modeRef.current === 'focus') {
         if (best === focusRef.current!.center) navigate(`/terms/${best.cat}/${best.id}`);
-        else enterFocus(best); // 环绕节点：以它为中心重新展开
+        else enterFocus(best); // 环绕节点：以它为中心重新展开（push 历史，返回可回溯）
       } else {
-        enterFocus(best); // 全局视图：点击进入焦点放射模式
+        enterFocus(best); // 全局视图：点击进入焦点放射模式（push 历史）
       }
     };
     const onWheel = (ev: WheelEvent) => {
