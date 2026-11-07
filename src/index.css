@@ -144,10 +144,6 @@ html.theme-transition *::after {
     box-shadow 0.32s ease !important;
 }
 
-html, body {
-  height: 100%;
-}
-
 /* 页面级滚动条：细窄半透明，不喧宾夺主 */
 html {
   scrollbar-width: thin;
@@ -197,11 +193,15 @@ html[data-theme='light'] *::-webkit-scrollbar-thumb:hover {
   scrollbar-color: rgba(124, 92, 240, 0.45) transparent;
 }
 
+html {
+  /* 画布兜底色与 ::before 纯色完全一致（过滚动/内容超出区域无色差割裂） */
+  background-color: var(--color-night-950);
+}
+
 body {
   margin: 0;
-  /* 渐变背景放在 body::before 的 fixed 定位层：
-     position:fixed 图层只合成一次，滚动零重绘（background-attachment:fixed 会每帧强制全页重绘，造成滚动闪烁掉帧） */
-  background-color: var(--color-night-950);
+  /* 纯色底 + 渐变全部由 ::before 固定层承担，body 自身透明：
+     position:fixed 图层只合成一次，滚动零重绘；文档任何高度都不会露出异色 */
   color: #e2e8f0;
   font-family: ui-sans-serif, system-ui, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -213,18 +213,19 @@ body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
+  background-color: var(--color-night-950);
+  background-image:
     radial-gradient(1200px 500px at 85% -10%, rgb(100 64 224 / 0.16), transparent 60%),
     radial-gradient(900px 420px at -10% 110%, rgb(0 173 216 / 0.10), transparent 55%);
 }
 
 html[data-theme='light'] body {
-  background-color: var(--color-night-950);
   color: #233252;
 }
 
 html[data-theme='light'] body::before {
-  background:
+  background-color: var(--color-night-950);
+  background-image:
     radial-gradient(1200px 500px at 85% -10%, rgb(124 92 240 / 0.10), transparent 60%),
     radial-gradient(900px 420px at -10% 110%, rgb(0 173 216 / 0.08), transparent 55%);
 }
