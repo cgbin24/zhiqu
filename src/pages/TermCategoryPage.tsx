@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Search } from 'lucide-react';
 import { TERM_CATEGORY_MAP, getTerm, searchTerms, termsOfCategory } from '@/data/terms';
@@ -126,6 +126,10 @@ export function TermCategoryPage() {
 /** 详情页（单独导出，路由 /terms/:cat/:tid） */
 export function TermDetailPage() {
   const { cat = '', tid = '' } = useParams<{ cat: string; tid: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  // 只有从关系图谱进入时才显示「返回视图」按钮（navigate 携带的 state 标记）
+  const fromGraph = (location.state as { from?: string } | null)?.from === 'graph';
   const def = TERM_CATEGORY_MAP[cat as TermCatId];
   const term = getTerm(tid);
   const markTermViewed = useProgress((s) => s.markTermViewed);
@@ -154,7 +158,15 @@ export function TermDetailPage() {
         <Link to={`/terms/${term.cat}`} className="text-slate-500 hover:text-slate-300">{def.name}</Link>
         <span className="text-slate-600">/</span>
         <span className="font-semibold text-slate-300">{term.name}</span>
-        {viewed && <span className="ml-auto rounded bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300">已学习</span>}
+        {fromGraph && (
+          <button
+            onClick={() => navigate(`/terms/graph?focus=${term.id}`)}
+            className="ml-auto flex items-center gap-1.5 rounded-lg border border-quest-500/40 bg-quest-500/10 px-3 py-1 text-[11px] font-bold text-quest-300 transition-colors hover:bg-quest-500/20"
+          >
+            🕸️ 返回视图
+          </button>
+        )}
+        {viewed && <span className={`rounded bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300 ${fromGraph ? 'ml-2' : 'ml-auto'}`}>已学习</span>}
       </div>
 
       <div className="rounded-2xl border border-night-700 bg-night-900 p-6">

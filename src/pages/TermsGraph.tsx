@@ -626,7 +626,7 @@ export function TermsGraph() {
       const { best } = pick(ev as unknown as PointerEvent);
       if (!best) return;
       if (modeRef.current === 'focus') {
-        if (best === focusRef.current!.center) navigate(`/terms/${best.cat}/${best.id}`);
+        if (best === focusRef.current!.center) navigate(`/terms/${best.cat}/${best.id}`, { state: { from: 'graph' } });
         else enterFocus(best); // 环绕节点：以它为中心重新展开（push 历史，返回可回溯）
       } else {
         enterFocus(best); // 全局视图：点击进入焦点放射模式（push 历史）
