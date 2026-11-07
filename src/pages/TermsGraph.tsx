@@ -139,7 +139,8 @@ export function TermsGraph() {
   const dragRef = useRef<{ node: GNode | null; panning: boolean; lx: number; ly: number }>({ node: null, panning: false, lx: 0, ly: 0 });
   const hoverRef = useRef<GNode | null>(null);
   const modeRef = useRef<'global' | 'focus'>('global');
-  const focusRef = useRef<{ center: GNode; pos: FocusPos[]; ringR: number } | null>(null);
+  const focusRef = useRef<{ center: GNode; pos: FocusPos[]; rx: number; ry: number } | null>(null);
+  const focusOffsetRef = useRef({ x: 0, y: 0 });
   const savedViewRef = useRef<{ x: number; y: number; k: number } | null>(null);
   const simulateRef = useRef<((ticks: number) => void) | null>(null);
   const exitFocusRef = useRef<() => void>(() => {});
@@ -331,14 +332,17 @@ export function TermsGraph() {
       // 度数高的放在正上方，其余顺时针
       ring.sort((a, b) => b.degree - a.degree);
       const n = ring.length;
-      const ringR = n === 0 ? 0 : Math.min(320, Math.max(180, 120 + n * 16));
+      // 椭圆自适应画布：无论宽高比例与节点数，环绕节点连同名字都完整落在画布内
+      const rx = Math.max(190, Math.min(W / 2 - 150, 200 + n * 20));
+      const ry = Math.max(140, Math.min(H / 2 - 150, 140 + n * 13));
       const cx = W / 2;
       const cy = H / 2;
       const pos: FocusPos[] = ring.map((node, i) => {
         const ang = -Math.PI / 2 + (i / n) * Math.PI * 2;
-        return { node, x: cx + Math.cos(ang) * ringR, y: cy + Math.sin(ang) * ringR };
+        return { node, x: cx + Math.cos(ang) * rx, y: cy + Math.sin(ang) * ry };
       });
-      focusRef.current = { center, pos, ringR };
+      focusRef.current = { center, pos, rx, ry };
+      focusOffsetRef.current = { x: 0, y: 0 };
     };
 
     const enterFocus = (node: GNode, opts?: { replace?: boolean }) => {
@@ -440,33 +444,37 @@ export function TermsGraph() {
       });
     };
 
-    /* —— 绘制：焦点放射模式 —— */
+    /* —— 绘制：焦点放射模式（支持整体拖动平移） —— */
     const drawFocus = () => {
       const f = focusRef.current!;
       const hovered = hoverRef.current;
+      const ox = focusOffsetRef.current.x;
+      const oy = focusOffsetRef.current.y;
+      const cx = W / 2 + ox;
+      const cy = H / 2 + oy;
       // 同心圆背景
       ctx.strokeStyle = 'rgba(124,92,240,0.08)';
-      for (const rr of [f.ringR * 0.55, f.ringR, f.ringR * 1.45]) {
+      for (const rr of [f.rx * 0.55, f.rx, f.rx * 1.3]) {
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.arc(W / 2, H / 2, rr, 0, Math.PI * 2);
+        ctx.ellipse(cx, cy, rr, (rr / Math.max(f.rx, 1)) * f.ry, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
       // 连线：中心 → 环绕（从芯片边缘出发，指向清晰）
       for (const p of f.pos) {
-        const ang = Math.atan2(p.y - H / 2, p.x - W / 2);
+        const ang = Math.atan2(p.y - cy, p.x - cx);
         const hi = hovered && (p.node === hovered || f.center === hovered);
         ctx.strokeStyle = hi ? 'rgba(251,191,36,0.9)' : p.node.color + 'aa';
         ctx.lineWidth = hi ? 3 : 2;
         ctx.beginPath();
-        ctx.moveTo(W / 2 + Math.cos(ang) * 46, H / 2 + Math.sin(ang) * 46);
+        ctx.moveTo(cx + Math.cos(ang) * 46, cy + Math.sin(ang) * 46);
         ctx.lineTo(p.x - Math.cos(ang) * 27, p.y - Math.sin(ang) * 27);
         ctx.stroke();
       }
       // 中心节点（大芯片）
       const c = f.center;
       ctx.beginPath();
-      ctx.arc(W / 2, H / 2, 40, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 40, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
       ctx.lineWidth = 4;
@@ -475,11 +483,11 @@ export function TermsGraph() {
       ctx.font = "38px system-ui, 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(c.icon, W / 2, H / 2 + 2);
+      ctx.fillText(c.icon, cx, cy + 2);
       // 中心名字（芯片下方）
       ctx.font = "700 15px system-ui, 'PingFang SC', sans-serif";
       ctx.fillStyle = '#334155';
-      ctx.fillText(c.name, W / 2, H / 2 + 62);
+      ctx.fillText(c.name, cx, cy + 62);
       // 环绕节点（小芯片 + 下方名字）
       for (const p of f.pos) {
         const isHover = hovered === p.node;
@@ -536,11 +544,13 @@ export function TermsGraph() {
         let sy: number;
         let hr: number;
         if (modeRef.current === 'focus' && focusRef.current) {
+          const ox = focusOffsetRef.current.x;
+          const oy = focusOffsetRef.current.y;
           if (focusRef.current.center === hoveredNow) {
-            sx = W / 2; sy = H / 2; hr = 40;
+            sx = W / 2 + ox; sy = H / 2 + oy; hr = 40;
           } else {
             const p = focusRef.current.pos.find((q) => q.node === hoveredNow)!;
-            sx = p.x; sy = p.y; hr = 24;
+            sx = p.x + ox; sy = p.y + oy; hr = 24;
           }
         } else {
           sx = hoveredNow.x * v.k + v.x;
@@ -569,10 +579,12 @@ export function TermsGraph() {
       const sx = ev.clientX - rect.left;
       const sy = ev.clientY - rect.top;
       if (modeRef.current === 'focus' && focusRef.current) {
+        const ox = focusOffsetRef.current.x;
+        const oy = focusOffsetRef.current.y;
         let best: GNode | null = null;
         let bestD = Infinity;
         const consider = (node: GNode, x: number, y: number, r: number) => {
-          const d = Math.hypot(node.x * 0 + x - sx, y - sy);
+          const d = Math.hypot(x + ox - sx, y + oy - sy);
           if (d < r + 6 && d < bestD) { best = node; bestD = d; }
         };
         consider(focusRef.current.center, W / 2, H / 2, 40);
@@ -592,7 +604,12 @@ export function TermsGraph() {
     const onDown = (ev: PointerEvent) => {
       const { best, sx, sy } = pick(ev);
       if (best && modeRef.current === 'global') dragRef.current.node = best;
-      else if (modeRef.current === 'global') { dragRef.current.panning = true; dragRef.current.lx = sx; dragRef.current.ly = sy; }
+      else {
+        // 全局空位平移 / 焦点模式整体拖动
+        dragRef.current.panning = true;
+        dragRef.current.lx = sx;
+        dragRef.current.ly = sy;
+      }
       if (modeRef.current === 'global') canvas.setPointerCapture(ev.pointerId);
     };
     const onMove = (ev: PointerEvent) => {
@@ -604,9 +621,17 @@ export function TermsGraph() {
         alpha = Math.min(0.3, Math.max(alpha, 0.15));
         return;
       }
-      if (modeRef.current === 'global' && dragRef.current.panning) {
-        viewRef.current.x += sx - dragRef.current.lx;
-        viewRef.current.y += sy - dragRef.current.ly;
+      if (dragRef.current.panning) {
+        const dx = sx - dragRef.current.lx;
+        const dy = sy - dragRef.current.ly;
+        if (modeRef.current === 'focus') {
+          // 焦点模式：整体平移放射结构
+          focusOffsetRef.current.x += dx;
+          focusOffsetRef.current.y += dy;
+        } else {
+          viewRef.current.x += dx;
+          viewRef.current.y += dy;
+        }
         dragRef.current.lx = sx;
         dragRef.current.ly = sy;
         return;
@@ -616,7 +641,7 @@ export function TermsGraph() {
       if (changed) {
         setHoverInfo(best ? { name: best.name, en: best.en, cat: CAT_NAME.get(best.cat) ?? best.cat, color: best.color, icon: best.icon, degree: best.degree, related: best.related } : null);
       }
-      canvas.style.cursor = best ? 'pointer' : 'default';
+      canvas.style.cursor = best ? 'pointer' : modeRef.current === 'focus' ? 'grab' : 'default';
     };
     const onUp = () => {
       dragRef.current.node = null;
