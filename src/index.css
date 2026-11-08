@@ -144,53 +144,38 @@ html.theme-transition *::after {
     box-shadow 0.32s ease !important;
 }
 
-/* 页面级滚动条：细窄半透明，不喧宾夺主 */
+/* ---------------- 滚动条：无卡槽 ----------------
+   内部滚动容器（代码块/面板/列表）：完全隐藏滚动条 —— 零卡槽、内容贴边圆角完整，
+   滚轮/触控板/触摸照常滚动，内容截断即滚动暗示。
+   页面级滚动条：保留细窄紫色滑块（位于浏览器窗口边缘，不侵入任何面板）。 */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
 html {
   scrollbar-width: thin;
-  scrollbar-color: rgba(124, 92, 240, 0.5) transparent;
-  scrollbar-gutter: stable;
+  scrollbar-color: rgba(124, 92, 240, 0.55) transparent;
 }
 html::-webkit-scrollbar {
   width: 8px;
+  display: block;
 }
 html::-webkit-scrollbar-track {
   background: transparent;
 }
 html::-webkit-scrollbar-thumb {
-  background: rgba(124, 92, 240, 0.4);
+  background: rgba(124, 92, 240, 0.45);
   border-radius: 8px;
 }
 html::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 92, 240, 0.65);
+  background: rgba(124, 92, 240, 0.7);
 }
 html[data-theme='light']::-webkit-scrollbar-thumb {
-  background: rgba(124, 92, 240, 0.35);
-}
-
-/* 内部小容器（代码块/表格）保留细窄自绘滚动条 */
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-*::-webkit-scrollbar-thumb {
-  background: rgba(43, 58, 92, 0.9);
-  border-radius: 8px;
-}
-*::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 77, 120, 1);
-}
-html[data-theme='light'] *::-webkit-scrollbar-thumb {
-  background: rgba(200, 210, 234, 0.9);
-}
-html[data-theme='light'] *::-webkit-scrollbar-thumb:hover {
-  background: rgba(176, 189, 224, 1);
-}
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(124, 92, 240, 0.45) transparent;
+  background: rgba(124, 92, 240, 0.4);
 }
 
 html {

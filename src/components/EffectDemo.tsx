@@ -151,7 +151,7 @@ function ScrollRevealDemo() {
 function HorizontalScrollDemo() {
   return (
     <div>
-      <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-lg bg-night-900 p-3 [scrollbar-width:thin]">
+      <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-lg bg-night-900 p-3">
         {Array.from({ length: 6 }, (_, i) => (
           <div key={i} className="grid h-28 w-40 shrink-0 snap-center place-items-center rounded-xl bg-gradient-to-br from-sky-500/60 to-indigo-500/40 text-sm text-white">
             第 {i + 1} 屏
