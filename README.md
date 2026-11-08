@@ -52,8 +52,7 @@ npm run preview
 
 ## ☁️ 在线访问
 
-- **Cloudflare Pages（主站）**：https://zhiqu-1h0.pages.dev/
-- GitHub Pages（备用）：https://ux58.github.io/zhiqu/
+- **Cloudflare Pages（唯一部署渠道）**：https://zhiqu-1h0.pages.dev/
 
 ### Cloudflare 部署（直接上传，无需 Git）
 
