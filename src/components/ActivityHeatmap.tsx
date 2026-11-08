@@ -81,14 +81,14 @@ export function ActivityHeatmap({ log }: { log: Record<string, number> }) {
       </div>
       <div className="overflow-x-auto pb-1">
         <div className="min-w-[560px]">
-          {/* 月份标签行：与周列同构对齐 */}
-          <div className="mb-1 flex gap-[3px]">
+          {/* 月份标签行：与周列同构对齐（固定行高，避免塌陷重叠） */}
+          <div className="mb-1 flex h-[13px] gap-[3px]">
             <div className="w-[14px] shrink-0" />
             <div className="flex flex-1 gap-[3px]">
               {weeks.map((_, i) => (
                 <div key={i} className="relative min-w-0 flex-1">
                   {monthLabels[i] && (
-                    <span className="absolute left-0 top-0 whitespace-nowrap text-[9px] text-slate-600">
+                    <span className="absolute left-0 top-0 whitespace-nowrap text-[9px] leading-[13px] text-slate-600">
                       {monthLabels[i]}
                     </span>
                   )}
