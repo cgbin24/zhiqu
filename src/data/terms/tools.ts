@@ -780,6 +780,78 @@ corepack enable        # 按该字段自动使用对应工具与版本`,
 
   // ==================== 环境与脚本 ====================
   {
+    id: 'tool-script',
+    name: '脚本',
+    en: 'Script',
+    cat: 'tools',
+    sub: '环境与脚本',
+    tags: ['脚本', '自动化', '基础'],
+    summary: '脚本是一个文本文件，按顺序写着让解释器自动执行的指令清单——把重复做的事写进文件，交给机器跑。',
+    detail: `**是什么**：脚本就是一个真实存在的文本文件（backup.sh、deploy.py、setup.bat），里面按顺序写着让某个"执行者"（解释器）自动完成的指令清单。执行者拿到文件从上到下逐行执行——把"我每天手动重复做的一串操作"写进文件，交给机器跑。
+
+**它不是抽象概念，物理形态就是一个文件**：用记事本打开 backup.sh，里面就三行 mysqldump、cp、echo；跑 \`bash backup.sh\`，三行命令自动依次执行。
+
+**典型场景**：
+- **定时任务**：backup.sh 挂在 cron/计划任务上，每天凌晨自动备份数据库；
+- **测试验证**：test.sh 改完代码跑一遍全量用例，全绿才允许提交；
+- **获取信息**：fetch_price.py 每天抓一次接口数据汇总成表；
+- **批量执行**：rename.py 把 1000 个图片按日期重命名；
+- **工作交接**：setup.sh 新人一键装环境（装依赖→建表→启动服务）；
+- **部署上线**：deploy.sh 拉代码→装依赖→构建→重启，一条命令发布。
+
+**常见脚本语言**：Shell/Bash（.sh，服务器运维）、BAT/PowerShell（.ps1，Windows）、Python（.py，数据与 AI）、Node.js（.js，前端构建）、SQL（.sql，数据修复）。行业语感：**偏自动化一段流程、随写随改的叫脚本；构建完整产品的叫程序**——界限不严格，但心态不同。
+
+**技巧与坑**：发现自己重复做第三遍的操作，就写成脚本；脚本要有输出（echo 进度），否则失败了你不知道卡在哪；先在测试环境跑通再挂定时任务。`,
+    relations: [
+      { to: 'tool-interpreter', desc: '解释器是脚本的执行者：逐行读取并执行脚本文件' },
+      { to: 'tool-shell-basics', desc: 'Shell 是最常见的脚本解释器，.sh 脚本由它执行' },
+      { to: 'tool-cron', desc: '定时任务让脚本在指定时间自动运行' },
+      { to: 'tool-git', desc: 'Git 课里敲的每一段命令序列，本质上就是脚本' },
+    ],
+    example: `# backup.sh —— 一个真实的定时备份脚本（用记事本就能打开编辑）
+mysqldump -u root mydb > backup_$(date +%F).sql   # 导出数据库
+cp backup_*.sql /mnt/nas/backups/                  # 复制到nas
+echo "备份完成"                                     # 输出进度
+
+# 运行方式（两种）
+bash backup.sh          # 手动执行一次
+# 挂到 cron：0 2 * * * bash /home/zq/backup.sh   # 每天凌晨 2 点自动跑`,
+    exampleLang: 'bash',
+    interview: '高频：脚本与程序的区别（解释执行 vs 编译执行、流程自动化 vs 产品构建）；写脚本的好习惯（有输出、可幂等、先测试再挂定时）；chmod +x 与 shebang（#!/bin/bash）的作用。',
+  },
+  {
+    id: 'tool-interpreter',
+    name: '解释器',
+    en: 'Interpreter',
+    cat: 'tools',
+    sub: '环境与脚本',
+    tags: ['脚本', '基础'],
+    summary: '解释器是脚本的"执行者"——逐行读取脚本文件并立即执行指令的程序，如 bash、python、node。',
+    detail: `**是什么**：解释器是一个程序，它读取脚本文件，逐行把人类可读的指令翻译并立即执行。你写的脚本本身不会动——是解释器在读它、跑它。bash 跑 .sh，python 跑 .py，node 跑 .js，各自只认自己的语法。
+
+**与编译器的区别**：编译器（如 Go/rustc）先把整个程序翻译成机器码再运行，产物是可执行文件；解释器边读边执行，不产出可执行文件——所以脚本"打开就能改，改完就能跑"，代价是运行速度通常慢于编译型语言。
+
+**典型场景**：\`bash backup.sh\` 是用 bash 解释器执行脚本；\`python fetch.py\` 用 Python 解释器执行；\`node app.js\` 用 Node 解释器执行。同一台机器可以装多个解释器，各跑各的脚本。
+
+**技巧与坑**：脚本第一行的 shebang（如 \`#!/bin/bash\`、\`#!/usr/bin/env python\`）告诉系统用哪个解释器执行——配好 shebang 加 chmod +x，就能像命令一样直接运行；"命令找不到"多半是解释器没装或不在 PATH。`,
+    relations: [
+      { to: 'tool-script', desc: '脚本是解释器的输入：没有解释器，脚本只是一份文本' },
+      { to: 'tool-shell-basics', desc: 'Shell（bash/zsh）就是最常用的命令脚本解释器' },
+      { to: 'tool-env-vars', desc: '解释器与脚本都依赖环境变量获取配置' },
+    ],
+    example: `# 同一台机器上，不同解释器各跑各的脚本
+bash backup.sh          # bash 解释器执行 shell 脚本
+python fetch_price.py   # python 解释器执行 python 脚本
+node build.js           # node 解释器执行 js 脚本
+
+# shebang：让脚本指定自己的解释器，直接当命令跑
+#!/usr/bin/env python
+print("hello")
+# chmod +x fetch.py 后即可 ./fetch.py 直接运行`,
+    exampleLang: 'bash',
+    interview: '高频：解释器与编译器的区别（逐行执行 vs 先整体翻译成机器码）；shebang 的作用；为什么脚本改完立刻生效而编译型语言要重新编译。',
+  },
+  {
     id: 'tool-shell-basics',
     name: 'Shell 命令行基础',
     en: 'Shell Basics',

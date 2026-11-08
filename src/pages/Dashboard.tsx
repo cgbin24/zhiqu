@@ -205,7 +205,7 @@ export function Dashboard() {
         <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-quest-500 to-fuchsia-500 text-lg shadow-lg shadow-quest-500/25">📖</span>
         <div className="min-w-0 flex-1">
           <div className="font-bold text-slate-100">术语百科 <span className="ml-1 text-xs font-normal text-slate-400">全链路 · 页面效果 · 前后端 · 安全 · 网络 · 数据结构与算法 · 工具链 · Agent · AI · 编程英语</span></div>
-          <div className="text-xs text-slate-400">534 个核心术语：全链路地图 + 页面效果实时演示 + 算法可视化 + 测验/速答得 XP</div>
+          <div className="text-xs text-slate-400">536 个核心术语：全链路地图 + 页面效果实时演示 + 算法可视化 + 测验/速答得 XP</div>
         </div>
         <ChevronRight size={16} className="text-quest-400 transition-transform group-hover:translate-x-1" />
       </Link>
