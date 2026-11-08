@@ -3,7 +3,7 @@
  * 无远程加载 → 无空窗、无闪烁、无网络依赖。
  */
 
-export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb';
+export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb' | 'cron';
 
 /** Go：官方青色 "GO" 字标 + 速度线 */
 export function GoLogo({ size = 32 }: { size?: number }) {
@@ -186,6 +186,21 @@ export function KbLogo({ size = 32 }: { size?: number }) {
   );
 }
 
+
+/** 定时任务：时钟表盘 + 指针 */
+export function CronLogo({ size = 32 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="14" fill="#042f2e" />
+      <circle cx="32" cy="32" r="20" fill="#134e4a" stroke="#2dd4bf" strokeWidth="3" />
+      <path d="M32 32 L32 18" stroke="#2dd4bf" strokeWidth="3" strokeLinecap="round" />
+      <path d="M32 32 L43 38" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="32" cy="32" r="2.5" fill="#fbbf24" />
+      <path d="M32 6 L32 12 M58 32 L52 32 M32 58 L32 52 M6 32 L12 32" stroke="#2dd4bf" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
+    </svg>
+  );
+}
+
 export function BrandLogo({ brand, size = 32 }: { brand: BrandId; size?: number }) {
   switch (brand) {
     case 'go': return <GoLogo size={size} />;
@@ -197,5 +212,6 @@ export function BrandLogo({ brand, size = 32 }: { brand: BrandId; size?: number 
     case 'collab': return <CollabLogo size={size} />;
 case 'git': return <GitLogo size={size} />;
 case 'kb': return <KbLogo size={size} />;
+case 'cron': return <CronLogo size={size} />;
   }
 }

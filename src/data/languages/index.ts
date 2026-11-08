@@ -54,6 +54,12 @@ import { KB_ADVANCED } from '../kb/advanced';
 import { KB_TIPS } from '../kb/tips';
 import { KB_BEST } from '../kb/best';
 import { KB_INTEGRATION } from '../kb/integration';
+import { CRON_BASIC } from '../cron/basic';
+import { CRON_PARADIGM } from '../cron/paradigm';
+import { CRON_ADVANCED } from '../cron/advanced';
+import { CRON_TIPS } from '../cron/tips';
+import { CRON_BEST } from '../cron/best';
+import { CRON_INTEGRATION } from '../cron/integration';
 
 /** 章节文件注册表：新增语言/章节在这里追加一行即可 */
 const CHAPTER_FILES: Level[][] = [
@@ -66,6 +72,7 @@ const CHAPTER_FILES: Level[][] = [
   COLLAB_BASIC, COLLAB_PARADIGM, COLLAB_ADVANCED, COLLAB_TIPS, COLLAB_BEST, COLLAB_INTEGRATION,
   GIT_BASIC, GIT_PARADIGM, GIT_ADVANCED, GIT_TIPS, GIT_BEST, GIT_INTEGRATION,
   KB_BASIC, KB_PARADIGM, KB_ADVANCED, KB_TIPS, KB_BEST, KB_INTEGRATION,
+  CRON_BASIC, CRON_PARADIGM, CRON_ADVANCED, CRON_TIPS, CRON_BEST, CRON_INTEGRATION,
 ];
 
 /** 全部关卡（扁平，含课程内全局顺序） */
@@ -85,8 +92,9 @@ const COURSE_ORDER: Record<CourseId, Level[]> = {
   collab: [],
   git: [],
   kb: [],
+  cron: [],
 };
-for (const course of ['go', 'rust', 'cpp', 'javascript', 'algo', 'linux', 'agentdev', 'collab', 'git', 'kb'] as CourseId[]) {
+for (const course of ['go', 'rust', 'cpp', 'javascript', 'algo', 'linux', 'agentdev', 'collab', 'git', 'kb', 'cron'] as CourseId[]) {
   for (const m of MODULES) {
     for (const l of LEVELS) {
       if (l.lang === course && l.module === m.id) COURSE_ORDER[course].push(l);

@@ -88,7 +88,7 @@ export function LevelPlay() {
 
   useEffect(() => {
     if (!level) return;
-    const defaultLang = level.lang === 'linux' ? 'bash' : level.lang === 'collab' ? 'prompt' : level.lang === 'git' ? 'git' : level.lang === 'kb' ? 'kb' : 'javascript';
+    const defaultLang = level.lang === 'linux' ? 'bash' : level.lang === 'collab' ? 'prompt' : level.lang === 'git' ? 'git' : level.lang === 'kb' ? 'kb' : level.lang === 'cron' ? 'cron' : 'javascript';
     setExecLang(defaultLang);
     const initDraft = level.algo ? drafts[`${level.id}:${defaultLang}`] : drafts[level.id];
     setCode(initDraft ?? level.algo?.starters[defaultLang] ?? level.starter ?? '');
@@ -356,7 +356,7 @@ export function LevelPlay() {
                     {visibleTests.map((t, i) => (
                       <div key={i} className="rounded-lg border border-night-700 bg-night-850 p-2.5">
                         <div className="mb-1.5 text-xs font-semibold text-slate-300">{t.name}</div>
-                        {level.lang !== 'collab' && level.lang !== 'git' && level.lang !== 'kb' && t.stdin && (
+                        {level.lang !== 'collab' && level.lang !== 'git' && level.lang !== 'kb' && level.lang !== 'cron' && t.stdin && (
                           <div className="mb-1 text-[11px] text-slate-500">
                             输入：<code className="rounded bg-night-800 px-1 py-0.5 font-mono text-slate-400">{t.stdin.replace(/\n/g, '⏎')}</code>
                           </div>
@@ -506,7 +506,7 @@ export function LevelPlay() {
             <CodeEditor value={code} language={execMonaco} onChange={onCodeChange} />
           </div>
 
-          {level.lang !== 'collab' && level.lang !== 'git' && level.lang !== 'kb' && (
+          {level.lang !== 'collab' && level.lang !== 'git' && level.lang !== 'kb' && level.lang !== 'cron' && (
             <details className="mt-3 rounded-xl border border-night-700 bg-night-900" open>
               <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold text-slate-400">
                 标准输入 stdin（点「运行」时喂给程序）

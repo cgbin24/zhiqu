@@ -18,11 +18,12 @@
 
 ## ✨ 特性
 
-- **九门课程 292 关**：
+- **十门课程 314 关**：
   - **Go / Rust / C++ 各 42 关**（六大模块：基础语法 → 编程思想 → 进阶 → 技巧 → 最佳实践 → 综合实战）
   - **算法课 42 关**（复杂度、双指针、二分、排序、递归/分治/贪心、栈队列哈希链表树、BFS/DFS/拓扑、DP、Dijkstra 等，配 **15 个交互式算法可视化动画**——可播放/单步/调速），可切换 JS / Go / Rust / C++ 作答
   - **Linux 课 30 关**：文件与目录、文本管道、权限与进程、Shell 脚本、系统管理 —— 内置**虚拟文件系统模拟终端**，`grep / sort / find / chmod` 等真实判题，全程离线可用
   - **Agent 开发实战 28 关**：消息与 Token、Prompt 工程、工具调用与 Agent Loop、记忆与 RAG、多智能体与护栏 —— 内置 **Mock LLM 运行时**（思维链 / Function Calling / 检索增强全可离线跑）
+  - **定时任务实战 22 关**：cron 表达式五段语法、服务器巡检四件套（磁盘/内存/证书/HTTP）、SSH 爆破与端口安全监控、阈值分级告警、定时备份与清理 —— 内置**确定性服务器监控模拟器**，从零搭建自己的监控体系
   - **知识库工程 22 关**：PARA 五区架构、front-matter 笔记、双链网络、检索发现、迁移归类、MOC 与每周维护 —— 内置**确定性 PARA 知识库模拟器**，从零搭建真实可运行的知识库
   - **Git 实战 22 关**：init/add/commit 核心流、分支切换、合并与历史、diff/stash/.gitignore、团队协作规范、完整 feature 工作流 —— 内置**确定性仓库模拟器**（提交哈希可复现，全程离线）
   - **AI 协作开发 22 关**：与 AI 结对从需求到落地的系统方法 —— 任务分诊、精确提问五要素、"不要做"边界、Phase 规约、有效反馈、工具选型与审核点设计；提交"给 AI 的文档"由**要素检查引擎**确定性判题
@@ -72,7 +73,7 @@ npx wrangler pages deploy dist --project-name=zhiqu --branch=main
 
 ```bash
 node scripts/verify-levels.mjs go/basic        # 只验证某一章
-node scripts/verify-levels.mjs --full          # 全部 292 关 + starter 防误过检查（云端/本地/模拟器/要素检查按课程分流）
+node scripts/verify-levels.mjs --full          # 全部 314 关 + starter 防误过检查（云端/本地/模拟器/要素检查按课程分流）
 node scripts/verify-terms.mjs                  # 术语数据完整性（关系引用/字段/唯一性）
 ```
 
@@ -92,6 +93,7 @@ src/
 │   ├── collab/       # ⭐ AI 协作课：6 章节文件（tests = 要素检查规则）
 │   ├── git/          # ⭐ Git 课：6 章节文件（仓库模拟器判题）
 │   ├── kb/           # ⭐ 知识库课：6 章节文件（PARA 模拟器判题）
+│   ├── cron/         # ⭐ 定时任务课：6 章节文件（服务器监控模拟器判题）
 │   └── languages/
 │       ├── registry.ts       # ⭐ 语言注册表 + 课程轨道（接入新语言的唯一入口之一）
 │       └── go|rust|cpp/      # 每语言 6 个章节文件（关卡内容）

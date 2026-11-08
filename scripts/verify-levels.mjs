@@ -67,6 +67,13 @@ import { execShell } from '../src/judge/linux-sim.ts';
 import { checkPromptSubmission } from '../src/judge/prompt-judge.ts';
 import { runGitScript } from '../src/judge/git-sim.ts';
 import { runKbScript } from '../src/judge/kb-sim.ts';
+import { runCronScript } from '../src/judge/cron-sim.ts';
+import { CRON_BASIC } from '../src/data/cron/basic.ts';
+import { CRON_PARADIGM } from '../src/data/cron/paradigm.ts';
+import { CRON_ADVANCED } from '../src/data/cron/advanced.ts';
+import { CRON_TIPS } from '../src/data/cron/tips.ts';
+import { CRON_BEST } from '../src/data/cron/best.ts';
+import { CRON_INTEGRATION } from '../src/data/cron/integration.ts';
 import { KB_BASIC } from '../src/data/kb/basic.ts';
 import { KB_PARADIGM } from '../src/data/kb/paradigm.ts';
 import { KB_ADVANCED } from '../src/data/kb/advanced.ts';
@@ -94,6 +101,7 @@ const CHAPTERS = [
   ['collab', 'basic', COLLAB_BASIC], ['collab', 'paradigm', COLLAB_PARADIGM], ['collab', 'advanced', COLLAB_ADVANCED], ['collab', 'tips', COLLAB_TIPS], ['collab', 'best', COLLAB_BEST], ['collab', 'integration', COLLAB_INTEGRATION],
   ['git', 'basic', GIT_BASIC], ['git', 'paradigm', GIT_PARADIGM], ['git', 'advanced', GIT_ADVANCED], ['git', 'tips', GIT_TIPS], ['git', 'best', GIT_BEST], ['git', 'integration', GIT_INTEGRATION],
   ['kb', 'basic', KB_BASIC], ['kb', 'paradigm', KB_PARADIGM], ['kb', 'advanced', KB_ADVANCED], ['kb', 'tips', KB_TIPS], ['kb', 'best', KB_BEST], ['kb', 'integration', KB_INTEGRATION],
+  ['cron', 'basic', CRON_BASIC], ['cron', 'paradigm', CRON_PARADIGM], ['cron', 'advanced', CRON_ADVANCED], ['cron', 'tips', CRON_TIPS], ['cron', 'best', CRON_BEST], ['cron', 'integration', CRON_INTEGRATION],
 ];
 
 /** 算法关的作答语言集（JS 本地验证，其余云端） */
@@ -346,6 +354,34 @@ for (const { lang, mod, level } of targets) {
       }
     }
     if (ok6) { passedLevels++; console.log('✓ KB 模拟器 ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of details6) console.log(d); }
+    continue;
+  }
+
+  // 定时任务关：本地服务器监控模拟器判题（solution 输出比对 + starter 防误过）
+  if (level.lang === 'cron') {
+    let okC = true;
+    const detailsC = [];
+    const src = level.solution ?? level.algo?.solutions?.cron;
+    if (!src) { okC = false; detailsC.push('  ✗ 缺少 solution 脚本'); }
+    for (const t of level.tests) {
+      if (!okC) break;
+      const got = runCronScript(src ?? '', level.runtime).replace(/\r/g, '');
+      const want = (t.expected || '').replace(/\r/g, '');
+      if (got !== want) {
+        okC = false;
+        detailsC.push('  ✗ [' + t.name + '] 输出不匹配\n    期望: ' + JSON.stringify(t.expected) + '\n    实际: ' + JSON.stringify(got));
+        break;
+      }
+    }
+    if (okC) {
+      const vis = level.tests.find((t) => !t.hidden);
+      const starterSrc = level.starter ?? level.algo?.starters?.cron;
+      if (vis && starterSrc && runCronScript(starterSrc, level.runtime).replace(/\r/g, '') === (vis.expected || '').replace(/\r/g, '')) {
+        okC = false;
+        detailsC.push('  ✗ starter 在用例「' + vis.name + '」就通过了 —— 起始脚本过于完整');
+      }
+    }
+    if (okC) { passedLevels++; console.log('✓ Cron 模拟器 ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of detailsC) console.log(d); }
     continue;
   }
 

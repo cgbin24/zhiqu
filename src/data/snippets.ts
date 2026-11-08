@@ -198,6 +198,25 @@ if let Some(v) = opt { }       // 只关心一种情况`,
       code: 'echo "hello" > out.txt   # 覆盖写入\necho "more" >> out.txt   # 追加',
     },
   ],
+  cron: [
+    {
+      title: 'cron 表达式五段速记',
+      code: '分 时 日 月 周\n0  2  *  *   *    # 每天凌晨 2 点\n*/30 9-18 * * 1-5  # 工作日 9-18 点每半小时',
+      note: '五个位置：分钟(0-59) 小时(0-23) 日(1-31) 月(1-12) 周(0-7)',
+    },
+    {
+      title: '添加与管理定时任务',
+      code: 'cron add "0 2 * * *" 备份数据库   # 定时任务\ncron list                        # 查看全部\ncron remove 备份数据库            # 移除',
+    },
+    {
+      title: '服务器巡检四件套',
+      code: 'monitor disk     # 磁盘使用率（阈值 85%）\nmonitor mem      # 内存使用率（阈值 90%）\nmonitor cert     # HTTPS 证书剩余天数\nmonitor http     # 服务存活与响应',
+    },
+    {
+      title: '安全监控与告警',
+      code: 'monitor ssh      # 24h SSH 登录失败次数\nmonitor port 22  # 端口开放检查\nalert "磁盘超过阈值，请处理"  # 推送告警',
+    },
+  ],
   kb: [
     {
       title: 'PARA 核心工作流',

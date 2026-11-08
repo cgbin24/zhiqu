@@ -109,6 +109,18 @@ console.log("平方：", n * n);
 `,
   },
   {
+    id: 'cron',
+    name: '定时任务',
+    tagline: 'cron 调度与服务器安全监控（本地模拟器）',
+    color: '#14b8a6',
+    gradient: 'from-teal-500 to-emerald-400',
+    monaco: 'shell',
+    fileName: 'monitor.sh',
+    executor: { provider: 'local' },
+    learnable: false,
+    template: '# 定时任务与服务器监控在本地模拟器中执行\ncron add "0 2 * * *" 备份数据库\nmonitor disk',
+  },
+  {
     id: 'kb',
     name: '知识库',
     tagline: 'PARA 方法论（本地知识库模拟器）',
@@ -158,7 +170,7 @@ export interface CourseDef {
   /** 关卡作答使用的执行语言集合 */
   execLangs: LanguageId[];
   /** 品牌 logo（内联 SVG 渲染） */
-  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb';
+  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb' | 'cron';
   /** 课程级模块名覆盖（如 Linux 课的"文件与目录"） */
   moduleNames?: Partial<Record<string, string>>;
   /** 课程级模块副标题覆盖 */
@@ -234,6 +246,34 @@ export const AGENTDEV_TRACK: CourseDef = {
 };
 
 export const LEARNABLE_LANGS = LANGUAGES.filter((l) => l.learnable !== false);
+
+/** 定时任务实战课：cron 调度与服务器安全监控，本地模拟器真实判题 */
+export const CRON_TRACK: CourseDef = {
+  id: 'cron',
+  name: '定时任务实战',
+  tagline: 'cron 调度与服务器安全监控，本地模拟器真实判题',
+  icon: '⏰',
+  color: '#14b8a6',
+  gradient: 'from-teal-500 to-emerald-400',
+  execLangs: ['cron'],
+  logo: 'cron',
+  moduleNames: {
+    basic: 'cron 调度基础',
+    paradigm: '服务器巡检',
+    advanced: '安全监控',
+    tips: '告警与通知',
+    best: '定时备份与清理',
+    integration: '综合实战',
+  },
+  moduleSubtitles: {
+    basic: 'cron 表达式、添加任务与手动触发',
+    paradigm: '磁盘/内存/证书/HTTP 四大巡检项',
+    advanced: 'SSH 爆破/端口/入侵迹象监控',
+    tips: '阈值分级、告警推送与防误报',
+    best: '定时备份、日志清理与轮转',
+    integration: '完整服务器监控体系搭建',
+  },
+};
 
 /** 知识库工程课：PARA 方法论，本地知识库模拟器真实判题 */
 export const KB_TRACK: CourseDef = {
@@ -336,6 +376,7 @@ export const COURSES: CourseDef[] = [
   COLLAB_TRACK,
   GIT_TRACK,
   KB_TRACK,
+  CRON_TRACK,
 ];
 
 export const COURSE_MAP: Record<CourseId, CourseDef> = Object.fromEntries(
@@ -370,6 +411,9 @@ export function executorOf(course: CourseId, execLang?: LanguageId): ExecutorCon
   }
   if (course === 'kb') {
     return LANG_MAP['kb'].executor;
+  }
+  if (course === 'cron') {
+    return LANG_MAP['cron'].executor;
   }
   if (course === 'algo') {
     const lang = execLang ?? 'javascript';

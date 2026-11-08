@@ -2,13 +2,13 @@
 
 /* ---------- 语言 ---------- */
 
-export type LanguageId = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash' | 'prompt' | 'git' | 'kb';
+export type LanguageId = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash' | 'prompt' | 'git' | 'kb' | 'cron';
 
 /** 课程轨道：三门语言课 + 算法课 + AI 协作课 + Git 课 */
-export type CourseId = 'go' | 'rust' | 'cpp' | 'javascript' | 'algo' | 'linux' | 'agentdev' | 'collab' | 'git' | 'kb';
+export type CourseId = 'go' | 'rust' | 'cpp' | 'javascript' | 'algo' | 'linux' | 'agentdev' | 'collab' | 'git' | 'kb' | 'cron';
 
 /** 算法/协作关可选择的作答语言 */
-export type AlgoLang = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash' | 'prompt' | 'git' | 'kb';
+export type AlgoLang = 'go' | 'rust' | 'cpp' | 'javascript' | 'bash' | 'prompt' | 'git' | 'kb' | 'cron';
 
 /** 执行器配置：godbolt（云端最新版本）/ local（浏览器本地执行，仅 JS） */
 export interface ExecutorConfig {
