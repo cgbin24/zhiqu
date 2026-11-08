@@ -38,9 +38,7 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        with:
-          # 自动启用 Pages（需仓库允许 Actions 的 pages:write 权限）
-          enablement: true
+        # 首次使用前需在仓库 Settings → Pages → Source 选 GitHub Actions（一次性设置）
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
