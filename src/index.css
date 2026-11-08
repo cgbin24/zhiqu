@@ -145,9 +145,9 @@ html.theme-transition *::after {
 }
 
 /* ---------------- 滚动条：无卡槽 ----------------
-   内部滚动容器（代码块/面板/列表）：完全隐藏滚动条 —— 零卡槽、内容贴边圆角完整，
-   滚轮/触控板/触摸照常滚动，内容截断即滚动暗示。
-   页面级滚动条：保留细窄紫色滑块（位于浏览器窗口边缘，不侵入任何面板）。 */
+   页面级与内部容器滚动条完全隐藏（scrollbar-width:none）——
+   零卡槽、零箭头、内容贴边；滚轮/触摸板/键盘/触摸照常滚动，
+   长页面配有「返回顶部」悬浮按钮兜底。 */
 * {
   scrollbar-width: none;
 }
@@ -155,27 +155,6 @@ html.theme-transition *::after {
   display: none;
   width: 0;
   height: 0;
-}
-html {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(124, 92, 240, 0.55) transparent;
-}
-html::-webkit-scrollbar {
-  width: 8px;
-  display: block;
-}
-html::-webkit-scrollbar-track {
-  background: transparent;
-}
-html::-webkit-scrollbar-thumb {
-  background: rgba(124, 92, 240, 0.45);
-  border-radius: 8px;
-}
-html::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 92, 240, 0.7);
-}
-html[data-theme='light']::-webkit-scrollbar-thumb {
-  background: rgba(124, 92, 240, 0.4);
 }
 
 html {
