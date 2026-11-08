@@ -106,7 +106,7 @@ export function CustomScrollbar() {
     <div
       ref={trackRef}
       aria-hidden="true"
-      className="pointer-events-none fixed right-[3px] top-16 bottom-20 z-50 hidden w-[7px] opacity-0 transition-opacity duration-300 md:bottom-10"
+      className="pointer-events-none fixed right-[3px] top-14 bottom-24 z-50 hidden w-[7px] opacity-0 transition-opacity duration-300 md:bottom-3"
     >
       <div
         ref={thumbRef}
