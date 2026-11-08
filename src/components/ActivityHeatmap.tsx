@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
-/** 热力图展示的周数（约半年） */
-const WEEKS = 26;
+/** 热力图展示的周数（一年） */
+const WEEKS = 52;
 
 function dateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -24,12 +24,15 @@ const LEVEL_BG: Record<0 | 1 | 2 | 3 | 4, string> = {
   4: 'bg-quest-500',
 };
 
+const WEEKDAY_LABELS = ['一', '', '三', '', '五', '', '日'];
+
 /**
- * 学习热力图（GitHub 风格）：最近 26 周，按日活动次数分 5 档强度。
+ * 学习热力图（GitHub 风格）：最近一年，按日活动次数分 5 档强度。
+ * 弹性填充网格：列 flex-1 + 单元格 aspect-square，随面板宽度自动撑满。
  * 数据源 store.activityLog（完成关卡 / 测验 / 笔记 / 浏览术语都会 +1）。
  */
 export function ActivityHeatmap({ log }: { log: Record<string, number> }) {
-  const { weeks, total, activeDays } = useMemo(() => {
+  const { weeks, total, activeDays, monthLabels } = useMemo(() => {
     const today = new Date();
     // 本周一
     const monday = new Date(today);
@@ -46,69 +49,75 @@ export function ActivityHeatmap({ log }: { log: Record<string, number> }) {
         day.setDate(monday.getDate() - w * 7 + d);
         const key = dateKey(day);
         const n = log[key] ?? 0;
-        const future = day.getTime() > today.getTime() && dateKey(day) !== dateKey(today);
+        const future = day.getTime() > today.getTime();
         if (!future && n > 0) {
           total += n;
           activeDays++;
         }
-        col.push({ key, n, future: future || day.getTime() > today.getTime() });
+        col.push({ key, n, future });
       }
       cols.push(col);
     }
-    return { weeks: cols, total, activeDays };
-  }, [log]);
-
-  const monthLabels = useMemo(() => {
-    // 顶部月份标签：在每月第一次出现的列上标注
-    const labels: (string | null)[] = new Array(weeks.length).fill(null);
+    // 月份标签：每月第一次出现的列
+    const labels: (string | null)[] = new Array(cols.length).fill(null);
     let lastMonth = -1;
-    weeks.forEach((col, i) => {
-      const first = col[0];
-      const month = Number(first.key.slice(5, 7));
+    cols.forEach((col, i) => {
+      const month = Number(col[0].key.slice(5, 7));
       if (month !== lastMonth) {
         labels[i] = `${month}月`;
         lastMonth = month;
       }
     });
-    return labels;
-  }, [weeks]);
+    return { weeks: cols, total, activeDays, monthLabels: labels };
+  }, [log]);
 
   return (
     <div>
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-sm font-bold text-slate-200">学习热力图</h3>
         <span className="text-[11px] text-slate-500">
-          近半年 {total} 次活动 · 活跃 {activeDays} 天
+          近一年 {total} 次活动 · 活跃 {activeDays} 天
         </span>
       </div>
       <div className="overflow-x-auto pb-1">
-        <div className="inline-block min-w-full">
-          <div className="mb-1 flex gap-[3px] pl-6 text-[9px] text-slate-600">
-            {monthLabels.map((m, i) => (
-              <span key={i} className="w-[13px] shrink-0 overflow-visible whitespace-nowrap">{m}</span>
-            ))}
-          </div>
-          <div className="flex gap-[3px]">
-            <div className="mr-1 flex flex-col gap-[3px] pt-[1px] text-[8px] leading-[10px] text-slate-600">
-              <span className="h-[11px]">一</span>
-              <span className="h-[11px]"></span>
-              <span className="h-[11px]">三</span>
-              <span className="h-[11px]"></span>
-              <span className="h-[11px]">五</span>
-              <span className="h-[11px]"></span>
-              <span className="h-[11px]">日</span>
+        <div className="min-w-[560px]">
+          {/* 月份标签行：与周列同构对齐 */}
+          <div className="mb-1 flex gap-[3px]">
+            <div className="w-[14px] shrink-0" />
+            <div className="flex flex-1 gap-[3px]">
+              {weeks.map((_, i) => (
+                <div key={i} className="relative min-w-0 flex-1">
+                  {monthLabels[i] && (
+                    <span className="absolute left-0 top-0 whitespace-nowrap text-[9px] text-slate-600">
+                      {monthLabels[i]}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
-            {weeks.map((col, i) => (
-              <div key={i} className="flex flex-col gap-[3px]">
-                {col.map((cell) => (
-                  <span
-                    key={cell.key}
-                    title={cell.future ? '' : `${cell.key} · ${cell.n} 次活动`}
-                    className={`h-[11px] w-[11px] shrink-0 rounded-[3px] ${cell.future ? 'opacity-30' : ''} ${LEVEL_BG[levelOf(cell.n)]} transition-colors`}
-                  />
-                ))}
-              </div>
-            ))}
+          </div>
+          {/* 网格：列 flex-1 + 单元格 aspect-square，铺满面板宽度 */}
+          <div className="flex gap-[3px]">
+            <div className="flex w-[14px] shrink-0 flex-col gap-[3px]">
+              {WEEKDAY_LABELS.map((w, i) => (
+                <span key={i} className="flex flex-1 items-center text-[9px] leading-none text-slate-600">
+                  {w}
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-1 gap-[3px]">
+              {weeks.map((col, i) => (
+                <div key={i} className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                  {col.map((cell) => (
+                    <span
+                      key={cell.key}
+                      title={cell.future ? '' : `${cell.key} · ${cell.n} 次活动`}
+                      className={`aspect-square w-full rounded-[2px] transition-colors ${cell.future ? 'opacity-0' : ''} ${LEVEL_BG[levelOf(cell.n)]}`}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
