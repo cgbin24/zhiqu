@@ -13,6 +13,7 @@ import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { Toasts } from './Toasts';
 import { BackToTop } from './BackToTop';
+import { CustomScrollbar } from './CustomScrollbar';
 
 const NAV = [
   { to: '/', label: '仪表盘', icon: Home, end: true },
@@ -215,6 +216,7 @@ export function Layout() {
 
       <Toasts />
       <BackToTop />
+      <CustomScrollbar />
       {/* 彩蛋点击反馈光环 */}
       <AnimatePresence>
         {eggPing && (
