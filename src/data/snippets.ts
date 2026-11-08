@@ -198,6 +198,27 @@ if let Some(v) = opt { }       // 只关心一种情况`,
       code: 'echo "hello" > out.txt   # 覆盖写入\necho "more" >> out.txt   # 追加',
     },
   ],
+  kb: [
+    {
+      title: 'PARA 核心工作流',
+      code: 'kb init                 # 初始化五区结构\nkb new 10-projects/x --title "标题"  # 新建笔记\nkb list                 # 浏览全部',
+      note: 'Projects/Areas/Resources/Archives 四区 + 收件箱',
+    },
+    {
+      title: '记录与链接',
+      code: 'kb tag <slug> 标签名    # 追加标签\nkb link <slugA> <slugB> # 建立双向链接\nkb backlinks <slug>     # 查看反向链接',
+      note: '双链是知识网络的骨架',
+    },
+    {
+      title: '检索与发现',
+      code: 'kb search 关键词        # 全库搜索\nkb tags                 # 标签统计\nkb stats                # 库存全景',
+    },
+    {
+      title: '迁移与归类',
+      code: 'kb move <slug> 20-areas # 移动到指定分区\nkb archive <slug>       # 归档完结内容',
+      note: '每月整顿一次，收件箱清零',
+    },
+  ],
   git: [
     {
       title: '核心工作流（每天最常用）',

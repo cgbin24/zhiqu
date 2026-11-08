@@ -122,7 +122,7 @@ export function buildAchievementCtx(s: ProgressState): AchievementCheckCtx {
     if (st.stars === 3) threeStarCount++;
     const level = ALL_LEVEL_MAP[id];
     if (!level) continue;
-    if (level.lang === 'algo' || level.lang === 'linux' || level.lang === 'agentdev' || level.lang === 'collab' || level.lang === 'git') {
+    if (level.lang === 'algo' || level.lang === 'linux' || level.lang === 'agentdev' || level.lang === 'collab' || level.lang === 'git' || level.lang === 'kb') {
       algoCompleted++;
     } else if (level.lang === 'go' || level.lang === 'rust' || level.lang === 'cpp') {
       langCompleted[level.lang]++;

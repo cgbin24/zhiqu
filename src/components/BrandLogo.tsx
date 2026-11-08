@@ -3,7 +3,7 @@
  * 无远程加载 → 无空窗、无闪烁、无网络依赖。
  */
 
-export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git';
+export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb';
 
 /** Go：官方青色 "GO" 字标 + 速度线 */
 export function GoLogo({ size = 32 }: { size?: number }) {
@@ -168,6 +168,24 @@ export function GitLogo({ size = 32 }: { size?: number }) {
   );
 }
 
+
+/** 知识库：书本 + 完成勾 */
+export function KbLogo({ size = 32 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="14" fill="#451a03" />
+      <rect x="14" y="12" width="24" height="40" rx="3" fill="#f59e0b" />
+      <rect x="18" y="18" width="16" height="3" rx="1.5" fill="#451a03" opacity="0.7" />
+      <rect x="18" y="24" width="12" height="3" rx="1.5" fill="#451a03" opacity="0.5" />
+      <rect x="30" y="18" width="20" height="28" rx="3" fill="#fbbf24" />
+      <rect x="34" y="24" width="12" height="2.5" rx="1.25" fill="#451a03" opacity="0.6" />
+      <rect x="34" y="29" width="9" height="2.5" rx="1.25" fill="#451a03" opacity="0.45" />
+      <circle cx="48" cy="48" r="7" fill="#22c55e" />
+      <path d="M45 48 L47.5 50.5 L51.5 45.5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function BrandLogo({ brand, size = 32 }: { brand: BrandId; size?: number }) {
   switch (brand) {
     case 'go': return <GoLogo size={size} />;
@@ -178,5 +196,6 @@ export function BrandLogo({ brand, size = 32 }: { brand: BrandId; size?: number 
     case 'agentdev': return <AgentLogo size={size} />;
     case 'collab': return <CollabLogo size={size} />;
 case 'git': return <GitLogo size={size} />;
+case 'kb': return <KbLogo size={size} />;
   }
 }

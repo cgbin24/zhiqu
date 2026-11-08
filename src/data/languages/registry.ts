@@ -109,6 +109,18 @@ console.log("平方：", n * n);
 `,
   },
   {
+    id: 'kb',
+    name: '知识库',
+    tagline: 'PARA 方法论（本地知识库模拟器）',
+    color: '#f59e0b',
+    gradient: 'from-amber-500 to-yellow-500',
+    monaco: 'shell',
+    fileName: 'kb.sh',
+    executor: { provider: 'local' },
+    learnable: false,
+    template: '# 知识库命令在本地 PARA 模拟器中执行\nkb init\nkb tree',
+  },
+  {
     id: 'git',
     name: 'Git',
     tagline: '版本控制命令（本地仓库模拟器）',
@@ -146,7 +158,7 @@ export interface CourseDef {
   /** 关卡作答使用的执行语言集合 */
   execLangs: LanguageId[];
   /** 品牌 logo（内联 SVG 渲染） */
-  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git';
+  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb';
   /** 课程级模块名覆盖（如 Linux 课的"文件与目录"） */
   moduleNames?: Partial<Record<string, string>>;
   /** 课程级模块副标题覆盖 */
@@ -223,6 +235,34 @@ export const AGENTDEV_TRACK: CourseDef = {
 
 export const LEARNABLE_LANGS = LANGUAGES.filter((l) => l.learnable !== false);
 
+/** 知识库工程课：PARA 方法论，本地知识库模拟器真实判题 */
+export const KB_TRACK: CourseDef = {
+  id: 'kb',
+  name: '知识库工程',
+  tagline: '从零搭建真实可运行的个人知识库，PARA 方法论全程实战',
+  icon: '📚',
+  color: '#f59e0b',
+  gradient: 'from-amber-500 to-yellow-500',
+  execLangs: ['kb'],
+  logo: 'kb',
+  moduleNames: {
+    basic: '方案与初始化',
+    paradigm: '记录与链接',
+    advanced: '检索与发现',
+    tips: '迁移与归类',
+    best: '规范与工作流',
+    integration: '综合实战',
+  },
+  moduleSubtitles: {
+    basic: 'PARA 架构、front-matter 与第一条知识',
+    paradigm: '双链、标签与 inbox 处理流',
+    advanced: 'search / tags 知识发现引擎',
+    tips: '迁移归类、生命周期与去重合并',
+    best: '命名规范、MOC 与每周维护',
+    integration: '从零到一完整搭建演练',
+  },
+};
+
 /** Git 实战课：本地仓库模拟器真实判题 */
 export const GIT_TRACK: CourseDef = {
   id: 'git',
@@ -295,6 +335,7 @@ export const COURSES: CourseDef[] = [
   AGENTDEV_TRACK,
   COLLAB_TRACK,
   GIT_TRACK,
+  KB_TRACK,
 ];
 
 export const COURSE_MAP: Record<CourseId, CourseDef> = Object.fromEntries(
@@ -326,6 +367,9 @@ export function executorOf(course: CourseId, execLang?: LanguageId): ExecutorCon
   }
   if (course === 'git') {
     return LANG_MAP['git'].executor;
+  }
+  if (course === 'kb') {
+    return LANG_MAP['kb'].executor;
   }
   if (course === 'algo') {
     const lang = execLang ?? 'javascript';

@@ -5,6 +5,7 @@ import { wandboxProvider } from './wandbox';
 import { localJsProvider } from './local-js';
 import { execShell } from './linux-sim';
 import { runGitScript } from './git-sim';
+import { runKbScript } from './kb-sim';
 import { checkPromptSubmission, promptCheckReport } from './prompt-judge';
 
 /* ---------------- 节流队列：公共 API 礼貌限速 ---------------- */
@@ -44,6 +45,19 @@ async function executeWithFallback(req: ExecRequest): Promise<ExecResult> {
   if (req.lang === 'git') {
     const t0 = performance.now();
     const out = runGitScript(req.source, req.runtime);
+    return {
+      executed: true,
+      stdout: out,
+      stderr: '',
+      exitCode: 0,
+      timeMs: Math.max(1, Math.round(performance.now() - t0)),
+      provider: 'godbolt',
+    };
+  }
+  // 知识库工程课：本地 PARA 模拟器（runtime 携带初始状态 JSON）
+  if (req.lang === 'kb') {
+    const t0 = performance.now();
+    const out = runKbScript(req.source, req.runtime);
     return {
       executed: true,
       stdout: out,

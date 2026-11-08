@@ -66,6 +66,13 @@ import { agentPreamble } from '../src/data/agent-runtime.ts';
 import { execShell } from '../src/judge/linux-sim.ts';
 import { checkPromptSubmission } from '../src/judge/prompt-judge.ts';
 import { runGitScript } from '../src/judge/git-sim.ts';
+import { runKbScript } from '../src/judge/kb-sim.ts';
+import { KB_BASIC } from '../src/data/kb/basic.ts';
+import { KB_PARADIGM } from '../src/data/kb/paradigm.ts';
+import { KB_ADVANCED } from '../src/data/kb/advanced.ts';
+import { KB_TIPS } from '../src/data/kb/tips.ts';
+import { KB_BEST } from '../src/data/kb/best.ts';
+import { KB_INTEGRATION } from '../src/data/kb/integration.ts';
 
 const LANG_EXEC = {
   go: { id: 'gl1260', args: '', file: 'main.go' },
@@ -86,6 +93,7 @@ const CHAPTERS = [
   ['agentdev', 'basic', AGENTDEV_BASIC], ['agentdev', 'paradigm', AGENTDEV_PARADIGM], ['agentdev', 'advanced', AGENTDEV_ADVANCED], ['agentdev', 'tips', AGENTDEV_TIPS], ['agentdev', 'best', AGENTDEV_BEST], ['agentdev', 'integration', AGENTDEV_INTEGRATION],
   ['collab', 'basic', COLLAB_BASIC], ['collab', 'paradigm', COLLAB_PARADIGM], ['collab', 'advanced', COLLAB_ADVANCED], ['collab', 'tips', COLLAB_TIPS], ['collab', 'best', COLLAB_BEST], ['collab', 'integration', COLLAB_INTEGRATION],
   ['git', 'basic', GIT_BASIC], ['git', 'paradigm', GIT_PARADIGM], ['git', 'advanced', GIT_ADVANCED], ['git', 'tips', GIT_TIPS], ['git', 'best', GIT_BEST], ['git', 'integration', GIT_INTEGRATION],
+  ['kb', 'basic', KB_BASIC], ['kb', 'paradigm', KB_PARADIGM], ['kb', 'advanced', KB_ADVANCED], ['kb', 'tips', KB_TIPS], ['kb', 'best', KB_BEST], ['kb', 'integration', KB_INTEGRATION],
 ];
 
 /** 算法关的作答语言集（JS 本地验证，其余云端） */
@@ -310,6 +318,34 @@ for (const { lang, mod, level } of targets) {
       }
     }
     if (ok5) { passedLevels++; console.log('✓ Git 模拟器 ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of details5) console.log(d); }
+    continue;
+  }
+
+  // 知识库关：本地 PARA 模拟器判题（solution 输出比对 + starter 防误过）
+  if (level.lang === 'kb') {
+    let ok6 = true;
+    const details6 = [];
+    const src = level.solution ?? level.algo?.solutions?.kb;
+    if (!src) { ok6 = false; details6.push('  ✗ 缺少 solution 脚本'); }
+    for (const t of level.tests) {
+      if (!ok6) break;
+      const got = runKbScript(src ?? '', level.runtime).replace(/\r/g, '');
+      const want = (t.expected || '').replace(/\r/g, '');
+      if (got !== want) {
+        ok6 = false;
+        details6.push('  ✗ [' + t.name + '] 输出不匹配\n    期望: ' + JSON.stringify(t.expected) + '\n    实际: ' + JSON.stringify(got));
+        break;
+      }
+    }
+    if (ok6) {
+      const vis = level.tests.find((t) => !t.hidden);
+      const starterSrc = level.starter ?? level.algo?.starters?.kb;
+      if (vis && starterSrc && runKbScript(starterSrc, level.runtime).replace(/\r/g, '') === (vis.expected || '').replace(/\r/g, '')) {
+        ok6 = false;
+        details6.push('  ✗ starter 在用例「' + vis.name + '」就通过了 —— 起始脚本过于完整');
+      }
+    }
+    if (ok6) { passedLevels++; console.log('✓ KB 模拟器 ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of details6) console.log(d); }
     continue;
   }
 
