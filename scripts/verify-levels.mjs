@@ -74,6 +74,10 @@ import { CRON_ADVANCED } from '../src/data/cron/advanced.ts';
 import { CRON_TIPS } from '../src/data/cron/tips.ts';
 import { CRON_BEST } from '../src/data/cron/best.ts';
 import { CRON_INTEGRATION } from '../src/data/cron/integration.ts';
+import { LINUX_LOGS } from '../src/data/linux/logs.ts';
+import { LINUX_OPS } from '../src/data/linux/ops.ts';
+import { CRON_AUDIT } from '../src/data/cron/audit.ts';
+import { CRON_OPS } from '../src/data/cron/ops.ts';
 import { KB_BASIC } from '../src/data/kb/basic.ts';
 import { KB_PARADIGM } from '../src/data/kb/paradigm.ts';
 import { KB_ADVANCED } from '../src/data/kb/advanced.ts';
@@ -101,6 +105,8 @@ const CHAPTERS = [
   ['collab', 'basic', COLLAB_BASIC], ['collab', 'paradigm', COLLAB_PARADIGM], ['collab', 'advanced', COLLAB_ADVANCED], ['collab', 'tips', COLLAB_TIPS], ['collab', 'best', COLLAB_BEST], ['collab', 'integration', COLLAB_INTEGRATION],
   ['git', 'basic', GIT_BASIC], ['git', 'paradigm', GIT_PARADIGM], ['git', 'advanced', GIT_ADVANCED], ['git', 'tips', GIT_TIPS], ['git', 'best', GIT_BEST], ['git', 'integration', GIT_INTEGRATION],
   ['kb', 'basic', KB_BASIC], ['kb', 'paradigm', KB_PARADIGM], ['kb', 'advanced', KB_ADVANCED], ['kb', 'tips', KB_TIPS], ['kb', 'best', KB_BEST], ['kb', 'integration', KB_INTEGRATION],
+  ['linux', 'logs', LINUX_LOGS], ['linux', 'ops', LINUX_OPS],
+  ['cron', 'audit', CRON_AUDIT], ['cron', 'ops', CRON_OPS],
   ['cron', 'basic', CRON_BASIC], ['cron', 'paradigm', CRON_PARADIGM], ['cron', 'advanced', CRON_ADVANCED], ['cron', 'tips', CRON_TIPS], ['cron', 'best', CRON_BEST], ['cron', 'integration', CRON_INTEGRATION],
 ];
 
@@ -218,14 +224,14 @@ for (const { lang, mod, level } of targets) {
   if (level.lang === 'linux') {
     let ok2 = true;
     const details2 = [];
-    const src = level.algo?.solutions?.bash;
+    const src = level.algo?.solutions?.bash ?? level.solution;
     if (!src) {
       ok2 = false;
       details2.push('  ✗ 缺少 bash 参考答案');
     }
     for (const t of level.tests) {
       if (!ok2) break;
-      const res = execShell(src ?? '', t.fs ?? level.fs ?? '{}');
+      const res = execShell(src ?? '', t.fs ?? level.fs ?? level.runtime ?? '{}');
       const got = (res.stdout || '').replace(/\n+$/, '');
       const want = (t.expected || '').replace(/\n+$/, '');
       if (res.exitCode !== 0 && res.stderr) {

@@ -30,6 +30,8 @@ import { LINUX_PERM } from '../linux/perm';
 import { LINUX_SCRIPT } from '../linux/script';
 import { LINUX_BEST } from '../linux/best';
 import { LINUX_INTEGRATION } from '../linux/integration';
+import { LINUX_LOGS } from '../linux/logs';
+import { LINUX_OPS } from '../linux/ops';
 import { AGENTDEV_BASIC } from '../agentdev/basic';
 import { AGENTDEV_PARADIGM } from '../agentdev/paradigm';
 import { AGENTDEV_ADVANCED } from '../agentdev/advanced';
@@ -60,6 +62,8 @@ import { CRON_ADVANCED } from '../cron/advanced';
 import { CRON_TIPS } from '../cron/tips';
 import { CRON_BEST } from '../cron/best';
 import { CRON_INTEGRATION } from '../cron/integration';
+import { CRON_AUDIT } from '../cron/audit';
+import { CRON_OPS } from '../cron/ops';
 
 /** 章节文件注册表：新增语言/章节在这里追加一行即可 */
 const CHAPTER_FILES: Level[][] = [
@@ -68,11 +72,13 @@ const CHAPTER_FILES: Level[][] = [
   CPP_BASIC, CPP_PARADIGM, CPP_ADVANCED, CPP_TIPS, CPP_BEST, CPP_INTEGRATION,
   ALGO_BASIC, ALGO_PARADIGM, ALGO_ADVANCED, ALGO_TIPS, ALGO_BEST, ALGO_INTEGRATION,
   LINUX_BASIC, LINUX_TEXT, LINUX_PERM, LINUX_SCRIPT, LINUX_BEST, LINUX_INTEGRATION,
+  LINUX_LOGS, LINUX_OPS,
   AGENTDEV_BASIC, AGENTDEV_PARADIGM, AGENTDEV_ADVANCED, AGENTDEV_TIPS, AGENTDEV_BEST, AGENTDEV_INTEGRATION,
   COLLAB_BASIC, COLLAB_PARADIGM, COLLAB_ADVANCED, COLLAB_TIPS, COLLAB_BEST, COLLAB_INTEGRATION,
   GIT_BASIC, GIT_PARADIGM, GIT_ADVANCED, GIT_TIPS, GIT_BEST, GIT_INTEGRATION,
   KB_BASIC, KB_PARADIGM, KB_ADVANCED, KB_TIPS, KB_BEST, KB_INTEGRATION,
   CRON_BASIC, CRON_PARADIGM, CRON_ADVANCED, CRON_TIPS, CRON_BEST, CRON_INTEGRATION,
+  CRON_AUDIT, CRON_OPS,
 ];
 
 /** 全部关卡（扁平，含课程内全局顺序） */

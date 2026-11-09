@@ -84,7 +84,7 @@ async function executeWithFallback(req: ExecRequest): Promise<ExecResult> {
   // Bash 走本地 Linux 模拟器（Linux 课程判题）
   if (req.lang === 'bash') {
     const t0 = performance.now();
-    const r = execShell(req.source, req.fs ?? '{"cwd":"/home/student"}');
+    const r = execShell(req.source, req.fs ?? req.runtime ?? '{"cwd":"/home/student"}');
     return {
       executed: true,
       stdout: r.stdout,
