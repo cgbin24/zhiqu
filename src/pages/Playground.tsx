@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Loader2, Play, Trash2 } from 'lucide-react';
 import { CodeEditor } from '@/components/CodeEditor';
+import { TerminalSim } from '@/components/TerminalSim';
 import { LANGUAGES, LANG_MAP } from '@/data/languages/registry';
+import { TERMINAL_SCENARIOS } from '@/data/linux/playground';
 import { executeCode } from '@/judge/judge';
 import { useProgress } from '@/store/progress';
 import type { ExecResult } from '@/types';
 
-/** 自由练习场：任意语言、任意代码、自定义 stdin */
+/** 自由练习场：任意语言、任意代码、自定义 stdin；另含 Linux 终端演练模式 */
 export function Playground() {
   const [langId, setLangId] = useState(LANGUAGES[0].id);
   const lang = LANG_MAP[langId];
@@ -18,6 +20,9 @@ export function Playground() {
   const [stdin, setStdin] = useState('');
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<ExecResult | null>(null);
+  const [linuxMode, setLinuxMode] = useState(false);
+  const [scenarioId, setScenarioId] = useState(TERMINAL_SCENARIOS[0].id);
+  const scenario = TERMINAL_SCENARIOS.find((s) => s.id === scenarioId) ?? TERMINAL_SCENARIOS[0];
 
   const switchLang = (id: typeof langId) => {
     setLangId(id);
@@ -51,32 +56,67 @@ export function Playground() {
         {LANGUAGES.filter((l) => l.id !== 'prompt').map((l) => (
           <button
             key={l.id}
-            onClick={() => switchLang(l.id)}
+            onClick={() => { switchLang(l.id); setLinuxMode(false); }}
             className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition-all ${
-              l.id === langId ? 'text-white' : 'border-night-700 text-slate-400 hover:text-slate-200'
+              l.id === langId && !linuxMode ? 'text-white' : 'border-night-700 text-slate-400 hover:text-slate-200'
             }`}
-            style={l.id === langId ? { borderColor: l.color, background: `${l.color}22`, color: l.color } : undefined}
+            style={l.id === langId && !linuxMode ? { borderColor: l.color, background: `${l.color}22`, color: l.color } : undefined}
           >
             {l.name}
           </button>
         ))}
+        <button
+          onClick={() => setLinuxMode(!linuxMode)}
+          className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition-all ${
+            linuxMode ? 'text-white' : 'border-night-700 text-slate-400 hover:text-slate-200'
+          }`}
+          style={linuxMode ? { borderColor: '#a3e635', background: '#a3e63522', color: '#a3e635' } : undefined}
+        >
+          🐧 Linux 终端
+        </button>
         <div className="flex-1" />
-        <button
-          onClick={() => { setCode(lang.template); setResult(null); }}
-          className="flex items-center gap-1 rounded-lg border border-night-700 px-2.5 py-1.5 text-xs text-slate-400 hover:text-slate-200"
-        >
-          <Trash2 size={12} /> 重置模板
-        </button>
-        <button
-          onClick={run}
-          disabled={running}
-          className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-cyan-400 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-sky-500/25 hover:brightness-110 disabled:opacity-50"
-        >
-          {running ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />} 运行
-        </button>
+        {!linuxMode && (
+          <>
+            <button
+              onClick={() => { setCode(lang.template); setResult(null); }}
+              className="flex items-center gap-1 rounded-lg border border-night-700 px-2.5 py-1.5 text-xs text-slate-400 hover:text-slate-200"
+            >
+              <Trash2 size={12} /> 重置模板
+            </button>
+            <button
+              onClick={run}
+              disabled={running}
+              className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-cyan-400 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-sky-500/25 hover:brightness-110 disabled:opacity-50"
+            >
+              {running ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />} 运行
+            </button>
+          </>
+        )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {linuxMode ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2">
+            {TERMINAL_SCENARIOS.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setScenarioId(s.id)}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition-all ${
+                  s.id === scenarioId ? 'text-white' : 'border-night-700 text-slate-400 hover:text-slate-200'
+                }`}
+                style={s.id === scenarioId ? { borderColor: '#a3e635', background: '#a3e63522', color: '#a3e635' } : undefined}
+              >
+                {s.name}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500">
+            {scenario.desc} —— 状态在会话内延续（cd 之后 pwd 试试）；↑↓ 翻历史，「清屏」只清显示不清状态。
+          </p>
+          <TerminalSim key={scenario.id} fsJson={scenario.fs} className="h-[68vh] min-h-[420px]" />
+        </div>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
         <div>
           <div className="h-[52vh] min-h-[340px]">
             <CodeEditor
@@ -129,7 +169,8 @@ export function Playground() {
             </div>
           )}
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

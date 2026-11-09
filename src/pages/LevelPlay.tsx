@@ -8,6 +8,7 @@ import {
 import { Send, Terminal, Trophy } from 'lucide-react';
 import { agentPreamble } from '@/data/agent-runtime';
 import { CodeEditor } from '@/components/CodeEditor';
+import { TerminalSim } from '@/components/TerminalSim';
 import { Markdown } from '@/components/Markdown';
 import { DiffView } from '@/components/DiffView';
 import { Stars } from '@/components/Stars';
@@ -54,6 +55,7 @@ export function LevelPlay() {
   const [judge, setJudge] = useState<JudgeResult | null>(null);
   const [judgeProgress, setJudgeProgress] = useState({ done: 0, total: 0 });
   const [execLang, setExecLang] = useState<LanguageId>('javascript');
+  const [linuxView, setLinuxView] = useState<'term' | 'editor'>('term');
   const [snippetOpen, setSnippetOpen] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [victory, setVictory] = useState<null | {
@@ -65,6 +67,7 @@ export function LevelPlay() {
   const lang = level ? LANG_MAP[level.lang as LanguageId] : undefined;
   const course = level ? COURSE_MAP[level.lang] : undefined;
   const isAlgo = Boolean(level?.algo);
+  const isLinux = level?.lang === 'linux';
   const stat = level ? levelStats[level.id] : undefined;
   const completed = Boolean(stat && stat.stars > 0);
   const isDaily = level ? dailyLevel().id === level.id : false;
@@ -97,6 +100,7 @@ export function LevelPlay() {
     setVictory(null);
     setHintsOpen(0);
     setAnswerOpen(false);
+    setLinuxView('term');
     setTab('task');
     setStdin(level.tests.find((t) => !t.hidden)?.stdin ?? '');
     setNoteText(notes[level.id] ?? '');
@@ -454,6 +458,26 @@ export function LevelPlay() {
             <span className="rounded-md border px-2 py-1 font-mono text-xs font-semibold" style={{ borderColor: (isAlgo ? LANG_MAP[execLang].color : lang?.color ?? '#659ad2') + '55', color: isAlgo ? LANG_MAP[execLang].color : lang?.color ?? '#659ad2' }}>
               {execFileName}
             </span>
+            {isLinux && (
+              <div className="flex gap-1 rounded-lg border border-night-700 bg-night-900 p-0.5">
+                <button
+                  onClick={() => setLinuxView('term')}
+                  className={`rounded-md px-2 py-1 text-[11px] font-semibold transition-colors ${
+                    linuxView === 'term' ? 'bg-lime-500/20 text-lime-300' : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  🖥️ 终端演练
+                </button>
+                <button
+                  onClick={() => setLinuxView('editor')}
+                  className={`rounded-md px-2 py-1 text-[11px] font-semibold transition-colors ${
+                    linuxView === 'editor' ? 'bg-lime-500/20 text-lime-300' : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  📝 编辑器
+                </button>
+              </div>
+            )}
             {isAlgo && (
               <div className="flex gap-1 rounded-lg border border-night-700 bg-night-900 p-0.5">
                 {(COURSE_MAP[level.lang]?.execLangs ?? ['javascript'] as LanguageId[]).map((l) => (
@@ -503,7 +527,17 @@ export function LevelPlay() {
           </div>
 
           <div className="h-[46vh] min-h-[320px] lg:h-[54vh]">
-            <CodeEditor value={code} language={execMonaco} onChange={onCodeChange} />
+            {isLinux && linuxView === 'term' ? (
+              <TerminalSim
+                key={level.id}
+                fsJson={level.fs ?? level.runtime ?? '{}'}
+                welcome="先在终端里试命令，再点「填入编辑器」提交评测"
+                onExport={(script) => { onCodeChange(script); setLinuxView('editor'); }}
+                className="h-full"
+              />
+            ) : (
+              <CodeEditor value={code} language={execMonaco} onChange={onCodeChange} />
+            )}
           </div>
 
           {level.lang !== 'collab' && level.lang !== 'git' && level.lang !== 'kb' && level.lang !== 'cron' && (
