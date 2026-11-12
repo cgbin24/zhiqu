@@ -12,6 +12,7 @@ import { LearnPath } from '@/pages/LearnPath';
  */
 const LevelPlay = lazy(() => import('@/pages/LevelPlay').then((m) => ({ default: m.LevelPlay })));
 const Playground = lazy(() => import('@/pages/Playground').then((m) => ({ default: m.Playground })));
+const TeamDashboard = lazy(() => import('@/pages/TeamDashboard').then((m) => ({ default: m.TeamDashboard })));
 const TermsHome = lazy(() => import('@/pages/TermsHome').then((m) => ({ default: m.TermsHome })));
 const TermsGraph = lazy(() => import('@/pages/TermsGraph').then((m) => ({ default: m.TermsGraph })));
 const TermQuiz = lazy(() => import('@/pages/TermQuiz').then((m) => ({ default: m.TermQuiz })));
@@ -36,6 +37,7 @@ function usePrefetchRoutes() {
     const kick = () => {
       void import('@/pages/LevelPlay');
       void import('@/pages/Playground');
+      void import('@/pages/TeamDashboard');
       void import('@/pages/TermsHome');
       void import('@/pages/TermsGraph');
       void import('@/pages/TermQuiz');
@@ -58,6 +60,14 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="/learn" element={<Navigate to="/learn/go" replace />} />
           <Route path="/learn/:lang" element={<LearnPath />} />
+          <Route
+            path="/team"
+            element={
+              <Suspense fallback={<RouteFallback />}>
+                <TeamDashboard />
+              </Suspense>
+            }
+          />
           <Route
             path="/level/:id"
             element={

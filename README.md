@@ -18,11 +18,11 @@
 
 ## ✨ 特性
 
-- **十门课程 332 关**：
+- **十门课程 338 关**：
   - **Go / Rust / C++ 各 42 关**（六大模块：基础语法 → 编程思想 → 进阶 → 技巧 → 最佳实践 → 综合实战）
   - **算法课 42 关**（复杂度、双指针、二分、排序、递归/分治/贪心、栈队列哈希链表树、BFS/DFS/拓扑、DP、Dijkstra 等，配 **15 个交互式算法可视化动画**——可播放/单步/调速），可切换 JS / Go / Rust / C++ 作答
   - **Linux 课 40 关**：文件与目录、文本处理与管道（含**日志分析实战**）、权限与进程、Shell 脚本、系统管理（含**资源排查实战**）、综合实战 —— 内置**虚拟文件系统模拟终端**，`grep / sort / find / chmod / ps / df / du / free / netstat / awk / sed` 等真实判题，关卡内即可打开**交互式终端演练**（逐命令敲、状态延续、一键回填编辑器），全程离线可用
-  - **Agent 开发实战 28 关**：消息与 Token、Prompt 工程、工具调用与 Agent Loop、记忆与 RAG、多智能体与护栏 —— 内置 **Mock LLM 运行时**（思维链 / Function Calling / 检索增强全可离线跑）
+  - **Agent 开发实战 34 关**：消息与 Token、Prompt 工程、工具调用与 Agent Loop、记忆与 RAG、多智能体与护栏、**Agent 团队搭建与治理**（角色技能矩阵 / 依赖并行 / 评审闸门 / 工具白名单 / 阻塞升级与死锁预防 / 全流程指挥毕业演练）—— 内置 **Mock LLM 运行时**与**确定性多 Agent 团队编排引擎**，配**团队指挥中心大屏**（`#/team`：全屏可视化、逐拍回放、策略实时可调，看护栏拦截越权、评审打回返工、PM 升级解阻塞的全过程）
   - **定时任务实战 30 关**：cron 表达式五段语法、服务器巡检四件套（磁盘/内存/证书/HTTP）、SSH 爆破与端口安全监控（新增**审计与合规**：每日安全审计、高危端口发现、暴力破解事件响应时间线、多指标联动分析）、阈值分级告警（新增**运维组合**：值班晨检、告警分级、巡检告警闭环、多故障处理时间线）、定时备份与清理 —— 内置**确定性服务器监控模拟器**，从零搭建自己的监控体系
   - **知识库工程 22 关**：PARA 五区架构、front-matter 笔记、双链网络、检索发现、迁移归类、MOC 与每周维护 —— 内置**确定性 PARA 知识库模拟器**，从零搭建真实可运行的知识库
   - **Git 实战 22 关**：init/add/commit 核心流、分支切换、合并与历史、diff/stash/.gitignore、团队协作规范、完整 feature 工作流 —— 内置**确定性仓库模拟器**（提交哈希可复现，全程离线）
@@ -70,7 +70,7 @@ npx wrangler pages deploy dist --project-name=zhiqu --branch=main
 
 ```bash
 node scripts/verify-levels.mjs go/basic        # 只验证某一章
-node scripts/verify-levels.mjs --full          # 全部 332 关 + starter 防误过检查（云端/本地/模拟器/要素检查按课程分流）
+node scripts/verify-levels.mjs --full          # 全部 338 关 + starter 防误过检查（云端/本地/模拟器/要素检查按课程分流）
 node scripts/verify-terms.mjs                  # 术语数据完整性（关系引用/字段/唯一性）
 ```
 
@@ -86,7 +86,7 @@ src/
 │   ├── terms/        # ⭐ 术语百科：十三领域数据（含编程英语）+ 注册表 + 全库搜索
 │   ├── algo/         # ⭐ 算法课：6 章节文件（多语言 starter/solution + 可视化配置）
 │   ├── linux/        # ⭐ Linux 课：8 章节文件（fs 虚拟文件系统场景）
-│   ├── agentdev/     # ⭐ Agent 课：6 章节文件（runtime = Mock LLM 配置）
+│   ├── agentdev/     # ⭐ Agent 课：8 章节文件（Mock LLM + 团队编排引擎）
 │   ├── collab/       # ⭐ AI 协作课：6 章节文件（tests = 要素检查规则）
 │   ├── git/          # ⭐ Git 课：6 章节文件（仓库模拟器判题）
 │   ├── kb/           # ⭐ 知识库课：6 章节文件（PARA 模拟器判题）
@@ -94,7 +94,7 @@ src/
 │   └── languages/
 │       ├── registry.ts       # ⭐ 语言注册表 + 课程轨道（接入新语言的唯一入口之一）
 │       └── go|rust|cpp/      # 每语言 6 个章节文件（关卡内容）
-├── judge/            # provider 抽象 + Godbolt/Wandbox + JS 本地执行 + Linux 模拟器 + Mock LLM 注入 + 提示词要素检查 + 节流队列
+├── judge/            # provider 抽象 + Godbolt/Wandbox + JS 本地执行 + Linux 模拟器 + Mock LLM 注入 + 团队编排引擎 + 提示词要素检查 + 节流队列
 ├── game/             # XP / 星级 / 段位 / 术语测验出题引擎
 ├── store/progress.ts # zustand + localStorage 持久化
 ├── components/       # 编辑器 / AlgoVisualizer 算法动画 / Toast / Diff / 布局 …

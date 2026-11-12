@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
-  BookOpenText, Compass, Flame, Gamepad2, Github, Home, Medal, SlidersHorizontal,
+  BookOpenText, Compass, Flame, Gamepad2, Github, Home, Medal, SlidersHorizontal, Users,
 } from 'lucide-react';
 import type { AchievementDef } from '@/types';
 import { emitToast } from '@/lib/toast-bus';
@@ -18,6 +18,7 @@ import { CustomScrollbar } from './CustomScrollbar';
 const NAV = [
   { to: '/', label: '仪表盘', icon: Home, end: true },
   { to: '/learn/go', label: '闯关', icon: Compass, end: false },
+  { to: '/team', label: '团队', icon: Users, end: false },
   { to: '/terms', label: '术语', icon: BookOpenText, end: false },
   { to: '/playground', label: '练习场', icon: Gamepad2, end: false },
   { to: '/achievements', label: '成就', icon: Medal, end: false },
