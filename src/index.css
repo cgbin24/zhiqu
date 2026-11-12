@@ -157,6 +157,21 @@ html.theme-transition *::after {
   height: 0;
 }
 
+/* ---------------- 自定义滚动条滑块：合成器驱动位移 ----------------
+   支持 CSS 滚动驱动动画的浏览器（Chrome/Edge 115+ 等）：滑块位移完全由
+   合成器按根滚动进度插值（本站「页面效果」课教的零 JS 现代实现），
+   滚动过程主线程零样式/布局工作，从根上消除逐帧抖动延迟。
+   其余浏览器由组件降级为 rAF + transform 直写（见 CustomScrollbar.tsx）。 */
+.scroll-thumb-css {
+  animation: thumb-slide linear both;
+  animation-timeline: scroll(root);
+  will-change: transform;
+}
+@keyframes thumb-slide {
+  from { transform: translateY(0); }
+  to { transform: translateY(var(--thumb-range, 0px)); }
+}
+
 html {
   /* 画布兜底色与 ::before 纯色完全一致（过滚动/内容超出区域无色差割裂） */
   background-color: var(--color-night-950);
