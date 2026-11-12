@@ -38,6 +38,8 @@ import { AGENTDEV_ADVANCED } from '../agentdev/advanced';
 import { AGENTDEV_TIPS } from '../agentdev/tips';
 import { AGENTDEV_BEST } from '../agentdev/best';
 import { AGENTDEV_INTEGRATION } from '../agentdev/integration';
+import { AGENTDEV_TEAM } from '../agentdev/team';
+import { AGENTDEV_TEAM_CAPSTONE } from '../agentdev/team-capstone';
 import { COLLAB_BASIC } from '../collab/basic';
 import { COLLAB_PARADIGM } from '../collab/paradigm';
 import { COLLAB_ADVANCED } from '../collab/advanced';
@@ -74,6 +76,7 @@ const CHAPTER_FILES: Level[][] = [
   LINUX_BASIC, LINUX_TEXT, LINUX_PERM, LINUX_SCRIPT, LINUX_BEST, LINUX_INTEGRATION,
   LINUX_LOGS, LINUX_OPS,
   AGENTDEV_BASIC, AGENTDEV_PARADIGM, AGENTDEV_ADVANCED, AGENTDEV_TIPS, AGENTDEV_BEST, AGENTDEV_INTEGRATION,
+  AGENTDEV_TEAM, AGENTDEV_TEAM_CAPSTONE,
   COLLAB_BASIC, COLLAB_PARADIGM, COLLAB_ADVANCED, COLLAB_TIPS, COLLAB_BEST, COLLAB_INTEGRATION,
   GIT_BASIC, GIT_PARADIGM, GIT_ADVANCED, GIT_TIPS, GIT_BEST, GIT_INTEGRATION,
   KB_BASIC, KB_PARADIGM, KB_ADVANCED, KB_TIPS, KB_BEST, KB_INTEGRATION,

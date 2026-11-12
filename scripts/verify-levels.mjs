@@ -42,6 +42,8 @@ import { AGENTDEV_ADVANCED } from '../src/data/agentdev/advanced.ts';
 import { AGENTDEV_TIPS } from '../src/data/agentdev/tips.ts';
 import { AGENTDEV_BEST } from '../src/data/agentdev/best.ts';
 import { AGENTDEV_INTEGRATION } from '../src/data/agentdev/integration.ts';
+import { AGENTDEV_TEAM } from '../src/data/agentdev/team.ts';
+import { AGENTDEV_TEAM_CAPSTONE } from '../src/data/agentdev/team-capstone.ts';
 import { COLLAB_BASIC } from '../src/data/collab/basic.ts';
 import { COLLAB_PARADIGM } from '../src/data/collab/paradigm.ts';
 import { COLLAB_ADVANCED } from '../src/data/collab/advanced.ts';
@@ -61,6 +63,7 @@ import { ALGO_ADVANCED } from '../src/data/algo/advanced.ts';
 import { ALGO_TIPS } from '../src/data/algo/tips.ts';
 import { ALGO_BEST } from '../src/data/algo/best.ts';
 import { ALGO_INTEGRATION } from '../src/data/algo/integration.ts';
+import { readFileSync } from 'node:fs';
 import { executeJsLocally } from '../src/judge/local-js.ts';
 import { agentPreamble } from '../src/data/agent-runtime.ts';
 import { execShell } from '../src/judge/linux-sim.ts';
@@ -102,6 +105,7 @@ const CHAPTERS = [
   ['algo', 'tips', ALGO_TIPS], ['algo', 'best', ALGO_BEST], ['algo', 'integration', ALGO_INTEGRATION],
   ['linux', 'basic', LINUX_BASIC], ['linux', 'text', LINUX_TEXT], ['linux', 'perm', LINUX_PERM], ['linux', 'script', LINUX_SCRIPT], ['linux', 'best', LINUX_BEST], ['linux', 'integration', LINUX_INTEGRATION],
   ['agentdev', 'basic', AGENTDEV_BASIC], ['agentdev', 'paradigm', AGENTDEV_PARADIGM], ['agentdev', 'advanced', AGENTDEV_ADVANCED], ['agentdev', 'tips', AGENTDEV_TIPS], ['agentdev', 'best', AGENTDEV_BEST], ['agentdev', 'integration', AGENTDEV_INTEGRATION],
+  ['agentdev', 'team', AGENTDEV_TEAM], ['agentdev', 'team-capstone', AGENTDEV_TEAM_CAPSTONE],
   ['collab', 'basic', COLLAB_BASIC], ['collab', 'paradigm', COLLAB_PARADIGM], ['collab', 'advanced', COLLAB_ADVANCED], ['collab', 'tips', COLLAB_TIPS], ['collab', 'best', COLLAB_BEST], ['collab', 'integration', COLLAB_INTEGRATION],
   ['git', 'basic', GIT_BASIC], ['git', 'paradigm', GIT_PARADIGM], ['git', 'advanced', GIT_ADVANCED], ['git', 'tips', GIT_TIPS], ['git', 'best', GIT_BEST], ['git', 'integration', GIT_INTEGRATION],
   ['kb', 'basic', KB_BASIC], ['kb', 'paradigm', KB_PARADIGM], ['kb', 'advanced', KB_ADVANCED], ['kb', 'tips', KB_TIPS], ['kb', 'best', KB_BEST], ['kb', 'integration', KB_INTEGRATION],
@@ -206,6 +210,13 @@ function execJsPreamble(src, stdin, runtimeJson) {
   return executeJsLocally(src, stdin, runtimeJson ? agentPreamble(runtimeJson) : undefined);
 }
 
+/* 团队型 agentdev 关卡：注入团队编排引擎（fs 读源码 + 剥 export，与 team-preamble.ts 保持一致） */
+const TEAM_ENGINE_SRC = readFileSync(new URL('../src/judge/team-sim.js', import.meta.url), 'utf8')
+  .replace('export function createTeamEngine', 'function createTeamEngine');
+function execJsTeam(src, stdin, runtimeJson) {
+  return executeJsLocally(src, stdin, TEAM_ENGINE_SRC + '\nconst __TEAM_CONFIG__ = ' + runtimeJson + ';\nconst team = createTeamEngine(__TEAM_CONFIG__);\n');
+}
+
 function verifyCaseLocal(level, t) {
   if (level.lang !== 'algo') return null;
   const js = level.algo?.solutions?.javascript;
@@ -263,7 +274,8 @@ for (const { lang, mod, level } of targets) {
     if (!src) { ok3 = false; details3.push('  ✗ 缺少 javascript 参考答案'); }
     for (const t of level.tests) {
       if (!ok3) break;
-      const r = execJsPreamble(src, t.stdin, level.runtime);
+      const isTeam = level.runtime && level.runtime.includes('"kind":"team"');
+      const r = isTeam ? execJsTeam(src, t.stdin, level.runtime) : execJsPreamble(src, t.stdin, level.runtime);
       if (r.exitCode !== 0 && r.stderr) {
         ok3 = false;
         details3.push('  ✗ [' + t.name + '] 执行报错: ' + r.stderr.split('\n').slice(0, 3).join(' | '));

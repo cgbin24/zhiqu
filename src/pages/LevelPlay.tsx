@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Send, Terminal, Trophy } from 'lucide-react';
 import { agentPreamble } from '@/data/agent-runtime';
+import { isTeamRuntime, teamPreamble } from '@/judge/team-preamble';
 import { CodeEditor } from '@/components/CodeEditor';
 import { TerminalSim } from '@/components/TerminalSim';
 import { Markdown } from '@/components/Markdown';
@@ -68,6 +69,13 @@ export function LevelPlay() {
   const course = level ? COURSE_MAP[level.lang] : undefined;
   const isAlgo = Boolean(level?.algo);
   const isLinux = level?.lang === 'linux';
+
+  /** agentdev 关卡的沙箱前置：团队型 runtime 注入团队引擎，其余注入 Mock LLM */
+  const agentRuntimePreamble = useCallback((rt: string | undefined): string | undefined => {
+    if (!rt) return undefined;
+    if (level?.lang !== 'agentdev') return rt;
+    return isTeamRuntime(rt) ? teamPreamble(rt) : agentPreamble(rt);
+  }, [level?.lang]);
   const stat = level ? levelStats[level.id] : undefined;
   const completed = Boolean(stat && stat.stars > 0);
   const isDaily = level ? dailyLevel().id === level.id : false;
@@ -191,7 +199,7 @@ export function LevelPlay() {
         stdin,
         fs: level.fs,
         // agentdev 需要 JS 沙箱包装；collab 直接透传检查项 JSON
-        runtime: level.runtime ? (level.lang === 'agentdev' ? agentPreamble(level.runtime) : level.runtime) : undefined,
+        runtime: agentRuntimePreamble(level.runtime),
       });
       setRunResult(res);
     } catch (err) {
@@ -219,7 +227,7 @@ export function LevelPlay() {
           cases.push(r);
           return { verdict: 'wrong-answer', passed: cases.filter((c) => c.verdict === 'accepted').length, total, cases };
         });
-      }, level.fs, level.runtime ? (level.lang === 'agentdev' ? agentPreamble(level.runtime) : level.runtime) : undefined);
+      }, level.fs, agentRuntimePreamble(level.runtime));
       setJudge(result);
       const accepted = result.verdict === 'accepted';
       recordSubmission(level.id, accepted);
