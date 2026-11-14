@@ -44,6 +44,12 @@ import { AGENTDEV_BEST } from '../src/data/agentdev/best.ts';
 import { AGENTDEV_INTEGRATION } from '../src/data/agentdev/integration.ts';
 import { AGENTDEV_TEAM } from '../src/data/agentdev/team.ts';
 import { AGENTDEV_TEAM_CAPSTONE } from '../src/data/agentdev/team-capstone.ts';
+import { HARMONY_BASIC } from '../src/data/harmony/basic.ts';
+import { HARMONY_PARADIGM } from '../src/data/harmony/paradigm.ts';
+import { HARMONY_ADVANCED } from '../src/data/harmony/advanced.ts';
+import { HARMONY_TIPS } from '../src/data/harmony/tips.ts';
+import { HARMONY_BEST } from '../src/data/harmony/best.ts';
+import { HARMONY_INTEGRATION } from '../src/data/harmony/integration.ts';
 import { COLLAB_BASIC } from '../src/data/collab/basic.ts';
 import { COLLAB_PARADIGM } from '../src/data/collab/paradigm.ts';
 import { COLLAB_ADVANCED } from '../src/data/collab/advanced.ts';
@@ -65,6 +71,7 @@ import { ALGO_BEST } from '../src/data/algo/best.ts';
 import { ALGO_INTEGRATION } from '../src/data/algo/integration.ts';
 import { readFileSync } from 'node:fs';
 import { executeJsLocally } from '../src/judge/local-js.ts';
+import { execArkTS } from '../src/judge/arkts-sim.ts';
 import { agentPreamble } from '../src/data/agent-runtime.ts';
 import { execShell } from '../src/judge/linux-sim.ts';
 import { checkPromptSubmission } from '../src/judge/prompt-judge.ts';
@@ -106,6 +113,7 @@ const CHAPTERS = [
   ['linux', 'basic', LINUX_BASIC], ['linux', 'text', LINUX_TEXT], ['linux', 'perm', LINUX_PERM], ['linux', 'script', LINUX_SCRIPT], ['linux', 'best', LINUX_BEST], ['linux', 'integration', LINUX_INTEGRATION],
   ['agentdev', 'basic', AGENTDEV_BASIC], ['agentdev', 'paradigm', AGENTDEV_PARADIGM], ['agentdev', 'advanced', AGENTDEV_ADVANCED], ['agentdev', 'tips', AGENTDEV_TIPS], ['agentdev', 'best', AGENTDEV_BEST], ['agentdev', 'integration', AGENTDEV_INTEGRATION],
   ['agentdev', 'team', AGENTDEV_TEAM], ['agentdev', 'team-capstone', AGENTDEV_TEAM_CAPSTONE],
+  ['harmony', 'basic', HARMONY_BASIC], ['harmony', 'paradigm', HARMONY_PARADIGM], ['harmony', 'advanced', HARMONY_ADVANCED], ['harmony', 'tips', HARMONY_TIPS], ['harmony', 'best', HARMONY_BEST], ['harmony', 'integration', HARMONY_INTEGRATION],
   ['collab', 'basic', COLLAB_BASIC], ['collab', 'paradigm', COLLAB_PARADIGM], ['collab', 'advanced', COLLAB_ADVANCED], ['collab', 'tips', COLLAB_TIPS], ['collab', 'best', COLLAB_BEST], ['collab', 'integration', COLLAB_INTEGRATION],
   ['git', 'basic', GIT_BASIC], ['git', 'paradigm', GIT_PARADIGM], ['git', 'advanced', GIT_ADVANCED], ['git', 'tips', GIT_TIPS], ['git', 'best', GIT_BEST], ['git', 'integration', GIT_INTEGRATION],
   ['kb', 'basic', KB_BASIC], ['kb', 'paradigm', KB_PARADIGM], ['kb', 'advanced', KB_ADVANCED], ['kb', 'tips', KB_TIPS], ['kb', 'best', KB_BEST], ['kb', 'integration', KB_INTEGRATION],
@@ -319,6 +327,37 @@ for (const { lang, mod, level } of targets) {
     continue;
   }
 
+  // 鸿蒙关：本地 ArkTS 模拟器判题（solution 输出比对 + starter 防误过）
+  if (level.lang === 'harmony') {
+    let okH = true;
+    const detailsH = [];
+    const src = level.algo?.solutions?.arkts ?? level.solution;
+    if (!src) { okH = false; detailsH.push('  ✗ 缺少 arkts 参考答案'); }
+    for (const t of level.tests) {
+      if (!okH) break;
+      const r = execArkTS(src ?? '', level.runtime ?? '{}', t.stdin);
+      const got = (r.ok ? [r.logs.join('\n'), r.dump].filter(Boolean).join('\n') : [r.logs.join('\n'), r.error ?? ''].filter(Boolean).join('\n')).replace(/\r/g, '');
+      const want = (t.expected || '').replace(/\r/g, '');
+      if (got !== want) {
+        okH = false;
+        detailsH.push('  ✗ [' + t.name + '] 输出不匹配\n    期望: ' + JSON.stringify(t.expected) + '\n    实际: ' + JSON.stringify(got));
+        break;
+      }
+    }
+    if (okH) {
+      const vis = level.tests.find((t) => !t.hidden);
+      const starterSrc = level.starter ?? level.algo?.starters?.arkts;
+      if (vis && starterSrc && execArkTS(starterSrc, level.runtime ?? '{}', vis.stdin).ok) {
+        const got = (() => { const r = execArkTS(starterSrc, level.runtime ?? '{}', vis.stdin); return (r.ok ? [r.logs.join('\n'), r.dump].filter(Boolean).join('\n') : [r.logs.join('\n'), r.error ?? ''].filter(Boolean).join('\n')).replace(/\r/g, ''); })();
+        if (got === (vis.expected || '').replace(/\r/g, '')) {
+        okH = false;
+        detailsH.push('  ✗ starter 在用例「' + vis.name + '」就通过了 —— 起始代码过于完整');
+        }
+      }
+    }
+    if (okH) { passedLevels++; console.log('✓ ArkTS 模拟器 ' + level.tests.length + ' 用例'); } else { failures.push(label); console.log('✗'); for (const d of detailsH) console.log(d); }
+    continue;
+  }
   // Git 关：本地仓库模拟器判题（solution 输出比对 + starter 防误过）
   if (level.lang === 'git') {
     let ok5 = true;

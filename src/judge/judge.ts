@@ -4,6 +4,7 @@ import { godboltProvider } from './godbolt';
 import { wandboxProvider } from './wandbox';
 import { localJsProvider } from './local-js';
 import { execShell } from './linux-sim';
+import { execArkTS } from './arkts-sim';
 import { runGitScript } from './git-sim';
 import { runKbScript } from './kb-sim';
 import { runCronScript } from './cron-sim';
@@ -92,6 +93,22 @@ async function executeWithFallback(req: ExecRequest): Promise<ExecResult> {
       exitCode: r.exitCode,
       timeMs: Math.max(1, Math.round(performance.now() - t0)),
       provider: 'godbolt',
+    };
+  }
+  // ArkTS 走本地鸿蒙模拟器（鸿蒙课程判题：渲染树 + 日志比对）
+  if (req.lang === 'arkts') {
+    const t0 = performance.now();
+    const r = execArkTS(req.source, req.runtime ?? '{}', req.stdin ?? '[]');
+    const out = r.ok
+      ? [r.logs.join('\n'), r.dump].filter(Boolean).join('\n')
+      : [r.logs.join('\n'), r.error ?? '执行出错'].filter(Boolean).join('\n');
+    return {
+      executed: true,
+      stdout: out,
+      stderr: r.ok ? '' : (r.error ?? '执行出错'),
+      exitCode: r.ok ? 0 : 1,
+      timeMs: Math.max(1, Math.round(performance.now() - t0)),
+      provider: 'arkts-sim',
     };
   }
   // JS 走浏览器本地执行：零延迟、无配额

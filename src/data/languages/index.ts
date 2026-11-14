@@ -66,6 +66,12 @@ import { CRON_BEST } from '../cron/best';
 import { CRON_INTEGRATION } from '../cron/integration';
 import { CRON_AUDIT } from '../cron/audit';
 import { CRON_OPS } from '../cron/ops';
+import { HARMONY_BASIC } from '../harmony/basic';
+import { HARMONY_PARADIGM } from '../harmony/paradigm';
+import { HARMONY_ADVANCED } from '../harmony/advanced';
+import { HARMONY_TIPS } from '../harmony/tips';
+import { HARMONY_BEST } from '../harmony/best';
+import { HARMONY_INTEGRATION } from '../harmony/integration';
 
 /** 章节文件注册表：新增语言/章节在这里追加一行即可 */
 const CHAPTER_FILES: Level[][] = [
@@ -82,6 +88,7 @@ const CHAPTER_FILES: Level[][] = [
   KB_BASIC, KB_PARADIGM, KB_ADVANCED, KB_TIPS, KB_BEST, KB_INTEGRATION,
   CRON_BASIC, CRON_PARADIGM, CRON_ADVANCED, CRON_TIPS, CRON_BEST, CRON_INTEGRATION,
   CRON_AUDIT, CRON_OPS,
+  HARMONY_BASIC, HARMONY_PARADIGM, HARMONY_ADVANCED, HARMONY_TIPS, HARMONY_BEST, HARMONY_INTEGRATION,
 ];
 
 /** 全部关卡（扁平，含课程内全局顺序） */
@@ -102,8 +109,9 @@ const COURSE_ORDER: Record<CourseId, Level[]> = {
   git: [],
   kb: [],
   cron: [],
+  harmony: [],
 };
-for (const course of ['go', 'rust', 'cpp', 'javascript', 'algo', 'linux', 'agentdev', 'collab', 'git', 'kb', 'cron'] as CourseId[]) {
+for (const course of ['go', 'rust', 'cpp', 'javascript', 'algo', 'linux', 'agentdev', 'collab', 'git', 'kb', 'cron', 'harmony'] as CourseId[]) {
   for (const m of MODULES) {
     for (const l of LEVELS) {
       if (l.lang === course && l.module === m.id) COURSE_ORDER[course].push(l);

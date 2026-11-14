@@ -363,4 +363,5 @@ std::max(a, b); std::minmax(a, b);
 std::swap(a, b);`,
     },
   ],
+  arkts: [],
 };

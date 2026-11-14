@@ -3,7 +3,7 @@
  * 无远程加载 → 无空窗、无闪烁、无网络依赖。
  */
 
-export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb' | 'cron';
+export type BrandId = 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb' | 'cron' | 'harmony';
 
 /** Go：官方青色 "GO" 字标 + 速度线 */
 export function GoLogo({ size = 32 }: { size?: number }) {
@@ -213,5 +213,17 @@ export function BrandLogo({ brand, size = 32 }: { brand: BrandId; size?: number 
 case 'git': return <GitLogo size={size} />;
 case 'kb': return <KbLogo size={size} />;
 case 'cron': return <CronLogo size={size} />;
+case 'harmony': return <HarmonyLogo size={size} />;
   }
+}
+
+export function HarmonyLogo({ size = 32 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="14" fill="#061a3d" />
+      <circle cx="32" cy="32" r="17" fill="none" stroke="#3b82f6" strokeWidth="4" />
+      <circle cx="32" cy="32" r="6" fill="#60a5fa" />
+      <path d="M32 15 A17 17 0 0 1 47.4 40.5" stroke="#93c5fd" strokeWidth="4" fill="none" strokeLinecap="round" />
+    </svg>
+  );
 }

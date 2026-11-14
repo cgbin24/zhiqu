@@ -65,7 +65,7 @@ export function LevelPlay() {
   const rankBefore = useRef(getRank(useProgress.getState().xp).rank.name);
   const confettiFired = useRef(false);
 
-  const lang = level ? LANG_MAP[level.lang as LanguageId] : undefined;
+  const lang = level ? LANG_MAP[level.lang === 'harmony' ? 'arkts' : (level.lang as LanguageId)] : undefined;
   const course = level ? COURSE_MAP[level.lang] : undefined;
   const isAlgo = Boolean(level?.algo);
   const isLinux = level?.lang === 'linux';
@@ -99,7 +99,7 @@ export function LevelPlay() {
 
   useEffect(() => {
     if (!level) return;
-    const defaultLang = level.lang === 'linux' ? 'bash' : level.lang === 'collab' ? 'prompt' : level.lang === 'git' ? 'git' : level.lang === 'kb' ? 'kb' : level.lang === 'cron' ? 'cron' : 'javascript';
+    const defaultLang = level.lang === 'linux' ? 'bash' : level.lang === 'collab' ? 'prompt' : level.lang === 'git' ? 'git' : level.lang === 'kb' ? 'kb' : level.lang === 'cron' ? 'cron' : level.lang === 'harmony' ? 'arkts' : 'javascript';
     setExecLang(defaultLang);
     const initDraft = level.algo ? drafts[`${level.id}:${defaultLang}`] : drafts[level.id];
     setCode(initDraft ?? level.algo?.starters[defaultLang] ?? level.starter ?? '');
@@ -194,7 +194,7 @@ export function LevelPlay() {
     recordRun(false);
     try {
       const res = await executeCode({
-        lang: (isAlgo ? execLang : level.lang) as LanguageId,
+        lang: (isAlgo ? execLang : level.lang === 'harmony' ? 'arkts' : level.lang) as LanguageId,
         source: code,
         stdin,
         fs: level.fs,
@@ -220,7 +220,7 @@ export function LevelPlay() {
     setJudgeProgress({ done: 0, total: level.tests.length });
     setTab('tests');
     try {
-      const result = await judgeLevel((isAlgo ? execLang : level.lang) as LanguageId, code, level.tests, (r, done, total) => {
+      const result = await judgeLevel((isAlgo ? execLang : level.lang === 'harmony' ? 'arkts' : level.lang) as LanguageId, code, level.tests, (r, done, total) => {
         setJudgeProgress({ done, total });
         setJudge((prev) => {
           const cases = prev?.cases ? [...prev.cases] : [];

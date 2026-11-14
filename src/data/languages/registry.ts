@@ -8,6 +8,21 @@ import type { CourseId, ExecutorConfig, LanguageDef, LanguageId } from '@/types'
  */
 export const LANGUAGES: LanguageDef[] = [
   {
+    id: 'arkts',
+    name: 'ArkTS',
+    tagline: '鸿蒙应用开发语言（本地模拟器）',
+    color: '#0a59f7',
+    gradient: 'from-blue-600 to-sky-400',
+    monaco: 'typescript',
+    fileName: 'Index.ets',
+    executor: { provider: 'local' },
+    learnable: false,
+    template: [
+      '// 鸿蒙 ArkTS 练习模板（完整语法见「鸿蒙应用开发」课程）',
+      'console.log(\'ArkTS 模拟器就绪\');',
+    ].join('\n'),
+  },
+  {
     id: 'go',
     name: 'Go',
     tagline: '简洁、高效、为并发而生',
@@ -170,7 +185,7 @@ export interface CourseDef {
   /** 关卡作答使用的执行语言集合 */
   execLangs: LanguageId[];
   /** 品牌 logo（内联 SVG 渲染） */
-  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb' | 'cron';
+  logo?: 'go' | 'rust' | 'cpp' | 'linux' | 'algo' | 'agentdev' | 'collab' | 'git' | 'kb' | 'cron' | 'harmony';
   /** 课程级模块名覆盖（如 Linux 课的"文件与目录"） */
   moduleNames?: Partial<Record<string, string>>;
   /** 课程级模块副标题覆盖 */
@@ -359,6 +374,35 @@ export const COLLAB_TRACK: CourseDef = {  id: 'collab',
 };
 
 /** 闯关地图顶部的课程卡片列表（语言课 + 算法课） */
+
+/** 鸿蒙应用开发课：ArkTS 声明式 UI 与真实应用实战，本地模拟器真实判题 */
+export const HONGMENG_TRACK: CourseDef = {
+  id: 'harmony',
+  name: '鸿蒙应用开发',
+  tagline: 'ArkTS 声明式 UI 与真实应用实战，本地模拟器真实判题',
+  icon: '📱',
+  color: '#0a59f7',
+  gradient: 'from-blue-600 to-sky-400',
+  execLangs: ['arkts'],
+  logo: 'harmony',
+  moduleNames: {
+    basic: 'ArkTS 与首个页面',
+    paradigm: '状态驱动与列表',
+    advanced: '组件进阶与导航',
+    tips: '高频踩坑实战',
+    best: '性能调优',
+    integration: '综合实战：口袋记账',
+  },
+  moduleSubtitles: {
+    basic: '声明式 UI 的第一性原理',
+    paradigm: '状态是 UI 的唯一驱动源',
+    advanced: '页面栈、生命周期与全局状态',
+    best: '让每一次渲染都有意义',
+    tips: '真实项目里最容易翻车的地方',
+    integration: '从需求到落地的完整小应用',
+  },
+};
+
 export const COURSES: CourseDef[] = [
   ...LEARNABLE_LANGS.map((l) => ({
     id: l.id as CourseId,
@@ -377,6 +421,7 @@ export const COURSES: CourseDef[] = [
   GIT_TRACK,
   KB_TRACK,
   CRON_TRACK,
+  HONGMENG_TRACK,
 ];
 
 export const COURSE_MAP: Record<CourseId, CourseDef> = Object.fromEntries(
@@ -419,5 +464,5 @@ export function executorOf(course: CourseId, execLang?: LanguageId): ExecutorCon
     const lang = execLang ?? 'javascript';
     return LANG_MAP[lang].executor;
   }
-  return LANG_MAP[course].executor;
+  return LANG_MAP[course === 'harmony' ? 'arkts' : course].executor;
 }
