@@ -9,6 +9,8 @@ import type { AchievementDef } from '@/types';
 import { emitToast } from '@/lib/toast-bus';
 import { getRank } from '@/data/ranks';
 import { useProgress } from '@/store/progress';
+import { todayQuote } from '@/data/quotes';
+import { useOnlineCount } from '@/lib/presence';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { Toasts } from './Toasts';
@@ -37,6 +39,8 @@ export function Layout() {
   const streak = useProgress((s) => s.streak.current);
   const location = useLocation();
   const { rank } = getRank(xp);
+  const quote = todayQuote();
+  const online = useOnlineCount();
 
   /* 路由切换回到页首：避免从长页面中部跳转时视口被钳制产生"跳动" */
   useEffect(() => {
@@ -184,6 +188,22 @@ export function Layout() {
           <Outlet />
         </div>
       </main>
+
+      {/* 页面底部：每日一语 + 真实在线人数（30s 心跳，服务不可达时优雅隐藏） */}
+      <footer className="border-t border-night-700/50 bg-night-950/70">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-5 gap-y-1 px-4 pb-14 pt-2.5 text-xs text-slate-500 md:pb-2.5">
+          <span className="min-w-0 flex-1 truncate" title={quote.t}>
+            <span className="mr-1.5 font-bold text-quest-400/80">💬 每日一语</span>
+            {quote.t}
+            <span className="ml-1.5 text-slate-600">—— {quote.a}</span>
+          </span>
+          {online !== null && (
+            <span className="shrink-0 font-semibold text-emerald-400" title="基于 30s 心跳的真实在线统计">
+              🟢 {online} 人在线
+            </span>
+          )}
+        </div>
+      </footer>
 
       {/* 移动端悬浮毛玻璃导航（横条滑块指示器） */}
       <nav className="fixed inset-x-0 bottom-3 z-40 md:hidden">

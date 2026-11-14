@@ -20,3 +20,4 @@ tsconfig.tsbuildinfo
 .zcode/
 .cf-token
 *.webm
+.cf-token-workers

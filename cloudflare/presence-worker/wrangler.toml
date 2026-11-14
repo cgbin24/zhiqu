@@ -1,0 +1,18 @@
+name = "zhiqu-presence"
+main = "src/index.js"
+compatibility_date = "2025-11-01"
+account_id = "cd5d0c69aa49d23deb9ff5ea76e4399b"
+
+# 自定义域名路由（域名 cgbin.xyz 已托管在 Cloudflare）
+routes = [
+  { pattern = "zhiqu.cgbin.xyz/api/*", zone_name = "cgbin.xyz" },
+]
+
+[[durable_objects.bindings]]
+name = "PRESENCE"
+class_name = "Presence"
+
+# SQLite 支撑的 DO（免费计划可用）
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Presence"]
