@@ -339,6 +339,12 @@ export function TeamDashboard() {
     return () => clearTimeout(t);
   }, [playing, cursor, speed, run]);
 
+  // 当前事件胶囊自动滚动居中：播放/单步/跳转时链路始终跟随，避免最新事件被遮挡在可视区外
+  const activeChipRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    activeChipRef.current?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [cursor, run]);
+
   useEffect(() => {
     const onChange = () => setFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener('fullscreenchange', onChange);
@@ -816,23 +822,32 @@ export function TeamDashboard() {
                 </div>
                 <span className="font-mono text-[10px] text-slate-500">{cursor}/{run.events.length}</span>
               </div>
-              <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {run.events.map((e, i) => {
-                  const st = KIND_STYLE[e.kind] ?? KIND_STYLE.assign;
-                  const active = i < cursor;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => { setPlaying(false); setCursor(i + 1); }}
-                      title={e.text}
-                      className={`shrink-0 rounded-md border px-1.5 py-1 font-mono text-[10px] transition-all ${
-                        active ? st.cls : 'border-night-700 bg-night-850 text-slate-600'
-                      } ${i === cursor - 1 ? 'scale-110 ring-1 ring-quest-400/60' : ''}`}
-                    >
-                      {st.icon}<span className="ml-0.5">{e.tick}</span>
-                    </button>
-                  );
-                })}
+              <div className="relative">
+                {/* 链路轨道线：穿过所有事件节点，构成一条可视的执行链路 */}
+                <div className="pointer-events-none absolute left-3 right-3 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-night-700" />
+                {/* 两侧渐隐：提示链路还有更多内容可横向滚动 */}
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-8 bg-gradient-to-r from-night-900/90 to-transparent" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-8 bg-gradient-to-l from-night-900/90 to-transparent" />
+                <div className="relative flex items-center gap-1.5 overflow-x-auto px-3 py-1.5">
+                  {run.events.map((e, i) => {
+                    const st = KIND_STYLE[e.kind] ?? KIND_STYLE.assign;
+                    const active = i < cursor;
+                    const isCurrent = i === cursor - 1;
+                    return (
+                      <button
+                        key={i}
+                        ref={isCurrent ? activeChipRef : undefined}
+                        onClick={() => { setPlaying(false); setCursor(i + 1); }}
+                        title={e.text}
+                        className={`relative z-10 shrink-0 rounded-md border px-1.5 py-1 font-mono text-[10px] transition-all ${
+                          active ? st.cls : 'border-night-700 bg-night-850 text-slate-600'
+                        } ${isCurrent ? 'scale-110 shadow-[0_0_14px_rgba(124,92,240,0.55)] ring-1 ring-quest-400/70' : ''}`}
+                      >
+                        {st.icon}<span className="ml-0.5">{e.tick}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               {derived?.current && (
                 <div className={`mt-2 rounded-lg border px-3 py-2 text-xs ${KIND_STYLE[derived.current.kind]?.cls ?? 'border-night-700 bg-night-850 text-slate-300'}`}>
