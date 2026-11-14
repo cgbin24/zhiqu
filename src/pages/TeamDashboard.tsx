@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Maximize2, Minimize2, Pause, Play, RotateCcw, StepForward } from 'lucide-react';
 import { createTeamEngine, type TeamEvent, type TeamMessage, type TeamSetup } from '@/judge/team-sim';
@@ -21,6 +21,8 @@ interface Derived {
   tasks: Record<string, TaskView>;
   lastAssignee: Record<string, string | null>;
   roleBusy: Record<string, string | null>;
+  /** 角色统计（悬浮详情用）：派工 / 完成 / 阻塞上报 / 越权 */
+  roleStats: Record<string, { assigned: number; done: number; blocks: number; violations: number }>;
   messages: TeamMessage[];
   intercepted: number;
   breaches: number;
@@ -30,10 +32,20 @@ interface Derived {
   deadlocked: boolean;
 }
 
+function emptyStats(): { assigned: number; done: number; blocks: number; violations: number } {
+  return { assigned: 0, done: 0, blocks: 0, violations: 0 };
+}
+
 function deriveAt(events: TeamEvent[], messages: TeamMessage[], upto: number): Derived {
   const tasks: Record<string, TaskView> = {};
   const lastAssignee: Record<string, string | null> = {};
   const roleBusy: Record<string, string | null> = {};
+  const roleStats: Record<string, ReturnType<typeof emptyStats>> = {};
+  const statOf = (id: string | null | undefined) => {
+    if (!id) return null;
+    if (!roleStats[id]) roleStats[id] = emptyStats();
+    return roleStats[id];
+  };
   let intercepted = 0;
   let breaches = 0;
   let escalations = 0;
@@ -47,6 +59,7 @@ function deriveAt(events: TeamEvent[], messages: TeamMessage[], upto: number): D
           tasks[e.taskId] = { state: 'in_progress', assignee: e.roleId ?? null };
           lastAssignee[e.taskId] = e.roleId ?? null;
         }
+        if (e.kind === 'assign' && e.roleId) statOf(e.roleId)!.assigned++;
         if (e.roleId) roleBusy[e.roleId] = e.taskId ?? null;
         break;
       case 'submit':
@@ -57,11 +70,11 @@ function deriveAt(events: TeamEvent[], messages: TeamMessage[], upto: number): D
         break;
       case 'done':
         if (e.taskId) tasks[e.taskId] = { state: 'done', assignee: null };
-        if (e.roleId) roleBusy[e.roleId] = null;
+        if (e.roleId) { roleBusy[e.roleId] = null; statOf(e.roleId)!.done++; }
         break;
       case 'block':
         if (e.taskId) tasks[e.taskId] = { state: 'blocked', assignee: e.roleId ?? null };
-        if (e.roleId) roleBusy[e.roleId] = null;
+        if (e.roleId) { roleBusy[e.roleId] = null; statOf(e.roleId)!.blocks++; }
         break;
       case 'retry':
         if (e.taskId) tasks[e.taskId] = { state: 'todo', assignee: null };
@@ -72,17 +85,18 @@ function deriveAt(events: TeamEvent[], messages: TeamMessage[], upto: number): D
         break;
       case 'violation':
         if (e.intercepted) intercepted++; else breaches++;
+        if (e.roleId) statOf(e.roleId)!.violations++;
         break;
       case 'deadlock':
         return {
-          tasks, lastAssignee, roleBusy,
+          tasks, lastAssignee, roleBusy, roleStats,
           messages: messages.filter((m) => m.tick <= (e.tick ?? 0)),
           intercepted, breaches, escalations,
           current: e, finished: true, deadlocked: true,
         };
       case 'complete':
         return {
-          tasks, lastAssignee, roleBusy,
+          tasks, lastAssignee, roleBusy, roleStats,
           messages: messages.filter((m) => m.tick <= (e.tick ?? 0)),
           intercepted, breaches, escalations,
           current: e, finished: true, deadlocked: false,
@@ -96,6 +110,7 @@ function deriveAt(events: TeamEvent[], messages: TeamMessage[], upto: number): D
     tasks,
     lastAssignee,
     roleBusy,
+    roleStats,
     messages: messages.filter((m) => m.tick <= (last?.tick ?? 0)),
     intercepted, breaches, escalations,
     current: last,
@@ -111,6 +126,7 @@ interface GraphNode {
   name: string;
   kind: 'planner' | 'worker' | 'reviewer' | 'guardrail';
   skills: string[];
+  tools: string[];
   x: number;
   y: number;
 }
@@ -118,7 +134,7 @@ interface GraphNode {
 const GW = 900;
 const GH = 430;
 
-function layoutGraph(roleList: { id: string; name: string; skills: string[] }[], whitelistOn: boolean) {
+function layoutGraph(roleList: { id: string; name: string; skills: string[]; tools?: string[] }[], whitelistOn: boolean) {
   const planner = roleList.find((r) => r.skills.includes('plan'));
   const reviewer = roleList.find((r) => r.skills.includes('review'));
   const workers = roleList.filter((r) => r !== planner && r !== reviewer);
@@ -126,14 +142,14 @@ function layoutGraph(roleList: { id: string; name: string; skills: string[] }[],
   const P = { x: 130, y: GH / 2 };
   const R = { x: GW - 130, y: GH / 2 };
   const W = { x: GW / 2, y: 0 };
-  if (planner) nodes.push({ ...planner, kind: 'planner', x: P.x, y: P.y });
+  if (planner) nodes.push({ ...planner, tools: planner.tools ?? [], kind: 'planner', x: P.x, y: P.y });
   const n = workers.length;
   workers.forEach((r, i) => {
     const y = n === 1 ? GH / 2 : 62 + (i * (GH - 124)) / (n - 1);
-    nodes.push({ ...r, kind: 'worker', x: W.x, y });
+    nodes.push({ ...r, tools: r.tools ?? [], kind: 'worker', x: W.x, y });
   });
-  if (reviewer) nodes.push({ ...reviewer, kind: 'reviewer', x: R.x, y: R.y });
-  nodes.push({ id: 'guardrail', name: whitelistOn ? '🛡 护栏' : '⚠ 护栏(关)', kind: 'guardrail', skills: [], x: R.x + 8, y: 52 });
+  if (reviewer) nodes.push({ ...reviewer, tools: reviewer.tools ?? [], kind: 'reviewer', x: R.x, y: R.y });
+  nodes.push({ id: 'guardrail', name: whitelistOn ? '🛡 护栏' : '⚠ 护栏(关)', kind: 'guardrail', skills: [], tools: [], x: R.x + 8, y: 52 });
   return { nodes, plannerId: planner?.id ?? null, reviewerId: reviewer?.id ?? null };
 }
 
@@ -170,8 +186,19 @@ const EDGE_BOW: Record<string, number> = {
   'planner->worker': 26,
   'worker->planner': -26,
   'worker->reviewer': 20,
+  'reviewer->worker': -20,
   'reviewer->planner': -120,
   'guardrail->planner': -60,
+};
+
+/** 线路类型的可读说明（悬浮详情用） */
+const EDGE_DESC: Record<string, string> = {
+  'planner->worker': '派工 · 重新入队 · 升级重派',
+  'worker->planner': '阻塞上报 · 交付验收',
+  'worker->reviewer': '提交评审',
+  'reviewer->worker': '打回返工',
+  'reviewer->planner': '评审通过 · 验收回传',
+  'guardrail->planner': '越权告警通道（虚线）',
 };
 
 /** 按节点"类型对"解析线路类型（EDGE_BOW / 连线样式的键）—— 与具体角色 id 无关 */
@@ -334,16 +361,24 @@ export function TeamDashboard() {
   );
 
   const edgeFlow = useMemo(() => {
-    if (!derived || !run) return { usage: {} as Record<string, number>, active: null as null | { key: string; type: string; kind: string; taskId?: string } };
+    if (!derived || !run) return {
+      usage: {} as Record<string, number>,
+      lastTask: {} as Record<string, string>,
+      active: null as null | { key: string; type: string; kind: string; taskId?: string },
+    };
     const usage: Record<string, number> = {};
+    const lastTask: Record<string, string> = {};
     let active: { key: string; type: string; kind: string; taskId?: string } | null = null;
     for (let i = 0; i < cursor; i++) {
       const e = run.events[i];
       const edge = resolveEdge(e, layout, derived.lastAssignee);
-      if (edge) usage[edge.key] = (usage[edge.key] ?? 0) + 1;
+      if (edge) {
+        usage[edge.key] = (usage[edge.key] ?? 0) + 1;
+        if (e.taskId) lastTask[edge.key] = e.taskId;
+      }
       if (i === cursor - 1 && edge) active = { key: edge.key, type: edge.type, kind: e.kind, taskId: e.taskId };
     }
-    return { usage, active };
+    return { usage, lastTask, active };
   }, [derived, run, cursor, layout]);
 
   const stats = useMemo(() => {
@@ -358,6 +393,11 @@ export function TeamDashboard() {
 
   const nodeById = (id: string | null | undefined) => layout.nodes.find((n) => n.id === id);
   const progressPct = run ? Math.round((cursor / Math.max(run.events.length, 1)) * 100) : 0;
+
+  /* ---------- 悬浮详情（节点 / 线路） ---------- */
+  type Hover = { kind: 'node'; id: string; x: number; y: number } | { kind: 'edge'; key: string; type: string; x: number; y: number } | null;
+  const [hover, setHover] = useState<Hover>(null);
+  const hoverFromEvent = (e: React.MouseEvent) => ({ x: e.clientX, y: e.clientY });
 
   /* 当前活跃节点（当前事件涉及的 roleId / lastAssignee） */
   const activeNodeIds = useMemo(() => {
@@ -527,6 +567,7 @@ export function TeamDashboard() {
                   const used = edgeFlow.usage[key] ?? 0;
                   const isActive = edgeFlow.active?.key === key;
                   const color = isActive ? (EDGE_COLOR[edgeFlow.active!.kind] ?? '#38bdf8') : 'rgba(148,163,184,1)';
+                  const isHoverEdge = hover?.kind === 'edge' && hover.key === key;
                   out.push(
                     <g key={key} style={isActive ? { color } : undefined}>
                       {isActive && <path d={d} stroke={color} strokeWidth={7} fill="none" opacity={0.22} strokeLinecap="round" />}
@@ -534,10 +575,20 @@ export function TeamDashboard() {
                         d={d}
                         fill="none"
                         stroke={color}
-                        strokeOpacity={isActive ? 0.95 : Math.min(0.18 + used * 0.09, 0.6)}
-                        strokeWidth={isActive ? 2.4 : 1.5}
-                        markerEnd={isActive ? 'url(#arrow-active)' : 'url(#arrow)'}
+                        strokeOpacity={isActive || isHoverEdge ? 0.95 : Math.min(0.18 + used * 0.09, 0.6)}
+                        strokeWidth={isActive || isHoverEdge ? 2.4 : 1.5}
+                        markerEnd={isActive || isHoverEdge ? 'url(#arrow-active)' : 'url(#arrow)'}
                         strokeDasharray={a.kind === 'guardrail' || b.kind === 'guardrail' ? '6 5' : undefined}
+                      />
+                      {/* 宽透明命中区：悬浮查看线路详情 */}
+                      <path
+                        d={d}
+                        fill="none"
+                        stroke="transparent"
+                        strokeWidth={16}
+                        style={{ pointerEvents: 'stroke', cursor: 'help' }}
+                        onMouseEnter={(ev) => setHover({ kind: 'edge', key, type, ...hoverFromEvent(ev as unknown as ReactMouseEvent<SVGElement>) })}
+                        onMouseLeave={() => setHover(null)}
                       />
                     </g>,
                   );
@@ -556,7 +607,7 @@ export function TeamDashboard() {
                 const color = EDGE_COLOR[edgeFlow.active.kind] ?? '#38bdf8';
                 const mid = bezierMid(a, b, bow);
                 return (
-                  <g key={cursor}>
+                  <g key={cursor} style={{ pointerEvents: 'none' }}>
                     <circle r={5.5} fill={color} opacity={0.95}>
                       <animateMotion dur="0.72s" fill="freeze" path={d} />
                     </circle>
@@ -579,7 +630,7 @@ export function TeamDashboard() {
                 );
               })()}
 
-              {/* 角色节点 */}
+              {/* 角色节点（悬浮查看详情） */}
               {layout.nodes.map((n2, i) => {
                 const hue = n2.kind === 'guardrail' ? '#f87171' : ROLE_HUE[i % ROLE_HUE.length];
                 const busyTask = n2.kind !== 'guardrail' ? (derived?.roleBusy[n2.id] ?? null) : null;
@@ -587,16 +638,23 @@ export function TeamDashboard() {
                 const working = busyState === 'in_progress' || busyState === 'review';
                 const isActiveNode = activeNodeIds.has(n2.id);
                 const isAlert = n2.kind === 'guardrail' && edgeFlow.active?.kind === 'violation';
+                const isHoverNode = hover?.kind === 'node' && hover.id === n2.id;
                 const w2 = n2.kind === 'guardrail' ? 96 : 128;
                 const h2 = n2.kind === 'guardrail' ? 34 : 52;
                 return (
-                  <g key={n2.id} transform={`translate(${n2.x - w2 / 2}, ${n2.y - h2 / 2})`}>
+                  <g
+                    key={n2.id}
+                    transform={`translate(${n2.x - w2 / 2}, ${n2.y - h2 / 2})`}
+                    onMouseEnter={(ev) => setHover({ kind: 'node', id: n2.id, ...hoverFromEvent(ev as unknown as ReactMouseEvent<SVGElement>) })}
+                    onMouseLeave={() => setHover(null)}
+                    style={{ cursor: 'default' }}
+                  >
                     {working && <rect width={w2} height={h2} rx={12} fill="none" stroke={hue} strokeWidth={2.5} opacity={0.5} className="animate-pulse" />}
                     <rect
                       width={w2} height={h2} rx={12}
                       fill="rgba(2,6,17,0.92)"
-                      stroke={isAlert ? '#f87171' : isActiveNode ? hue : 'rgba(100,116,139,0.55)'}
-                      strokeWidth={isAlert || isActiveNode ? 2.2 : 1.3}
+                      stroke={isAlert ? '#f87171' : isHoverNode ? '#e2e8f0' : isActiveNode ? hue : 'rgba(100,116,139,0.55)'}
+                      strokeWidth={isAlert || isHoverNode ? 2.4 : isActiveNode ? 2.2 : 1.3}
                     />
                     <text x={w2 / 2} y={n2.kind === 'guardrail' ? 21 : 20} textAnchor="middle" fontSize={n2.kind === 'guardrail' ? 11 : 12.5} fontWeight={700} fill={hue}>
                       {n2.name}
@@ -765,6 +823,83 @@ export function TeamDashboard() {
           </div>
         </>
       )}
+
+      {/* 悬浮详情卡（跟随首次进入位置，靠边自动翻转） */}
+      {hover && (() => {
+        const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+        const vh = typeof window !== 'undefined' ? window.innerHeight : 720;
+        const flipX = hover.x + 340 > vw;
+        const flipY = hover.y + 280 > vh;
+        let body: React.ReactNode = null;
+        if (hover.kind === 'node') {
+          const n2 = nodeById(hover.id);
+          if (!n2) return null;
+          const idx = layout.nodes.findIndex((x) => x.id === n2.id);
+          const hue = n2.kind === 'guardrail' ? '#f87171' : ROLE_HUE[idx % ROLE_HUE.length];
+          if (n2.kind === 'guardrail') {
+            body = (
+              <>
+                <div className="mb-1.5 font-bold text-red-300">{n2.name} · 越权防线</div>
+                <div className="space-y-1 text-[11px] leading-relaxed text-slate-400">
+                  <div>状态：{toolWhitelist ? '开启 —— 白名单外的工具调用当场拦截并告警' : '关闭 —— 越权将静默穿透，只留记录'}</div>
+                  <div>角色只能在 tools 白名单内调用工具，与角色名称无关。</div>
+                  <div className="grid grid-cols-2 gap-1 pt-1">
+                    <span className="rounded bg-amber-500/10 px-1 py-0.5 text-center text-amber-300">拦截 {derived?.intercepted ?? 0}</span>
+                    <span className="rounded bg-red-500/10 px-1 py-0.5 text-center text-red-300">穿透 {derived?.breaches ?? 0}</span>
+                  </div>
+                </div>
+              </>
+            );
+          } else {
+            const st = derived?.roleStats[n2.id] ?? emptyStats();
+            const busyTask = derived?.roleBusy[n2.id] ?? null;
+            const busyState = busyTask ? derived?.tasks[busyTask]?.state : null;
+            body = (
+              <>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <span className="font-bold" style={{ color: hue }}>{n2.name}</span>
+                  <span className="rounded bg-night-800 px-1.5 py-0.5 text-[9px] font-bold text-slate-400">
+                    {n2.kind === 'planner' ? '调度 · PM' : n2.kind === 'reviewer' ? '评审角色' : '执行角色'}
+                  </span>
+                </div>
+                <div className="space-y-1 text-[11px] leading-relaxed text-slate-400">
+                  <div>技能（可接任务类型）：{n2.skills.join(' / ')}</div>
+                  <div>工具白名单：{n2.tools.length > 0 ? n2.tools.join(' / ') : '—'}</div>
+                  <div>当前：{busyTask ? (busyState === 'review' ? `待评审 · ${busyTask}` : `执行中 · ${busyTask}`) : '空闲待命'}</div>
+                  <div className="grid grid-cols-4 gap-1 pt-1">
+                    <span className="rounded bg-sky-500/10 px-1 py-0.5 text-center text-sky-300">派工 {st.assigned}</span>
+                    <span className="rounded bg-emerald-500/10 px-1 py-0.5 text-center text-emerald-300">完成 {st.done}</span>
+                    <span className="rounded bg-orange-500/10 px-1 py-0.5 text-center text-orange-300">阻塞 {st.blocks}</span>
+                    <span className="rounded bg-red-500/10 px-1 py-0.5 text-center text-red-300">越权 {st.violations}</span>
+                  </div>
+                </div>
+              </>
+            );
+          }
+        } else {
+          const used = edgeFlow.usage[hover.key] ?? 0;
+          const lt = edgeFlow.lastTask[hover.key];
+          body = (
+            <>
+              <div className="mb-1 font-bold text-slate-200">🔗 线路详情</div>
+              <div className="space-y-1 text-[11px] leading-relaxed text-slate-400">
+                <div>承载动作：{EDGE_DESC[hover.type] ?? hover.type}</div>
+                <div>历史流转：{used} 次</div>
+                {lt && <div>最近任务：<span className="font-mono text-quest-300">{lt}</span></div>}
+                {hover.type === 'guardrail->planner' && <div className="text-red-300/80">虚线通道：越权工具调用被拦截时触发</div>}
+              </div>
+            </>
+          );
+        }
+        return (
+          <div
+            className="pointer-events-none fixed z-[80] w-[300px] rounded-xl border border-quest-500/40 bg-night-950/95 p-3 text-xs shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            style={{ left: flipX ? Math.max(8, hover.x - 316) : hover.x + 16, top: flipY ? Math.max(8, hover.y - 200) : hover.y + 16 }}
+          >
+            {body}
+          </div>
+        );
+      })()}
     </div>
   );
 }
