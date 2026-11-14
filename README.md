@@ -52,7 +52,9 @@ npm run preview
 
 ## ☁️ 在线访问
 
-- **Cloudflare Pages（唯一部署渠道）**：https://zhiqu-1h0.pages.dev/
+- **主站（推荐）**：https://zhiqu.cgbin.xyz/ —— Pages 项目绑定的自定义域名（证书/解析均已激活）
+- **备用入口**：https://zhiqu-1h0.pages.dev/ —— Pages 默认域名（部分网络环境对其存在阻断，打不开时请用主站）
+- 两个域名指向同一部署，每次部署自动同步生效
 
 ### Cloudflare 部署（直接上传，无需 Git）
 
