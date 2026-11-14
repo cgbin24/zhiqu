@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Maximize2, Minimize2, Pause, Play, RotateCcw, StepForward } from 'lucide-react';
 import { createTeamEngine, type TeamEvent, type TeamMessage, type TeamSetup } from '@/judge/team-sim';
@@ -131,7 +131,7 @@ interface GraphNode {
   y: number;
 }
 
-const GW = 900;
+const GW = 1120;
 const GH = 430;
 
 function layoutGraph(roleList: { id: string; name: string; skills: string[]; tools?: string[] }[], whitelistOn: boolean) {
@@ -139,8 +139,8 @@ function layoutGraph(roleList: { id: string; name: string; skills: string[]; too
   const reviewer = roleList.find((r) => r.skills.includes('review'));
   const workers = roleList.filter((r) => r !== planner && r !== reviewer);
   const nodes: GraphNode[] = [];
-  const P = { x: 130, y: GH / 2 };
-  const R = { x: GW - 130, y: GH / 2 };
+  const P = { x: 120, y: GH / 2 };
+  const R = { x: GW - 120, y: GH / 2 };
   const W = { x: GW / 2, y: 0 };
   if (planner) nodes.push({ ...planner, tools: planner.tools ?? [], kind: 'planner', x: P.x, y: P.y });
   const n = workers.length;
@@ -354,11 +354,53 @@ export function TeamDashboard() {
 
   const derived = run ? deriveAt(run.events, run.messages, cursor) : null;
 
-  /* 流图布局与线路状态（随游标派生） */
-  const layout = useMemo(
+  /* ---------- 流图布局与节点拖拽 ---------- */
+  const layoutBase = useMemo(
     () => layoutGraph(scenario.defaultSetup.roles, toolWhitelist),
     [scenario, toolWhitelist],
   );
+  // 节点手动位置覆盖（拖拽调整布局），场景切换/重置时清空
+  const [nodePos, setNodePos] = useState<Record<string, { x: number; y: number }>>({});
+  const [dragging, setDragging] = useState(false);
+  const dragRef = useRef<{ id: string; sx: number; sy: number; ox: number; oy: number } | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const layout = useMemo(() => ({
+    ...layoutBase,
+    nodes: layoutBase.nodes.map((n) => ({ ...n, ...(nodePos[n.id] ?? {}) })),
+  }), [layoutBase, nodePos]);
+
+  /** 屏幕 → viewBox 换算（处理 preserveAspectRatio 居中 letterbox） */
+  const vbMetrics = () => {
+    const r = svgRef.current?.getBoundingClientRect();
+    if (!r || r.width === 0) return { scale: 1 };
+    return { scale: Math.min(r.width / GW, r.height / GH) };
+  };
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+  const onNodePointerDown = (e: ReactPointerEvent<SVGGElement>, id: string) => {
+    const n = layout.nodes.find((x) => x.id === id);
+    if (!n) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { id, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y };
+    setHover(null);
+    setDragging(true);
+    e.preventDefault();
+  };
+  const onNodePointerMove = (e: ReactPointerEvent<SVGGElement>) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const { scale } = vbMetrics();
+    setNodePos((p) => ({
+      ...p,
+      [d.id]: {
+        x: Math.round(clamp(d.ox + (e.clientX - d.sx) / scale, 70, GW - 70)),
+        y: Math.round(clamp(d.oy + (e.clientY - d.sy) / scale, 36, GH - 28)),
+      },
+    }));
+  };
+  const onNodePointerUp = () => { dragRef.current = null; setDragging(false); };
+  const resetNodePos = () => setNodePos({});
 
   const edgeFlow = useMemo(() => {
     if (!derived || !run) return {
@@ -545,7 +587,21 @@ export function TeamDashboard() {
 
           {/* ===== 流程流图（核心面板） ===== */}
           <div className="rounded-xl border border-night-700 bg-night-900/70 p-2">
-            <svg viewBox={`0 0 ${GW} ${GH}`} className="w-full" style={{ maxHeight: '52vh' }}>
+            <div className="flex items-center gap-2 px-2 pt-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">🗺 团队流程图</span>
+              <span className="text-[10px] text-slate-600">拖动节点可调整布局</span>
+              {Object.keys(nodePos).length > 0 && (
+                <button onClick={resetNodePos} className="rounded border border-night-600 px-1.5 py-0.5 text-[10px] text-slate-400 transition-colors hover:text-slate-200">
+                  复位布局
+                </button>
+              )}
+            </div>
+            <svg
+              ref={svgRef}
+              viewBox={`0 0 ${GW} ${GH}`}
+              className="mx-auto block w-full"
+              style={{ aspectRatio: `${GW} / ${GH}`, maxHeight: '56vh' }}
+            >
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                   <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="rgba(148,163,184,0.7)" strokeWidth="1.6" />
@@ -645,9 +701,14 @@ export function TeamDashboard() {
                   <g
                     key={n2.id}
                     transform={`translate(${n2.x - w2 / 2}, ${n2.y - h2 / 2})`}
-                    onMouseEnter={(ev) => setHover({ kind: 'node', id: n2.id, ...hoverFromEvent(ev as unknown as ReactMouseEvent<SVGElement>) })}
+                    onPointerDown={(ev) => onNodePointerDown(ev, n2.id)}
+                    onPointerMove={onNodePointerMove}
+                    onPointerUp={onNodePointerUp}
+                    onPointerCancel={onNodePointerUp}
+                    onDoubleClick={() => setNodePos((p) => { const q = { ...p }; delete q[n2.id]; return q; })}
+                    onMouseEnter={(ev) => { if (!dragging) setHover({ kind: 'node', id: n2.id, ...hoverFromEvent(ev as unknown as ReactMouseEvent<SVGElement>) }); }}
                     onMouseLeave={() => setHover(null)}
-                    style={{ cursor: 'default' }}
+                    style={{ cursor: dragging ? 'grabbing' : 'grab' }}
                   >
                     {working && <rect width={w2} height={h2} rx={12} fill="none" stroke={hue} strokeWidth={2.5} opacity={0.5} className="animate-pulse" />}
                     <rect
